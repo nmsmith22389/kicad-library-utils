@@ -23,10 +23,7 @@ if not common in sys.path:
 
 from schlib import *
 from print_color import *
-
-def ExitError( msg ):
-    print(msg)
-    sys.exit(-1)
+from checklib import *
 
 parser = argparse.ArgumentParser(description="Compare two .lib files to determine which symbols have changed")
 
@@ -39,28 +36,17 @@ parser.add_argument("--nocolor", help="Does not use colors to show the output", 
 args,extra = parser.parse_known_args()
 
 if not args.new:
-    ExitError("New file(s) not supplied")
+    parser.error("New file(s) not supplied")
 
 if not args.old:
-    ExitError("Original file(s) not supplied")
+    parser.error("Original file(s) not supplied")
 
 def KLCCheck(lib, component):
-    
-    # Wrap library in "quotes" if required
-    if " " in lib and '"' not in lib:
-        lib = '"' + lib + '"'
+    common_args = [lib, '-c={cmp}'.format(cmp=component), '-vv', '-s']
+    if args.nocolor:
+        common_args.append("--nocolor")
 
-    call = 'python checklib.py {lib} -c={cmp} -vv -s {nocolor}'.format(
-                lib = lib,
-                cmp = component,
-                nocolor = "--nocolor" if args.nocolor else ""
-                )
-                
-    # Pass extra arguments to checklib script
-    if len(extra) > 0:
-        call += ' '.join([str(e) for e in extra])
-        
-    return os.system(call)
+    return checklib_command(common_args + extra)
 
 printer = PrintColor(use_color = not args.nocolor)
 
