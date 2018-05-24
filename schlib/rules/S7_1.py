@@ -4,11 +4,10 @@ from rules.rule import *
 import re
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad lib files.
-    """
+    """Power flag symbols"""
+
     def __init__(self, component):
-        super(Rule, self).__init__(component, 'Power-flag symbols follow some special rules/KLC-exceptions')
+        super(Rule, self).__init__(component)
         self.makePinINVISIBLE=False
         self.makePinPowerInput=False
         self.fixTooManyPins=False

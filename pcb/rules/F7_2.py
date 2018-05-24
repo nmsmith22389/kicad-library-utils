@@ -3,11 +3,10 @@
 from rules.rule import *
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad_mod files.
-    """
+    """Footprint anchor should placed at the location of Pin-1"""
+
     def __init__(self, module, args):
-        super(Rule, self).__init__(module, args, 'For through-hole components, footprint anchor is set on pad 1')
+        super(Rule, self).__init__(module, args)
 
         self.pin1_position = []
         self.pin1_count = 0

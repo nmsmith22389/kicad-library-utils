@@ -3,11 +3,10 @@
 from rules.rule import *
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad lib files.
-    """
+    """Rules for pin stacking"""
+
     def __init__(self, component):
-        super(Rule, self).__init__(component, 'Rules for pin stacking')
+        super(Rule, self).__init__(component)
         self.different_names=False
         self.NC_stacked=False
         self.different_types=False

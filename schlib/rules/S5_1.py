@@ -4,11 +4,7 @@ from rules.rule import *
 import fnmatch
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad lib files.
-    """
-    def __init__(self, component):
-        super(Rule, self).__init__(component, 'For components with a single default footprint, footprint field is filled with valid footprint filename')
+    """Symbols with a default footprint link to a valid footprint file"""
 
     def check(self):
         """

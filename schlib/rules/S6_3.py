@@ -3,11 +3,7 @@
 from rules.rule import *
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad lib files.
-    """
-    def __init__(self, component):
-        super(Rule, self).__init__(component, 'Part meta-data is filled in as appropriate')
+    """Component metadata is added to symbol (and all aliases)"""
 
     def check(self):
         """

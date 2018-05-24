@@ -67,14 +67,15 @@ def positionFormater(element):
     # return "pos [{0},{1}]".format(element['posx'],element['posy'])
 
 class KLCRule(KLCRuleBase):
-    """
-    A base class to represent a KLC rule
+    """A base class to represent a KLC rule
+
+    Create the methods check and fix to use with the kicad lib files.
     """
 
     verbosity = 0
 
-    def __init__(self, component, description):
+    def __init__(self, component):
 
-        KLCRuleBase.__init__(self, description)
+        KLCRuleBase.__init__(self)
 
         self.component = component

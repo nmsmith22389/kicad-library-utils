@@ -4,11 +4,10 @@ from rules.rule import *
 import re
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad lib files.
-    """
+    """Graphical symbols"""
+
     def __init__(self, component):
-        super(Rule, self).__init__(component, 'Graphical symbols follow some special rules/KLC-exceptions')
+        super(Rule, self).__init__(component)
         self.fixTooManyPins=False
         self.fixNoFootprint=False
 

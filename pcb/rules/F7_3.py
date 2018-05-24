@@ -3,11 +3,10 @@
 from rules.rule import *
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad_mod files.
-    """
+    """Pin 1 should be rectangular, and other pads circular or oval"""
+
     def __init__(self, module, args):
-        super(Rule, self).__init__(module, args, 'Pad 1 should be denoted by rectangular pad')
+        super(Rule, self).__init__(module, args)
 
         self.names = ['1', 'A', 'A1', 'P1', 'PAD1']
 

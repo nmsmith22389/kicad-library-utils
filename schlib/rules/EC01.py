@@ -4,11 +4,7 @@ from rules.rule import *
 import re
 
 class Rule(KLCRule):
-    """
-    Create the methods check and fix to use with the kicad lib files.
-    """
-    def __init__(self, component):
-        super(Rule, self).__init__(component, 'General pin number checking')
+    """General pin number checking"""
 
     def checkPinNames(self):
         self.wrong_pin_numbers = []

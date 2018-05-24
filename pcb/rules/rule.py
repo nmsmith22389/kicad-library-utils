@@ -78,12 +78,13 @@ def graphItemString(graph, layer=False, width=False):
     return shapeText + layerText + widthText
 
 class KLCRule(KLCRuleBase):
-    """
-    A base class to represent a KLC rule
-    """
-    def __init__(self, module, args, description):
+    """A base class to represent a KLC rule
 
-        KLCRuleBase.__init__(self, description)
+    Create the methods check and fix to use with the kicad_mod files.
+    """
+    def __init__(self, module, args):
+
+        KLCRuleBase.__init__(self)
     
         self.module = module
         self.args = args
