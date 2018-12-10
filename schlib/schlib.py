@@ -428,6 +428,9 @@ class SchLib(object):
         for component in self.components:
             if component.definition['name'] == name:
                 return component
+            for alias in component.aliases.keys():
+                if alias == name:
+                    return component
 
         return None
 
