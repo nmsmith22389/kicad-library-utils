@@ -7,6 +7,8 @@ import logging
 import re
 import os.path
 import fnmatch
+import math
+from enum import IntEnum
 
 sys.path.append(os.path.join(sys.path[0],'..'))
 from KiCadSymbolGenerator import *
@@ -54,45 +56,104 @@ class Device:
     _PACKAGE_REGEXP = re.compile("([a-zA-Z]+)(\d+)")
 
     class Pin:
+        class PinType(IntEnum):
+            UNKNOWN = 0
+            GENERAL = 1         # IO_*
+            CONFIG = 2          # INIT, PROGRAM, DONE
+            BOOT = 3            # M[2:0]
+            JTAG = 4            # JTAG
+            ADC = 5             # DXP/DXN, V_N/V_P
+            ADC_REF = 6         # VREFP/VREFN
+            BANK_POWER = 7      # VCCO_*
+            CORE_POWER = 8      # VCCINT
+            BRAM_POWER = 9      # VCCBRAM
+            AUX_POWER = 10      # VCCAUX
+            ADC_POWER = 11      # VCCADC
+            BATT_POWER = 12     # VCCBATT
+            GND = 13            # GND
+            ADC_GND = 14        # ADC GND
+            NC = 15             # No connect
+
+
+        _TYPE_REGEXPS = {
+            re.compile("^((PROGRAM)|(INIT)|(DONE))|(CFGBVS)|(CCLK)")
+                                                    : PinType.CONFIG,
+            re.compile("^M(\d+)")                   : PinType.BOOT,
+            re.compile("^T((DI)|(DO)|(MS)|(CK))")   : PinType.JTAG,
+            re.compile("^((?:DX)|(?:V))([PN])")     : PinType.ADC,
+            re.compile("^VREF([PN])")               : PinType.ADC_REF,
+            re.compile("^VCCO_(\d+)")               : PinType.BANK_POWER,
+            re.compile("^VCCINT")                   : PinType.CORE_POWER,
+            re.compile("^VCCBRAM")                  : PinType.BRAM_POWER,
+            re.compile("^VCCAUX")                   : PinType.AUX_POWER,
+            re.compile("^VCCADC")                   : PinType.ADC_POWER,
+            re.compile("^VCCBATT")                  : PinType.BATT_POWER,
+            re.compile("^GNDADC")                   : PinType.ADC_GND,
+            re.compile("^GND")                      : PinType.GND,
+            re.compile("^IO_(L?)(\d+)([PN]?)")      : PinType.GENERAL,
+            re.compile("^NC")                       : PinType.NC
+        }
         _IO_PIN_REGEXP = re.compile("IO_(L?)(\d+)([PN]?)")
 
         def __init__(self, dic):
+            self.type = self.PinType.UNKNOWN
             self.pin = dic["pin"]
             self.name = dic["name"]
             try:
                 self.bank = int(dic["bank"])
             except:
-                self.bank = -1
+                self.bank = 0
 
-            self.type = dic["type"]
+            self.bankType = dic["type"]
 
             self.number = -1
             self.pair = False
             self.pairNeg = False
 
-            # Detect pin/pair name
-            m = self._IO_PIN_REGEXP.match(self.name)
-            if m:
+            # Detect pin type
+            for r,t in self._TYPE_REGEXPS.items():
+                m = r.match(self.name)
+                if m is None:
+                    continue
+
+                self.type = t
+                break
+
+            if self.type == self.PinType.UNKNOWN:
+                logging.warning(f"Unknown pin type for pin {self.name}")
+
+            if self.type == self.PinType.GENERAL:
                 if m.group(1) == "L":
                     self.pair = True
                     self.pairNeg = m.group(3) == "N"
                 self.number = int(m.group(2))
+            elif self.type == self.PinType.ADC:
+                self.number = 1 if m.group(1) == "V" else 0
+                self.pair = True
+                self.pairNeg = m.group(2) == "N"
+            elif self.type == self.PinType.ADC_REF:
+                self.pair = True
+                self.pairNeg = m.group(1) == "N"
+
 
         # For sorting
         def __lt__(self, other):
             if self.bank < other.bank:
                 return True
             elif self.bank == other.bank:
-                if self.number < other.number:
+                if self.type < other.type:
                     return True
-                elif self.number == other.number:
-                    if self.pairNeg < other.pairNeg:
+                elif self.type == other.type:
+                    if (self.number != -1) and (other.number != -1) and self.number < other.number:
                         return True
-                    elif self.pairNeg == other.pairNeg:
-                        return self.name < other.name
+                    elif (self.number == -1) or (other.number == -1) or (self.number == other.number):
+                        if self.pair and other.pair and self.pairNeg < other.pairNeg:
+                            return True
+                        elif not self.pair or not other.pair or self.pairNeg == other.pairNeg:
+                            return self.name < other.name
 
         def __str__(self):
-            return f"({self.name}, {self.pin}, {self.bank}, {self.type}, {self.number}, {self.pair}, {self.pairNeg})"
+            return f"({self.name}, {self.pin}, {self.bank}, {self.bankType}, {self.number}, {self.type}, {self.pair}, {self.pairNeg})"
 
         def drawingPin(self, **kwargs):
             return DrawingPin(at=Point(0, 0), number=self.pin, name=self.name, **kwargs)
@@ -145,7 +206,7 @@ class Device:
             self.pinCount += len(self.banks[k])
 
         for k, v in self.banks.items():
-            logging.info(f"Bank {k}")
+            logging.debug(f"Bank {k}")
             for pin in v:
                 logging.debug(f"  {pin}")
         logging.info(f"Total pins: {self.pinCount }")
@@ -193,24 +254,133 @@ class Device:
         logging.info(f"  Capacity:\t{self.capacity}")
 
     def drawSymbol(self):
-        bank_list = list(self.banks.items())
+        bankList = list(self.banks.items())
 
         self.symbol.setReference('U')
         self.symbol.setValue(value=self.libraryName)
-        self.symbol.num_units = len(bank_list)
+        self.symbol.num_units = len(bankList)
         self.symbol.interchangable = Symbol.UnitsInterchangable.NOT_INTERCHANGEABLE
 
-        for bank_idx in range(0, self.symbol.num_units):
-            bank, pins = bank_list[bank_idx]
-            y = 0
+        # Calc max package pin name
+        maxPackagePin = 0
+        for bank, pins in bankList:
             for pin in pins:
+                maxPackagePin = len(pin.pin) if len(pin.pin) > maxPackagePin else maxPackagePin
+        pinLength = 200 if maxPackagePin > 2 else 100
+
+        for bankIdx in range(0, self.symbol.num_units):
+            bank, pins = bankList[bankIdx]
+
+            pinsides = {"l": [], "r": [], "t": [], "b": []}
+            pinoffsets = {"l": 0, "r": 0, "t": 0, "b": 0}
+            maxNames = {"l": 0, "r": 0, "t": 0, "b": 0}
+            pinsGrouped = {}
+
+            # Extract pin groups
+            for p in pins:
+                if p.type not in pinsGrouped:
+                    pinsGrouped[p.type] = []
+                pinsGrouped[p.type].append(p)
+
+            # Force some pin group to specific side and draw them
+            forcedSides = {
+                "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, ],
+                "r": [ self.Pin.PinType.JTAG, self.Pin.PinType.ADC_REF, self.Pin.PinType.ADC],
+                "t": [self.Pin.PinType.BANK_POWER, self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER,
+                      self.Pin.PinType.AUX_POWER, self.Pin.PinType.ADC_POWER, self.Pin.PinType.BATT_POWER],
+                "b": [self.Pin.PinType.ADC_GND, self.Pin.PinType.GND]
+            }
+
+            for s, l in forcedSides.items():
+                for g in l:
+                    if g not in pinsGrouped:
+                        continue
+
+                    # Map for merging pin with same name within group
+                    mergedPins = {}
+                    for p in pinsGrouped[g]:
+                        dp = p.drawingPin()
+                        if p.name in mergedPins:
+                            dp.translate(mergedPins[p.name].at)
+                            dp.visibility = DrawingPin.PinVisibility.INVISIBLE
+                        else:
+                            if s == "l" or s == "r":
+                                dp.translate(Point(0, -pinoffsets[s] * 100))
+                            else:
+                                dp.translate(Point(pinoffsets[s] * 100, 0))
+                            mergedPins[p.name] = dp
+                            pinoffsets[s] = pinoffsets[s] + 1
+                        pinsides[s].append(dp)
+                    pinoffsets[s] = pinoffsets[s] + 1
+
+            # Draw general IO
+            genSide = "l"
+            genPins = pinsGrouped[self.Pin.PinType.GENERAL] if self.Pin.PinType.GENERAL in pinsGrouped else []
+            for idx in range(0, len(genPins)):
+                pin = genPins[idx]
                 dp = pin.drawingPin()
+                dp.translate(Point(0, -pinoffsets[genSide] * 100))
+                pinsides[genSide].append(dp)
+                pinoffsets[genSide] = pinoffsets[genSide] + 1
 
-                dp.translate(Point(0, y))
-                dp.unit_idx = bank_idx + 1
+                # Switch side to right when left side is filled
+                if genSide == "l" and (pinoffsets["l"] >= (pinoffsets["r"] + (len(genPins) - idx))) \
+                        and (not pin.pair or pin.pairNeg):
+                    genSide = "r"
 
-                self.symbol.drawing.append(dp)
-                y += 100
+            # Calc max pin names
+            for s, l in pinsides.items():
+                for p in l:
+                    maxNames[s] = len(p.name) if len(p.name) > maxNames[s] else maxNames[s]
+
+            maxLROffset = pinoffsets["l"] if pinoffsets["l"] > pinoffsets["r"] else pinoffsets["r"]
+            maxTBOffset = pinoffsets["t"] if pinoffsets["t"] > pinoffsets["b"] else pinoffsets["b"]
+
+            lPinOffset = pinLength + 20 if len(pinsides["l"]) > 0 else 0
+            rPinOffset = pinLength + 20 if len(pinsides["r"]) > 0 else 0
+            tPinOffset = pinLength + 20 if len(pinsides["t"]) > 0 else 0
+            bPinOffset = pinLength + 20 if len(pinsides["b"]) > 0 else 0
+
+            vStride = math.ceil((maxLROffset - 1) / 2) * 100
+            top = math.ceil((vStride + tPinOffset + maxNames["t"] * 48) / 100) * 100
+            bottom = math.floor((vStride - (maxLROffset - 1) * 100 - bPinOffset - maxNames["b"] * 48) / 100) * 100
+
+            hStride = math.ceil((maxNames["l"] + maxNames["r"]) * 48 / 2 / 100) * 100
+            hStrideV = math.ceil((maxTBOffset - 1) / 2) * 100
+            if hStrideV > hStride:
+                hStride = hStrideV
+            left =  -math.floor((hStride + lPinOffset) / 100) * 100
+            right = math.ceil((hStride + rPinOffset) / 100) * 100
+
+            hStartY = vStride
+            tStartX = -math.floor((pinoffsets["t"] - 1) / 2) * 100
+            bStartX = -math.floor((pinoffsets["b"] - 1) / 2) * 100
+
+            for s, l in pinsides.items():
+                for dp in l:
+                    dp.unit_idx = bankIdx + 1
+                    dp.pin_length = pinLength
+                    if s == "l":
+                        dp.orientation = DrawingPin.PinOrientation.RIGHT
+                        dp.translate(Point(left, hStartY))
+                    elif s == "r":
+                        dp.translate(Point(right, hStartY))
+                    elif s == "t":
+                        dp.orientation = DrawingPin.PinOrientation.DOWN
+                        dp.translate(Point(tStartX, top))
+                    elif s == "b":
+                        dp.orientation = DrawingPin.PinOrientation.UP
+                        dp.translate(Point(bStartX, bottom))
+                    self.symbol.drawing.append(dp)
+
+            rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left
+            rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right
+            rectY0 = bottom + pinLength if len(pinsides["b"]) > 0 else bottom - 100
+            rectY1 = top - pinLength if len(pinsides["t"]) > 0 else top + 100
+
+            self.symbol.drawing.append(DrawingRectangle(Point(rectX0, rectY0), Point(rectX1, rectY1),
+                                                        unit_idx=bankIdx + 1,
+                                                        fill=ElementFill.FILL_BACKGROUND))
 
     def createSymbol(self, gen):
         # Make strings for DCM entries
