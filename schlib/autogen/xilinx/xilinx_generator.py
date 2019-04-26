@@ -62,17 +62,18 @@ class Device:
             CONFIG = 2          # INIT, PROGRAM, DONE
             BOOT = 3            # M[2:0]
             JTAG = 4            # JTAG
-            ADC = 5             # DXP/DXN, V_N/V_P
-            ADC_REF = 6         # VREFP/VREFN
-            BANK_POWER = 7      # VCCO_*
+            ADC_REF = 5         # VREFP/VREFN
+            ADC = 6             # V_N/V_P
+            ADC_DIODE = 7       # DXP/DXN
             CORE_POWER = 8      # VCCINT
             BRAM_POWER = 9      # VCCBRAM
             AUX_POWER = 10      # VCCAUX
             ADC_POWER = 11      # VCCADC
             BATT_POWER = 12     # VCCBATT
-            GND = 13            # GND
-            ADC_GND = 14        # ADC GND
-            NC = 15             # No connect
+            BANK_POWER = 13     # VCCO_*
+            GND = 14            # GND
+            ADC_GND = 15        # ADC GND
+            NC = 16             # No connect
 
 
         _TYPE_REGEXPS = {
@@ -80,8 +81,9 @@ class Device:
                                                     : PinType.CONFIG,
             re.compile("^M(\d+)")                   : PinType.BOOT,
             re.compile("^T((DI)|(DO)|(MS)|(CK))")   : PinType.JTAG,
-            re.compile("^((?:DX)|(?:V))([PN])")     : PinType.ADC,
             re.compile("^VREF([PN])")               : PinType.ADC_REF,
+            re.compile("^V([PN])")                  : PinType.ADC,
+            re.compile("^DX([PN])")                 : PinType.ADC_DIODE,
             re.compile("^VCCO_(\d+)")               : PinType.BANK_POWER,
             re.compile("^VCCINT")                   : PinType.CORE_POWER,
             re.compile("^VCCBRAM")                  : PinType.BRAM_POWER,
@@ -93,7 +95,43 @@ class Device:
             re.compile("^IO_(L?)(\d+)([PN]?)")      : PinType.GENERAL,
             re.compile("^NC")                       : PinType.NC
         }
-        _IO_PIN_REGEXP = re.compile("IO_(L?)(\d+)([PN]?)")
+        # PinElectricalType(Enum):
+        # EL_TYPE_INPUT = 'I'
+        # EL_TYPE_OUTPUT = 'O'
+        # EL_TYPE_BIDIR = 'B'
+        # EL_TYPE_TRISTATE = 'T'
+        # EL_TYPE_PASSIVE = 'P'
+        # EL_TYPE_OPEN_COLECTOR = 'C'
+        # EL_TYPE_OPEN_EMITTER = 'E'
+        # EL_TYPE_NC = 'N'
+        # EL_TYPE_UNSPECIFIED = 'U'
+        # EL_TYPE_POWER_INPUT = 'W'
+        # EL_TYPE_POWER_OUTPUT = 'w'
+
+        _TYPE_DEFAULT_ELTYPE = {
+            PinType.GENERAL:    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            PinType.CONFIG:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.BOOT:       DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.JTAG:       DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.ADC_REF:    DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.ADC:        DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.ADC_DIODE:  DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.CORE_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.BRAM_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.AUX_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.ADC_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.BATT_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.BANK_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.GND:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.ADC_GND:    DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.NC:         DrawingPin.PinElectricalType.EL_TYPE_NC
+        }
+        _SPECIAL_ELTYPE = {
+            re.compile("^CCLK"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            re.compile("^DONE"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            re.compile("^INIT"):    DrawingPin.PinElectricalType.EL_TYPE_OPEN_COLECTOR,
+            re.compile("^TDO"):     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+        }
 
         def __init__(self, dic):
             self.type = self.PinType.UNKNOWN
@@ -127,10 +165,9 @@ class Device:
                     self.pair = True
                     self.pairNeg = m.group(3) == "N"
                 self.number = int(m.group(2))
-            elif self.type == self.PinType.ADC:
-                self.number = 1 if m.group(1) == "V" else 0
+            elif self.type == self.PinType.ADC or self.type == self.PinType.ADC_DIODE:
                 self.pair = True
-                self.pairNeg = m.group(2) == "N"
+                self.pairNeg = m.group(1) == "N"
             elif self.type == self.PinType.ADC_REF:
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
@@ -156,7 +193,15 @@ class Device:
             return f"({self.name}, {self.pin}, {self.bank}, {self.bankType}, {self.number}, {self.type}, {self.pair}, {self.pairNeg})"
 
         def drawingPin(self, **kwargs):
-            return DrawingPin(at=Point(0, 0), number=self.pin, name=self.name, **kwargs)
+            eltype = self._TYPE_DEFAULT_ELTYPE[self.type] if self.type in self._TYPE_DEFAULT_ELTYPE else \
+                DrawingPin.PinElectricalType.EL_TYPE_PASSIVE
+
+            for r,t in self._SPECIAL_ELTYPE.items():
+                if r.match(self.name):
+                    eltype = t
+                    break
+
+            return DrawingPin(at=Point(0, 0), number=self.pin, name=self.name, el_type=eltype, **kwargs)
 
     def __init__(self, file):
         self.csvFile = file;
@@ -284,11 +329,12 @@ class Device:
 
             # Force some pin group to specific side and draw them
             forcedSides = {
-                "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, ],
-                "r": [ self.Pin.PinType.JTAG, self.Pin.PinType.ADC_REF, self.Pin.PinType.ADC],
-                "t": [self.Pin.PinType.BANK_POWER, self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER,
-                      self.Pin.PinType.AUX_POWER, self.Pin.PinType.ADC_POWER, self.Pin.PinType.BATT_POWER],
-                "b": [self.Pin.PinType.ADC_GND, self.Pin.PinType.GND]
+                "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, self.Pin.PinType.JTAG, self.Pin.PinType.ADC_REF,
+                      self.Pin.PinType.ADC, self.Pin.PinType.ADC_DIODE],
+                "r": [],
+                "t": [self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, self.Pin.PinType.AUX_POWER,
+                      self.Pin.PinType.BANK_POWER, self.Pin.PinType.ADC_POWER, self.Pin.PinType.BATT_POWER],
+                "b": [self.Pin.PinType.GND, self.Pin.PinType.ADC_GND]
             }
 
             for s, l in forcedSides.items():
@@ -303,6 +349,9 @@ class Device:
                         if p.name in mergedPins:
                             dp.translate(mergedPins[p.name].at)
                             dp.visibility = DrawingPin.PinVisibility.INVISIBLE
+                            if (dp.el_type == DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT) or \
+                                (dp.el_type == DrawingPin.PinElectricalType.EL_TYPE_POWER_OUTPUT):
+                                dp.el_type = DrawingPin.PinElectricalType.EL_TYPE_PASSIVE
                         else:
                             if s == "l" or s == "r":
                                 dp.translate(Point(0, -pinoffsets[s] * 100))
@@ -324,7 +373,7 @@ class Device:
                 pinoffsets[genSide] = pinoffsets[genSide] + 1
 
                 # Switch side to right when left side is filled
-                if genSide == "l" and (pinoffsets["l"] >= (pinoffsets["r"] + (len(genPins) - idx))) \
+                if genSide == "l" and (pinoffsets["l"] >= (pinoffsets["r"] + (len(genPins) - idx - 1))) \
                         and (not pin.pair or pin.pairNeg):
                     genSide = "r"
 
@@ -332,6 +381,18 @@ class Device:
             for s, l in pinsides.items():
                 for p in l:
                     maxNames[s] = len(p.name) if len(p.name) > maxNames[s] else maxNames[s]
+
+            maxRowNames = 0
+
+            # Calc max names on same row
+            for lp in pinsides["l"]:
+                for rp in pinsides["r"]:
+                    if lp.at.y != rp.at.y:
+                        continue
+
+                    l = len(lp.name) + len(rp.name)
+                    if l > maxRowNames:
+                        maxRowNames = l
 
             maxLROffset = pinoffsets["l"] if pinoffsets["l"] > pinoffsets["r"] else pinoffsets["r"]
             maxTBOffset = pinoffsets["t"] if pinoffsets["t"] > pinoffsets["b"] else pinoffsets["b"]
@@ -345,11 +406,11 @@ class Device:
             top = math.ceil((vStride + tPinOffset + maxNames["t"] * 48) / 100) * 100
             bottom = math.floor((vStride - (maxLROffset - 1) * 100 - bPinOffset - maxNames["b"] * 48) / 100) * 100
 
-            hStride = math.ceil((maxNames["l"] + maxNames["r"]) * 48 / 2 / 100) * 100
+            hStride = math.ceil(maxRowNames * 48 / 2 / 100) * 100
             hStrideV = math.ceil((maxTBOffset - 1) / 2) * 100
             if hStrideV > hStride:
                 hStride = hStrideV
-            left =  -math.floor((hStride + lPinOffset) / 100) * 100
+            left =  -math.ceil((hStride + lPinOffset) / 100) * 100
             right = math.ceil((hStride + rPinOffset) / 100) * 100
 
             hStartY = vStride
