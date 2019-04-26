@@ -9,6 +9,7 @@ import os.path
 import fnmatch
 import math
 from enum import IntEnum
+import glob
 
 sys.path.append(os.path.join(sys.path[0],'..'))
 from KiCadSymbolGenerator import *
@@ -54,6 +55,15 @@ class Device:
         "VirtexUltrascale": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf"
     }
     _PACKAGE_REGEXP = re.compile("([a-zA-Z]+)(\d+)")
+
+    _PACKAGE_FILTER_MAP = {
+        re.compile("ftg?b?196"):    "BGA*256*15.0x15.0mm*Layout14x14*P1.0mm*",
+        re.compile("fgg?a?484"):    "BGA*484*23.0x23.0mm*Layout22x22*P1.0mm*",
+        re.compile("fgg?a?676"):    "BGA*676*27.0x27.0mm*Layout26x26*P1.0mm*",
+        re.compile("cpg?a?196"):    "BGA*196*8.0x8.0mm*Layout14x14*P0.5mm*",
+        re.compile("csg?a?225"):    "BGA*225*13.0x13.0mm*Layout15x15*P0.8mm*",
+        re.compile("csg?a?32[45]"): "BGA*324*15.0x15.0mm*Layout18x18*P0.8mm*",
+    }
 
     class Pin:
         class PinType(IntEnum):
@@ -205,13 +215,15 @@ class Device:
 
     def __init__(self, file):
         self.csvFile = file;
+        self.banks = {}
+        self.pinCount = 0
+        self.footprint = ""
+
         self.parseFileName()
         self.readPins()
 
     def readPins(self):
         f = open(self.csvFile, "r")
-
-        self.banks = {}
 
         # Default for 7 series
         paramMapping = {"pin": 0, "name": 1, "bank": 3, "type": 6}
@@ -402,9 +414,9 @@ class Device:
             tPinOffset = pinLength + 20 if len(pinsides["t"]) > 0 else 0
             bPinOffset = pinLength + 20 if len(pinsides["b"]) > 0 else 0
 
-            vStride = math.ceil((maxLROffset - 1) / 2) * 100
-            top = math.ceil((vStride + tPinOffset + maxNames["t"] * 48) / 100) * 100
-            bottom = math.floor((vStride - (maxLROffset - 1) * 100 - bPinOffset - maxNames["b"] * 48) / 100) * 100
+            vStride = math.ceil(((maxLROffset - 1) * 100 + (maxNames["t"] + maxNames["b"]) * 48) / 2 / 100) * 100
+            top = math.ceil((vStride + tPinOffset) / 100) * 100
+            bottom = -math.ceil((vStride + bPinOffset) / 100) * 100
 
             hStride = math.ceil(maxRowNames * 48 / 2 / 100) * 100
             hStrideV = math.ceil((maxTBOffset - 1) / 2) * 100
@@ -413,7 +425,7 @@ class Device:
             left =  -math.ceil((hStride + lPinOffset) / 100) * 100
             right = math.ceil((hStride + rPinOffset) / 100) * 100
 
-            hStartY = vStride
+            hStartY = math.floor((vStride - maxNames["t"] * 48) / 100) * 100
             tStartX = -math.floor((pinoffsets["t"] - 1) / 2) * 100
             bStartX = -math.floor((pinoffsets["b"] - 1) / 2) * 100
 
@@ -434,14 +446,18 @@ class Device:
                         dp.translate(Point(bStartX, bottom))
                     self.symbol.drawing.append(dp)
 
-            rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left
-            rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right
+            rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left - 100
+            rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right + 100
             rectY0 = bottom + pinLength if len(pinsides["b"]) > 0 else bottom - 100
             rectY1 = top - pinLength if len(pinsides["t"]) > 0 else top + 100
 
             self.symbol.drawing.append(DrawingRectangle(Point(rectX0, rectY0), Point(rectX1, rectY1),
                                                         unit_idx=bankIdx + 1,
                                                         fill=ElementFill.FILL_BACKGROUND))
+
+        self.symbol.setReference('U')
+        self.symbol.setValue(value=self.libraryName.upper())
+        self.symbol.setDefaultFootprint(value=self.footprint)
 
     def createSymbol(self, gen):
         # Make strings for DCM entries
@@ -455,6 +471,31 @@ class Device:
                 'keywords': keywords,
                 'datasheet': datasheet},
                 offset=20)
+
+        fpFilter = None
+        fp = None
+        for r, f in self._PACKAGE_FILTER_MAP.items():
+            if r.match(self.packageName):
+                fpFilter = f
+
+                # A bit ugly here - find footprint in Package_BGA.pretty only
+                fpFile = glob.glob(os.path.join(self.footprintDir, "Package_BGA.pretty/", f))
+                if len(fpFile) > 0:
+                    fp = f"Package_BGA:{os.path.basename(fpFile[0])}"
+                break
+
+        if fpFilter:
+            logging.info(f"Found footprint filter: {fpFilter}")
+            self.symbol.addFootprintFilter(fpFilter)
+
+            if fp:
+                logging.info(f"Found footprint: {fp}")
+                self.footprint = fp
+            else:
+                logging.warning(f"Cannot find footprint for {self.libraryName}")
+        else:
+            logging.warning(f"Unknown footprint for {self.libraryName}")
+
         self.drawSymbol()
 
 
@@ -465,6 +506,9 @@ if __name__ == "__main__":
             help='Directory containing ONLY valid Xilinx ASCII package files (CSV)')
     parser.add_argument('-v', '--verbose', action='count', default=0,
             help='Print more information')
+    parser.add_argument('--footprints',
+                        help='Path to footprint libraries (.pretty dirs)',
+                        default='/usr/share/kicad/modules')
 
     args = parser.parse_args()
 
@@ -487,6 +531,7 @@ if __name__ == "__main__":
             fullpath = os.path.join(path, file)
             if fnmatch.fnmatch(fullpath.lower(), '*.csv'):
                 fpga = Device(fullpath)
+                fpga.footprintDir = args.footprints
                 # If there isn't a SymbolGenerator for this family yet, make one
                 if fpga.family not in libraries:
                     libraries[fpga.family] = SymbolGenerator(
