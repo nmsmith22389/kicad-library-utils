@@ -14,6 +14,8 @@ import glob
 sys.path.append(os.path.join(sys.path[0],'..'))
 from KiCadSymbolGenerator import *
 
+FOOTPRINT_PATH = "/usr/share/kicad/modules"
+
 class Device:
     _FAMILY_PART_REGEXPS = {
         "Spartan7":             re.compile("(x[cq]7s(\d+))([a-zA-Z]+\d+)pkg"),
@@ -57,7 +59,7 @@ class Device:
     _PACKAGE_REGEXP = re.compile("([a-zA-Z]+)(\d+)")
 
     _PACKAGE_FILTER_MAP = {
-        re.compile("ftg?b?196"):    "BGA*256*15.0x15.0mm*Layout14x14*P1.0mm*",
+        re.compile("ftg?b?196"):    "BGA*196*15.0x15.0mm*Layout14x14*P1.0mm*",
         re.compile("fgg?a?484"):    "BGA*484*23.0x23.0mm*Layout22x22*P1.0mm*",
         re.compile("fgg?a?676"):    "BGA*676*27.0x27.0mm*Layout26x26*P1.0mm*",
         re.compile("cpg?a?196"):    "BGA*196*8.0x8.0mm*Layout14x14*P0.5mm*",
@@ -66,26 +68,27 @@ class Device:
     }
 
     class Pin:
+        # FPGA pin types. Pin with same pin type grouped together.
         class PinType(IntEnum):
             UNKNOWN = 0
-            GENERAL = 1         # IO_*
-            CONFIG = 2          # INIT, PROGRAM, DONE
-            BOOT = 3            # M[2:0]
+            GENERAL = 1         # IO_* - General I/O pins
+            CONFIG = 2          # INIT, PROGRAM, DONE - Configuration pins (reset, init, etc.)
+            BOOT = 3            # M[2:0] - Boot type
             JTAG = 4            # JTAG
-            ADC_REF = 5         # VREFP/VREFN
-            ADC = 6             # V_N/V_P
-            ADC_DIODE = 7       # DXP/DXN
-            CORE_POWER = 8      # VCCINT
-            BRAM_POWER = 9      # VCCBRAM
-            AUX_POWER = 10      # VCCAUX
-            ADC_POWER = 11      # VCCADC
-            BATT_POWER = 12     # VCCBATT
-            BANK_POWER = 13     # VCCO_*
+            ADC_REF = 5         # VREFP/VREFN - XADC reference
+            ADC = 6             # V_N/V_P - ADC input
+            ADC_DIODE = 7       # DXP/DXN - On-die thermal diode
+            CORE_POWER = 8      # VCCINT - Core power
+            BRAM_POWER = 9      # VCCBRAM - Internal RAM power
+            AUX_POWER = 10      # VCCAUX - Aux power
+            ADC_POWER = 11      # VCCADC - ADC power
+            BATT_POWER = 12     # VCCBATT - Battery backup power
+            BANK_POWER = 13     # VCCO_* - I/O power
             GND = 14            # GND
             ADC_GND = 15        # ADC GND
             NC = 16             # No connect
 
-
+        # Pin type filters
         _TYPE_REGEXPS = {
             re.compile("^((PROGRAM)|(INIT)|(DONE))|(CFGBVS)|(CCLK)")
                                                     : PinType.CONFIG,
@@ -105,19 +108,8 @@ class Device:
             re.compile("^IO_(L?)(\d+)([PN]?)")      : PinType.GENERAL,
             re.compile("^NC")                       : PinType.NC
         }
-        # PinElectricalType(Enum):
-        # EL_TYPE_INPUT = 'I'
-        # EL_TYPE_OUTPUT = 'O'
-        # EL_TYPE_BIDIR = 'B'
-        # EL_TYPE_TRISTATE = 'T'
-        # EL_TYPE_PASSIVE = 'P'
-        # EL_TYPE_OPEN_COLECTOR = 'C'
-        # EL_TYPE_OPEN_EMITTER = 'E'
-        # EL_TYPE_NC = 'N'
-        # EL_TYPE_UNSPECIFIED = 'U'
-        # EL_TYPE_POWER_INPUT = 'W'
-        # EL_TYPE_POWER_OUTPUT = 'w'
 
+        # Default KiCAD electrical type for pin types
         _TYPE_DEFAULT_ELTYPE = {
             PinType.GENERAL:    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
             PinType.CONFIG:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
@@ -136,6 +128,8 @@ class Device:
             PinType.ADC_GND:    DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
             PinType.NC:         DrawingPin.PinElectricalType.EL_TYPE_NC
         }
+
+        # Some dedicated pins has different electrical type...
         _SPECIAL_ELTYPE = {
             re.compile("^CCLK"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
             re.compile("^DONE"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
@@ -149,7 +143,7 @@ class Device:
             self.name = dic["name"]
             try:
                 self.bank = int(dic["bank"])
-            except:
+            except: # All pins without bank goes to bank 0
                 self.bank = 0
 
             self.bankType = dic["type"]
@@ -171,6 +165,7 @@ class Device:
                 logging.warning(f"Unknown pin type for pin {self.name}")
 
             if self.type == self.PinType.GENERAL:
+                # General I/O pins has number and can be in pair
                 if m.group(1) == "L":
                     self.pair = True
                     self.pairNeg = m.group(3) == "N"
@@ -183,7 +178,7 @@ class Device:
                 self.pairNeg = m.group(1) == "N"
 
 
-        # For sorting
+        # Sort pins by bank->type->number->P/N->name
         def __lt__(self, other):
             if self.bank < other.bank:
                 return True
@@ -203,6 +198,7 @@ class Device:
             return f"({self.name}, {self.pin}, {self.bank}, {self.bankType}, {self.number}, {self.type}, {self.pair}, {self.pairNeg})"
 
         def drawingPin(self, **kwargs):
+            # Try to find electrical type
             eltype = self._TYPE_DEFAULT_ELTYPE[self.type] if self.type in self._TYPE_DEFAULT_ELTYPE else \
                 DrawingPin.PinElectricalType.EL_TYPE_PASSIVE
 
@@ -219,13 +215,12 @@ class Device:
         self.pinCount = 0
         self.footprint = ""
 
-        self.parseFileName()
-        self.readPins()
+        self.parseFile()
 
     def readPins(self):
         f = open(self.csvFile, "r")
 
-        # Default for 7 series
+        # Default column mapping for 7 series
         paramMapping = {"pin": 0, "name": 1, "bank": 3, "type": 6}
 
         for line in f:
@@ -234,7 +229,7 @@ class Device:
             if "" in params:
                 continue;
             elif params[0].lower() == "pin":
-                # Parse line describing columns
+                # Found line describing columns, update column mapping
                 for i in range (0, len(params)):
                     paramName = params[i].strip().lower()
                     if paramName == "pin":
@@ -246,12 +241,16 @@ class Device:
                     elif paramName == "i/o type":
                         paramMapping["type"] = i
                 continue
+
+            # Extract info from row
             dic = {}
             for k,v in paramMapping.items():
                 dic[k] = params[v].strip()
 
+            # Create pin
             pin = Device.Pin(dic)
 
+            # Place pin into bank (or create it)
             if pin.bank not in self.banks:
                 self.banks[pin.bank] = []
             self.banks[pin.bank].append(pin)
@@ -266,18 +265,18 @@ class Device:
             logging.debug(f"Bank {k}")
             for pin in v:
                 logging.debug(f"  {pin}")
-        logging.info(f"Total pins: {self.pinCount }")
 
+        # Primitive error checking
         if self.pinCount != self.packagePins:
-            logging.warning(f"Package pin count mismatch: found {self.pinCount} pins, should be {self.packagePins}")
+            logging.warning(f"{self.libraryName} - package pin count mismatch: found {self.pinCount} pins, should be {self.packagePins}")
 
 
-
-    def parseFileName(self):
+    def parseFile(self):
         logging.info(f"File {self.csvFile}:")
 
         baseName = os.path.basename(self.csvFile)
 
+        # Extract FPGA family/name/package from file name
         values = []
         self.family = ""
         for f, r in self._FAMILY_PART_REGEXPS.items():
@@ -305,16 +304,45 @@ class Device:
         else:
             self.packagePins = int(pm.group(2))
 
+        # Try to find footprint
+        self.footprintFilter = None
+        self.footprint = None
+        for r, f in self._PACKAGE_FILTER_MAP.items():
+            if r.match(self.packageName):
+                self.footprintFilter = f
+
+                # A bit ugly here - find footprint in Package_BGA.pretty only
+                fpFile = glob.glob(os.path.join(FOOTPRINT_PATH, "Package_BGA.pretty/", f))
+                if len(fpFile) > 0:
+                    self.footprint  = f"Package_BGA:{os.path.basename(fpFile[0])}"
+                break
+
+        if not self.footprint:
+            logging.warning(f"{self.libraryName} - cannot find footprint file")
+        if not self.footprintFilter:
+            logging.warning(f"{self.libraryName} - unknown footprint")
+
+        self.readPins()
+
         logging.info(f"  Name:\t\t{self.name}")
         logging.info(f"  Family:\t{self.familyName}")
         logging.info(f"  Package:\t{self.packageName}")
         logging.info(f"  Capacity:\t{self.capacity}")
+        logging.info(f"  Banks: {len(self.banks)}")
+        logging.info(f"  Pins: {self.pinCount}")
+        logging.info(f"  Footprint: {self.footprint}")
+        logging.info(f"  Footprint filter: {self.footprintFilter}")
 
     def drawSymbol(self):
         bankList = list(self.banks.items())
 
+        # Basic info
         self.symbol.setReference('U')
-        self.symbol.setValue(value=self.libraryName)
+        self.symbol.setValue(value=self.libraryName.upper())
+        self.symbol.setDefaultFootprint(value=self.footprint)
+        self.symbol.addFootprintFilter(self.footprintFilter)
+
+        # I/O Bank = KiCAD Unit
         self.symbol.num_units = len(bankList)
         self.symbol.interchangable = Symbol.UnitsInterchangable.NOT_INTERCHANGEABLE
 
@@ -325,9 +353,11 @@ class Device:
                 maxPackagePin = len(pin.pin) if len(pin.pin) > maxPackagePin else maxPackagePin
         pinLength = 200 if maxPackagePin > 2 else 100
 
+        # Generate units
         for bankIdx in range(0, self.symbol.num_units):
             bank, pins = bankList[bankIdx]
 
+            # Different sides of symbol (left, right, top, bottom)
             pinsides = {"l": [], "r": [], "t": [], "b": []}
             pinoffsets = {"l": 0, "r": 0, "t": 0, "b": 0}
             maxNames = {"l": 0, "r": 0, "t": 0, "b": 0}
@@ -349,22 +379,24 @@ class Device:
                 "b": [self.Pin.PinType.GND, self.Pin.PinType.ADC_GND]
             }
 
+            # Draw all non-I/O pin groups
             for s, l in forcedSides.items():
                 for g in l:
                     if g not in pinsGrouped:
                         continue
 
-                    # Map for merging pin with same name within group
                     mergedPins = {}
                     for p in pinsGrouped[g]:
                         dp = p.drawingPin()
                         if p.name in mergedPins:
+                            # Merging pins with same name within group
                             dp.translate(mergedPins[p.name].at)
                             dp.visibility = DrawingPin.PinVisibility.INVISIBLE
                             if (dp.el_type == DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT) or \
                                 (dp.el_type == DrawingPin.PinElectricalType.EL_TYPE_POWER_OUTPUT):
                                 dp.el_type = DrawingPin.PinElectricalType.EL_TYPE_PASSIVE
                         else:
+                            # Draw pin vertically or horizontally
                             if s == "l" or s == "r":
                                 dp.translate(Point(0, -pinoffsets[s] * 100))
                             else:
@@ -374,10 +406,11 @@ class Device:
                         pinsides[s].append(dp)
                     pinoffsets[s] = pinoffsets[s] + 1
 
-            # Draw general IO
+            # Draw general IO, starting from left side
             genSide = "l"
             genPins = pinsGrouped[self.Pin.PinType.GENERAL] if self.Pin.PinType.GENERAL in pinsGrouped else []
             for idx in range(0, len(genPins)):
+                # Draw pin horizontally
                 pin = genPins[idx]
                 dp = pin.drawingPin()
                 dp.translate(Point(0, -pinoffsets[genSide] * 100))
@@ -389,7 +422,7 @@ class Device:
                         and (not pin.pair or pin.pairNeg):
                     genSide = "r"
 
-            # Calc max pin names
+            # Calc max pin names - for bounding calculation
             for s, l in pinsides.items():
                 for p in l:
                     maxNames[s] = len(p.name) if len(p.name) > maxNames[s] else maxNames[s]
@@ -406,18 +439,22 @@ class Device:
                     if l > maxRowNames:
                         maxRowNames = l
 
+            # Calc total vertical/horizontal pin count
             maxLROffset = pinoffsets["l"] if pinoffsets["l"] > pinoffsets["r"] else pinoffsets["r"]
             maxTBOffset = pinoffsets["t"] if pinoffsets["t"] > pinoffsets["b"] else pinoffsets["b"]
 
+            # Pin offset from body - used for pin positioning
             lPinOffset = pinLength + 20 if len(pinsides["l"]) > 0 else 0
             rPinOffset = pinLength + 20 if len(pinsides["r"]) > 0 else 0
             tPinOffset = pinLength + 20 if len(pinsides["t"]) > 0 else 0
             bPinOffset = pinLength + 20 if len(pinsides["b"]) > 0 else 0
 
+            # vStride - size from center to upper/lower corner
             vStride = math.ceil(((maxLROffset - 1) * 100 + (maxNames["t"] + maxNames["b"]) * 48) / 2 / 100) * 100
             top = math.ceil((vStride + tPinOffset) / 100) * 100
             bottom = -math.ceil((vStride + bPinOffset) / 100) * 100
 
+            # hStride - size from center to left/right corner
             hStride = math.ceil(maxRowNames * 48 / 2 / 100) * 100
             hStrideV = math.ceil((maxTBOffset - 1) / 2) * 100
             if hStrideV > hStride:
@@ -425,10 +462,12 @@ class Device:
             left =  -math.ceil((hStride + lPinOffset) / 100) * 100
             right = math.ceil((hStride + rPinOffset) / 100) * 100
 
+            # Pin draw starts
             hStartY = math.floor((vStride - maxNames["t"] * 48) / 100) * 100
             tStartX = -math.floor((pinoffsets["t"] - 1) / 2) * 100
             bStartX = -math.floor((pinoffsets["b"] - 1) / 2) * 100
 
+            # Move/rotate pins
             for s, l in pinsides.items():
                 for dp in l:
                     dp.unit_idx = bankIdx + 1
@@ -446,6 +485,7 @@ class Device:
                         dp.translate(Point(bStartX, bottom))
                     self.symbol.drawing.append(dp)
 
+            # Draw body
             rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left - 100
             rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right + 100
             rectY0 = bottom + pinLength if len(pinsides["b"]) > 0 else bottom - 100
@@ -454,10 +494,6 @@ class Device:
             self.symbol.drawing.append(DrawingRectangle(Point(rectX0, rectY0), Point(rectX1, rectY1),
                                                         unit_idx=bankIdx + 1,
                                                         fill=ElementFill.FILL_BACKGROUND))
-
-        self.symbol.setReference('U')
-        self.symbol.setValue(value=self.libraryName.upper())
-        self.symbol.setDefaultFootprint(value=self.footprint)
 
     def createSymbol(self, gen):
         # Make strings for DCM entries
@@ -471,31 +507,7 @@ class Device:
                 'keywords': keywords,
                 'datasheet': datasheet},
                 offset=20)
-
-        fpFilter = None
-        fp = None
-        for r, f in self._PACKAGE_FILTER_MAP.items():
-            if r.match(self.packageName):
-                fpFilter = f
-
-                # A bit ugly here - find footprint in Package_BGA.pretty only
-                fpFile = glob.glob(os.path.join(self.footprintDir, "Package_BGA.pretty/", f))
-                if len(fpFile) > 0:
-                    fp = f"Package_BGA:{os.path.basename(fpFile[0])}"
-                break
-
-        if fpFilter:
-            logging.info(f"Found footprint filter: {fpFilter}")
-            self.symbol.addFootprintFilter(fpFilter)
-
-            if fp:
-                logging.info(f"Found footprint: {fp}")
-                self.footprint = fp
-            else:
-                logging.warning(f"Cannot find footprint for {self.libraryName}")
-        else:
-            logging.warning(f"Unknown footprint for {self.libraryName}")
-
+        # Draw
         self.drawSymbol()
 
 
@@ -524,6 +536,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(format='%(levelname)s:\t%(message)s', level=loglevel)
 
+    FOOTPRINT_PATH = args.footprints
+
     # Load devices from CSV, sorted by family
     libraries = {}
     for path, dirs, files in os.walk(args.dir):
@@ -531,7 +545,6 @@ if __name__ == "__main__":
             fullpath = os.path.join(path, file)
             if fnmatch.fnmatch(fullpath.lower(), '*.csv'):
                 fpga = Device(fullpath)
-                fpga.footprintDir = args.footprints
                 # If there isn't a SymbolGenerator for this family yet, make one
                 if fpga.family not in libraries:
                     libraries[fpga.family] = SymbolGenerator(
