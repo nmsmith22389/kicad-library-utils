@@ -84,9 +84,15 @@ class Device:
             ADC_POWER = 11      # VCCADC - ADC power
             BATT_POWER = 12     # VCCBATT - Battery backup power
             BANK_POWER = 13     # VCCO_* - I/O power
-            GND = 14            # GND
-            ADC_GND = 15        # ADC GND
-            NC = 16             # No connect
+            MGT_RREF = 14       # MGTRREF* - Termination resistor
+            MGT_REFCLK = 15     # MGTREFCLK* - Transceiver clock
+            MGT_RX = 16         # MGT*RX* - Transceiver input
+            MGT_TX = 17         # MGT*TX* - Transceiver output
+            MGT_POWER = 18      # MGT*VCC* - Transceiver power
+            MGT_VTT = 19        # MGT*VTT* - Transceiver termination power
+            GND = 20            # GND
+            ADC_GND = 21        # ADC GND
+            NC = 22             # No connect
 
         # Pin type filters
         _TYPE_REGEXPS = {
@@ -106,7 +112,13 @@ class Device:
             re.compile("^GNDADC")                   : PinType.ADC_GND,
             re.compile("^GND")                      : PinType.GND,
             re.compile("^IO_(L?)(\d+)([PN]?)")      : PinType.GENERAL,
-            re.compile("^NC")                       : PinType.NC
+            re.compile("^MGTRREF")                  : PinType.MGT_RREF,
+            re.compile("^MGTREFCLK(\d+)([PN])")     : PinType.MGT_REFCLK,
+            re.compile("^MGTPRX([PN])(\d+)")        : PinType.MGT_RX,
+            re.compile("^MGTPTX([PN])(\d+)")        : PinType.MGT_TX,
+            re.compile("^MGTAVCC")                  : PinType.MGT_POWER,
+            re.compile("^MGTAVTT")                  : PinType.MGT_VTT,
+            re.compile("^(NC)|(RSVDGND)")           : PinType.NC
         }
 
         # Default KiCAD electrical type for pin types
@@ -126,7 +138,13 @@ class Device:
             PinType.BANK_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
             PinType.GND:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
             PinType.ADC_GND:    DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.NC:         DrawingPin.PinElectricalType.EL_TYPE_NC
+            PinType.NC:         DrawingPin.PinElectricalType.EL_TYPE_NC,
+            PinType.MGT_RREF:   DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.MGT_REFCLK: DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.MGT_RX:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.MGT_TX:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.MGT_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.MGT_VTT:    DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
         }
 
         # Some dedicated pins has different electrical type...
@@ -174,6 +192,14 @@ class Device:
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
             elif self.type == self.PinType.ADC_REF:
+                self.pair = True
+                self.pairNeg = m.group(1) == "N"
+            elif self.type == self.PinType.MGT_REFCLK:
+                self.number = int(m.group(1))
+                self.pair = True
+                self.pairNeg = m.group(2) == "N"
+            elif self.type == self.PinType.MGT_RX or self.type == self.PinType.MGT_TX:
+                self.number = int(m.group(2))
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
 
@@ -226,9 +252,7 @@ class Device:
         for line in f:
             params = line.strip().split(",")
 
-            if "" in params:
-                continue;
-            elif params[0].lower() == "pin":
+            if params[0].lower() == "pin":
                 # Found line describing columns, update column mapping
                 for i in range (0, len(params)):
                     paramName = params[i].strip().lower()
@@ -244,8 +268,15 @@ class Device:
 
             # Extract info from row
             dic = {}
+            fail = False
             for k,v in paramMapping.items():
                 dic[k] = params[v].strip()
+                if dic[k] == "":
+                    fail = True
+
+            if fail:
+                # That was not pin line
+                continue
 
             # Create pin
             pin = Device.Pin(dic)
@@ -339,8 +370,10 @@ class Device:
         # Basic info
         self.symbol.setReference('U')
         self.symbol.setValue(value=self.libraryName.upper())
-        self.symbol.setDefaultFootprint(value=self.footprint)
-        self.symbol.addFootprintFilter(self.footprintFilter)
+        if self.footprint:
+            self.symbol.setDefaultFootprint(value=self.footprint)
+        if self.footprintFilter:
+            self.symbol.addFootprintFilter(self.footprintFilter)
 
         # I/O Bank = KiCAD Unit
         self.symbol.num_units = len(bankList)
@@ -372,10 +405,12 @@ class Device:
             # Force some pin group to specific side and draw them
             forcedSides = {
                 "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, self.Pin.PinType.JTAG, self.Pin.PinType.ADC_REF,
-                      self.Pin.PinType.ADC, self.Pin.PinType.ADC_DIODE],
-                "r": [],
+                      self.Pin.PinType.ADC, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_RX,
+                      self.Pin.PinType.MGT_REFCLK, self.Pin.PinType.MGT_RREF],
+                "r": [self.Pin.PinType.MGT_TX],
                 "t": [self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, self.Pin.PinType.AUX_POWER,
-                      self.Pin.PinType.BANK_POWER, self.Pin.PinType.ADC_POWER, self.Pin.PinType.BATT_POWER],
+                      self.Pin.PinType.BANK_POWER, self.Pin.PinType.ADC_POWER, self.Pin.PinType.BATT_POWER,
+                      self.Pin.PinType.MGT_POWER, self.Pin.PinType.MGT_VTT],
                 "b": [self.Pin.PinType.GND, self.Pin.PinType.ADC_GND]
             }
 
@@ -450,13 +485,13 @@ class Device:
             bPinOffset = pinLength + 20 if len(pinsides["b"]) > 0 else 0
 
             # vStride - size from center to upper/lower corner
-            vStride = math.ceil(((maxLROffset - 1) * 100 + (maxNames["t"] + maxNames["b"]) * 48) / 2 / 100) * 100
+            vStride = math.ceil(((maxLROffset - 2) * 100 + (maxNames["t"] + maxNames["b"]) * 48) / 2 / 100) * 100
             top = math.ceil((vStride + tPinOffset) / 100) * 100
             bottom = -math.ceil((vStride + bPinOffset) / 100) * 100
 
             # hStride - size from center to left/right corner
             hStride = math.ceil(maxRowNames * 48 / 2 / 100) * 100
-            hStrideV = math.ceil((maxTBOffset - 1) / 2) * 100
+            hStrideV = math.ceil((maxTBOffset - 2) / 2) * 100
             if hStrideV > hStride:
                 hStride = hStrideV
             left =  -math.ceil((hStride + lPinOffset) / 100) * 100
