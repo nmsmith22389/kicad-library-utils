@@ -157,8 +157,8 @@ class Device:
             re.compile("^MGTRREF")                  : PinType.MGT_RREF,
             re.compile("^MGT\w+RCAL")               : PinType.MGT_RCAL,
             re.compile("^MGTREFCLK(\d+)([PN])")     : PinType.MGT_REFCLK,
-            re.compile("^MGT[PX]RX([PN])(\d+)")     : PinType.MGT_RX,
-            re.compile("^MGT[PX]TX([PN])(\d+)")     : PinType.MGT_TX,
+            re.compile("^MGT[PXH]RX([PN])(\d+)")    : PinType.MGT_RX,
+            re.compile("^MGT[PXH]TX([PN])(\d+)")    : PinType.MGT_TX,
             re.compile("^MGTAVCC")                  : PinType.MGT_POWER,
             re.compile("^MGTAVTT")                  : PinType.MGT_VTT,
             re.compile("^MGTVCCAUX")                : PinType.MGT_AUX_POWER,
@@ -328,6 +328,7 @@ class Device:
         self.banks = {}
         self.pinCount = 0
         self.footprint = ""
+        self.valid = False
 
         self.parseFile()
 
@@ -375,6 +376,8 @@ class Device:
             self.banks[pin.bank].append(pin)
 
         self.pinCount = 0
+        self.valid = True
+
         # Sort pins inside banks
         for k,_ in self.banks.items():
             self.banks[k].sort()
@@ -386,6 +389,11 @@ class Device:
                 logging.debug(f"  {pin}")
 
         # Primitive error checking
+        for k, v in self.banks.items():
+            for pin in v:
+                if pin.type == self.Pin.PinType.UNKNOWN:
+                    self.valid = False
+
         if self.pinCount != self.packagePins:
             logging.warning(f"{self.libraryName} - package pin count mismatch: found {self.pinCount} pins, should be {self.packagePins}")
 
@@ -451,6 +459,7 @@ class Device:
         logging.info(f"  Pins: {self.pinCount}")
         logging.info(f"  Footprint: {self.footprint}")
         logging.info(f"  Footprint filter: {self.footprintFilter}")
+        logging.info(f"  Valid: {self.valid}")
 
     def drawSymbol(self):
         bankList = list(self.banks.items())
@@ -633,6 +642,9 @@ class Device:
                 logging.warning(f"Unplaced pin: {pin.name} ({pin.pin})")
 
     def createSymbol(self, gen):
+        if not self.valid:
+            return
+
         # Make strings for DCM entries
         desc = (f"Xilinx {self.familyName} FPGA, {self.name.upper()}, {self.packageName.upper()}")
         keywords = f"Xilinx FPGA {self.familyName}"
