@@ -16,6 +16,9 @@ from KiCadSymbolGenerator import *
 
 FOOTPRINT_PATH = "/usr/share/kicad/modules"
 
+def _roundUp(x, step=100):
+    return math.ceil(x / step) * step
+
 class Device:
     _FAMILY_PART_REGEXPS = {
         "Spartan7":             re.compile("(x[cq]7s(\d+))([a-zA-Z]+\d+)pkg"),
@@ -451,6 +454,10 @@ class Device:
 
     def drawSymbol(self):
         bankList = list(self.banks.items())
+        pinList = []
+
+        for b, l in bankList:
+            pinList.extend(l)
 
         # Basic info
         self.symbol.setReference('U')
@@ -530,6 +537,7 @@ class Device:
                             mergedPins[p.name] = dp
                             pinoffsets[s] = pinoffsets[s] + 1
                         pinsides[s].append(dp)
+                        pinList.remove(p)
                     pinoffsets[s] = pinoffsets[s] + 1
 
             # Draw general IO, starting from left side
@@ -546,6 +554,7 @@ class Device:
                 dp.translate(Point(0, -pinoffsets[genSide] * 100))
                 pinsides[genSide].append(dp)
                 pinoffsets[genSide] = pinoffsets[genSide] + 1
+                pinList.remove(pin)
 
                 # Switch side to right when left side is filled
                 if genSide == "l" and (pinoffsets["l"] >= (pinoffsets["r"] + (len(genPins) - idx - 1))) \
@@ -567,52 +576,34 @@ class Device:
                     ceilName = len(p.name) * 48
                     maxNames[s] = ceilName if ceilName > maxNames[s] else maxNames[s]
 
-            maxRowNames = 0
-
-            # Calc max names
-            for s in ["l", "r"]:
-                for lp in pinsides[s]:
-                    l = (len(lp.name)) * 48
-                    if l > maxRowNames:
-                        maxRowNames = l
-
-            # Calc max names on same row
-            for lp in pinsides["l"]:
-                for rp in pinsides["r"]:
-                    if lp.at.y != rp.at.y:
-                        continue
-
-                    l = (len(lp.name) + len(rp.name)) * 48
-                    if l > maxRowNames:
-                        maxRowNames = l
+            maxRowNames = maxNames["l"] if maxNames["l"] > maxNames["r"] else maxNames["r"]
+            if pinoffsets["l"] > 0 and pinoffsets["r"] > 0:
+                maxRowNames = maxRowNames * 2
 
             # Calc total vertical/horizontal pin count
-            maxLROffset = pinoffsets["l"] if pinoffsets["l"] > pinoffsets["r"] else pinoffsets["r"]
-            maxTBOffset = pinoffsets["t"] if pinoffsets["t"] > pinoffsets["b"] else pinoffsets["b"]
+            maxLRHeight = (pinoffsets["l"] if pinoffsets["l"] > pinoffsets["r"] else pinoffsets["r"]) * 100
+            maxTBWidth = (pinoffsets["t"] if pinoffsets["t"] > pinoffsets["b"] else pinoffsets["b"]) * 100
 
-            # Pin offset from body - used for pin positioning
-            lPinOffset = pinLength + 100 if len(pinsides["l"]) > 0 else 100
-            rPinOffset = pinLength + 100 if len(pinsides["r"]) > 0 else 100
-            tPinOffset = pinLength + 50 if len(pinsides["t"]) > 0 else 100
-            bPinOffset = pinLength + 50 if len(pinsides["b"]) > 0 else 100
+            if maxRowNames > maxTBWidth:
+                width = _roundUp(maxRowNames + maxTBWidth + 200, 200)
+                height = _roundUp(maxLRHeight + 200, 200)
+            else:
+                width = _roundUp(maxTBWidth + 200, 200)
+                height = _roundUp(maxLRHeight, 200) + _roundUp(_roundUp(maxNames["t"] + 70) + _roundUp(maxNames["b"] + 70), 200)
 
-            # vStride - size from center to upper/lower corner
-            vStride = (maxLROffset * 100 + maxNames["t"] + maxNames["b"])
-            top = math.ceil((vStride / 2 + tPinOffset) / 100) * 100
-            bottom = top - math.ceil((tPinOffset + bPinOffset + maxLROffset * 100 + maxNames["t"] + maxNames["b"]) / 100) * 100
-
-            # hStride - size from center to left/right corner
-            hStride = maxRowNames
-            hStrideV = maxTBOffset * 100
-            if hStrideV > hStride:
-                hStride = hStrideV
-            left = -math.ceil((hStride / 2 + lPinOffset) / 100) * 100
-            right = left + math.ceil((lPinOffset + rPinOffset + hStride) / 100) * 100
+            left = - width / 2
+            right = width / 2
+            top = height / 2
+            bottom = - height / 2
 
             # Pin draw starts
-            hStartY = top - math.ceil((tPinOffset + maxNames["t"]) / 100) * 100
-            tStartX = -math.ceil(pinoffsets["t"] / 2) * 100
-            bStartX = -math.ceil(pinoffsets["b"] / 2) * 100
+            if maxRowNames > maxTBWidth:
+                hStartY =  height / 2 - _roundUp((height - maxLRHeight) / 2)
+            else:
+                hStartY = height / 2 - _roundUp(maxNames["t"] + 70)
+
+            tStartX = _roundUp((width - pinoffsets["t"] * 100) / 2) - width / 2
+            bStartX = _roundUp((width - pinoffsets["b"] * 100) / 2) - width / 2
 
             # Move/rotate pins
             for s, l in pinsides.items():
@@ -621,26 +612,25 @@ class Device:
                     dp.pin_length = pinLength
                     if s == "l":
                         dp.orientation = DrawingPin.PinOrientation.RIGHT
-                        dp.translate(Point(left, hStartY))
+                        dp.translate(Point(left - pinLength, hStartY))
                     elif s == "r":
-                        dp.translate(Point(right, hStartY))
+                        dp.translate(Point(right + pinLength, hStartY))
                     elif s == "t":
                         dp.orientation = DrawingPin.PinOrientation.DOWN
-                        dp.translate(Point(tStartX, top))
+                        dp.translate(Point(tStartX, top + pinLength))
                     elif s == "b":
                         dp.orientation = DrawingPin.PinOrientation.UP
-                        dp.translate(Point(bStartX, bottom))
+                        dp.translate(Point(bStartX, bottom - pinLength))
                     self.symbol.drawing.append(dp)
 
             # Draw body
-            rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left
-            rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right
-            rectY0 = bottom + pinLength if len(pinsides["b"]) > 0 else bottom
-            rectY1 = top - pinLength if len(pinsides["t"]) > 0 else top
-
-            self.symbol.drawing.append(DrawingRectangle(Point(rectX0, rectY0), Point(rectX1, rectY1),
+            self.symbol.drawing.append(DrawingRectangle(Point(left, bottom), Point(right, top),
                                                         unit_idx=bankIdx + 1,
                                                         fill=ElementFill.FILL_BACKGROUND))
+
+        for pin in pinList:
+            if pin.type != self.Pin.PinType.NC:
+                logging.warning(f"Unplaced pin: {pin.name} ({pin.pin})")
 
     def createSymbol(self, gen):
         # Make strings for DCM entries
