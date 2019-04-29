@@ -72,27 +72,46 @@ class Device:
         class PinType(IntEnum):
             UNKNOWN = 0
             GENERAL = 1         # IO_* - General I/O pins
-            CONFIG = 2          # INIT, PROGRAM, DONE - Configuration pins (reset, init, etc.)
-            BOOT = 3            # M[2:0] - Boot type
-            JTAG = 4            # JTAG
-            ADC_REF = 5         # VREFP/VREFN - XADC reference
-            ADC = 6             # V_N/V_P - ADC input
-            ADC_DIODE = 7       # DXP/DXN - On-die thermal diode
-            CORE_POWER = 8      # VCCINT - Core power
-            BRAM_POWER = 9      # VCCBRAM - Internal RAM power
-            AUX_POWER = 10      # VCCAUX - Aux power
-            ADC_POWER = 11      # VCCADC - ADC power
-            BATT_POWER = 12     # VCCBATT - Battery backup power
-            BANK_POWER = 13     # VCCO_* - I/O power
-            MGT_RREF = 14       # MGTRREF* - Termination resistor
-            MGT_REFCLK = 15     # MGTREFCLK* - Transceiver clock
-            MGT_RX = 16         # MGT*RX* - Transceiver input
-            MGT_TX = 17         # MGT*TX* - Transceiver output
-            MGT_POWER = 18      # MGT*VCC* - Transceiver power
-            MGT_VTT = 19        # MGT*VTT* - Transceiver termination power
-            GND = 20            # GND
-            ADC_GND = 21        # ADC GND
-            NC = 22             # No connect
+            PS_GENERAL = 2      # PS_MIO_* - General I/O pins for Zynq CPU (PS)
+            CONFIG = 3          # INIT, PROGRAM, DONE - Configuration pins (reset, init, etc.)
+            BOOT = 4            # M[2:0] - Boot type
+            JTAG = 5            # JTAG
+            ADC_REF = 6         # VREFP/VREFN - XADC reference
+            ADC = 7             # V_N/V_P - ADC input
+            ADC_DIODE = 8       # DXP/DXN - On-die thermal diode
+            CORE_POWER = 9      # VCCINT - Core power
+            BRAM_POWER = 10     # VCCBRAM - Internal RAM power
+            AUX_POWER = 11      # VCCAUX - Aux power
+            ADC_POWER = 12      # VCCADC - ADC power
+            BATT_POWER = 13     # VCCBATT - Battery backup power
+            BANK_POWER = 14     # VCCO_* - I/O power
+            MGT_RREF = 15       # MGTRREF* - Termination resistor
+            MGT_RCAL = 16       # MGT*RCAL - Calibration resistor
+            MGT_REFCLK = 17     # MGTREFCLK* - Transceiver clock
+            MGT_RX = 18         # MGT*RX* - Transceiver input
+            MGT_TX = 19         # MGT*TX* - Transceiver output
+            MGT_POWER = 20      # MGT*VCC* - Transceiver power
+            MGT_AUX_POWER = 21  # MGT*VCCAUX* - Transceiver aux power
+            MGT_VTT = 22        # MGT*VTT* - Transceiver termination power
+            GND = 23            # GND
+            ADC_GND = 24        # ADC GND
+            NC = 25             # No connect
+            PS_CTL = 26         # Control ports of Zynq CPU (PS)
+            PS_DDR_DQ = 27      # PS_DDR_DQ* - RAM data for Zynq CPU (PS)
+            PS_DDR_DQS = 28     # PS_DDR_DQ* - RAM data strobe for Zynq CPU (PS)
+            PS_DDR_DM = 29      # PS_DDR_DM* - RAM data mask for Zynq CPU (PS)
+            PS_DDR_A = 30       # PS_DDR_A* - RAM address for Zynq CPU (PS)
+            PS_DDR_BA = 31      # PS_DDR_BA* - RAM bank address for Zynq CPU (PS)
+            PS_DDR_CTL = 32     # PS_DDR_* - RAM control for Zynq CPU (PS)
+            PS_DDR_CLK = 33     # PS_DDR_CK* - RAM clock for Zynq CPU (PS)
+            PS_DDR_DCI_REF = 34 # PS_DDR_VR* - RAM DCI reference voltage for Zynq CPU (PS)
+            PS_DDR_ODT = 35     # PS_DDR_ODT - RAM termination for Zynq CPU (PS)
+            PS_DDR_VREF = 36    # PS_DDR_VREF* - RAM reference voltage for Zynq CPU (PS)
+            PS_VCCPINT = 37     # VCCPINT* - Core power for Zynq CPU (PS)
+            PS_VCCPAUX = 38     # VCCPAUX - Aux power for Zynq CPU (PS)
+            PS_VCCPLL = 39      # VCCPLL - PLL power for Zynq CPU (PS)
+            PS_MIO_VREF = 40    # PS_MIO_VREF - reference voltage for Zynq CPU (PS)
+            AUX_IO_POWER = 41   # Aux IO Power
 
         # Pin type filters
         _TYPE_REGEXPS = {
@@ -103,48 +122,89 @@ class Device:
             re.compile("^VREF([PN])")               : PinType.ADC_REF,
             re.compile("^V([PN])")                  : PinType.ADC,
             re.compile("^DX([PN])")                 : PinType.ADC_DIODE,
-            re.compile("^VCCO_(\d+)")               : PinType.BANK_POWER,
+            re.compile("^VCCO_(?:DDR_)?(?:MIO\d*_)?(\d+)")
+                                                    : PinType.BANK_POWER,
             re.compile("^VCCINT")                   : PinType.CORE_POWER,
             re.compile("^VCCBRAM")                  : PinType.BRAM_POWER,
+            re.compile("^VCCAUX_IO")                : PinType.AUX_IO_POWER,
             re.compile("^VCCAUX")                   : PinType.AUX_POWER,
             re.compile("^VCCADC")                   : PinType.ADC_POWER,
             re.compile("^VCCBATT")                  : PinType.BATT_POWER,
             re.compile("^GNDADC")                   : PinType.ADC_GND,
             re.compile("^GND")                      : PinType.GND,
+            re.compile("^PS_((CLK)|(POR_B)|(SRST_B))")
+                                                    : PinType.PS_CTL,
+            re.compile("^PS_DDR_DQ(\d+)")           : PinType.PS_DDR_DQ,
+            re.compile("^PS_DDR_DQS_([PN])(\d+)")   : PinType.PS_DDR_DQS,
+            re.compile("^PS_DDR_DM(\d+)")           : PinType.PS_DDR_DM,
+            re.compile("^PS_DDR_A(\d+)")            : PinType.PS_DDR_A,
+            re.compile("^PS_DDR_BA(\d+)")           : PinType.PS_DDR_BA,
+            re.compile("^PS_DDR_((DRST)|(CS_B)|(CKE)|(WE_B)|(CAS_B)|(RAS_B))")
+                                                    : PinType.PS_DDR_CTL,
+            re.compile("^PS_DDR_CK([PN])")          : PinType.PS_DDR_CLK,
+            re.compile("^PS_DDR_VR([PN])")          : PinType.PS_DDR_DCI_REF,
+            re.compile("^PS_DDR_ODT")               : PinType.PS_DDR_ODT,
+            re.compile("^PS_DDR_VREF(\d+)")         : PinType.PS_DDR_VREF,
+            re.compile("^PS_MIO_VREF")              : PinType.PS_MIO_VREF,
+            re.compile("^VCCPINT")                  : PinType.PS_VCCPINT,
+            re.compile("^VCCPAUX")                  : PinType.PS_VCCPAUX,
+            re.compile("^VCCPLL")                   : PinType.PS_VCCPLL,
             re.compile("^IO_(L?)(\d+)([PN]?)")      : PinType.GENERAL,
+            re.compile("^PS_MIO(\d+)")              : PinType.PS_GENERAL,
             re.compile("^MGTRREF")                  : PinType.MGT_RREF,
+            re.compile("^MGT\w+RCAL")               : PinType.MGT_RCAL,
             re.compile("^MGTREFCLK(\d+)([PN])")     : PinType.MGT_REFCLK,
-            re.compile("^MGTPRX([PN])(\d+)")        : PinType.MGT_RX,
-            re.compile("^MGTPTX([PN])(\d+)")        : PinType.MGT_TX,
+            re.compile("^MGT[PX]RX([PN])(\d+)")     : PinType.MGT_RX,
+            re.compile("^MGT[PX]TX([PN])(\d+)")     : PinType.MGT_TX,
             re.compile("^MGTAVCC")                  : PinType.MGT_POWER,
             re.compile("^MGTAVTT")                  : PinType.MGT_VTT,
+            re.compile("^MGTVCCAUX")                : PinType.MGT_AUX_POWER,
             re.compile("^(NC)|(RSVDGND)")           : PinType.NC
         }
 
         # Default KiCAD electrical type for pin types
         _TYPE_DEFAULT_ELTYPE = {
-            PinType.GENERAL:    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            PinType.CONFIG:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.BOOT:       DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.JTAG:       DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.ADC_REF:    DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.ADC:        DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.ADC_DIODE:  DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.CORE_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.BRAM_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.AUX_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.ADC_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.BATT_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.BANK_POWER: DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.GND:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.ADC_GND:    DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.NC:         DrawingPin.PinElectricalType.EL_TYPE_NC,
-            PinType.MGT_RREF:   DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.MGT_REFCLK: DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.MGT_RX:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.MGT_TX:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.MGT_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.MGT_VTT:    DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.GENERAL:        DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            PinType.PS_GENERAL:     DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            PinType.CONFIG:         DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.BOOT:           DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.JTAG:           DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.ADC_REF:        DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.ADC:            DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.ADC_DIODE:      DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.CORE_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.BRAM_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.AUX_POWER:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.ADC_POWER:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.BATT_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.BANK_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.GND:            DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.ADC_GND:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.NC:             DrawingPin.PinElectricalType.EL_TYPE_NC,
+            PinType.MGT_RREF:       DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.MGT_RCAL:       DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.MGT_REFCLK:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.MGT_RX:         DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.MGT_TX:         DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.MGT_POWER:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.MGT_VTT:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.MGT_AUX_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.PS_CTL:         DrawingPin.PinElectricalType.EL_TYPE_INPUT,
+            PinType.PS_DDR_DQ:      DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            PinType.PS_DDR_DQS:     DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
+            PinType.PS_DDR_DM:      DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.PS_DDR_A:       DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.PS_DDR_BA:      DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.PS_DDR_CTL:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.PS_DDR_CLK:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.PS_DDR_DCI_REF: DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.PS_DDR_ODT:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            PinType.PS_DDR_VREF:    DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.PS_VCCPINT:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.PS_VCCPAUX:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.PS_VCCPLL:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
+            PinType.PS_MIO_VREF:    DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
+            PinType.AUX_IO_POWER:   DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT
         }
 
         # Some dedicated pins has different electrical type...
@@ -153,6 +213,13 @@ class Device:
             re.compile("^DONE"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
             re.compile("^INIT"):    DrawingPin.PinElectricalType.EL_TYPE_OPEN_COLECTOR,
             re.compile("^TDO"):     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+        }
+
+        _BANK_REGEXP = re.compile(".+_(\d+)$")
+
+        # Some pins should be tied either to GND or VCC, so just rename them
+        _PIN_NAME_REMAP = {
+            re.compile("^RSVDVCC\d*"):  "VCCO_0"
         }
 
         def __init__(self, dic):
@@ -169,6 +236,21 @@ class Device:
             self.number = -1
             self.pair = False
             self.pairNeg = False
+
+            # Rename, if needed
+            for r, n in self._PIN_NAME_REMAP.items():
+                m = r.match(self.name)
+                if m:
+                    logging.info(f"Renaming {self.name} -> {n}")
+                    self.name = n
+
+            # Check bank name
+            m = self._BANK_REGEXP.match(self.name)
+            if m:
+                newBank = int(m.group(1));
+                if self.bank != newBank:
+                    logging.warning(f"Wrong bank for {self.name}, was {self.bank} should be {newBank}")
+                    self.bank = newBank
 
             # Detect pin type
             for r,t in self._TYPE_REGEXPS.items():
@@ -188,21 +270,24 @@ class Device:
                     self.pair = True
                     self.pairNeg = m.group(3) == "N"
                 self.number = int(m.group(2))
-            elif self.type == self.PinType.ADC or self.type == self.PinType.ADC_DIODE:
-                self.pair = True
-                self.pairNeg = m.group(1) == "N"
-            elif self.type == self.PinType.ADC_REF:
+            elif self.type == self.PinType.PS_GENERAL or self.type == self.PinType.PS_DDR_DQ or \
+                    self.type == self.PinType.PS_DDR_DM or self.type == self.PinType.PS_DDR_A or \
+                    self.type == self.PinType.PS_DDR_BA or self.type == self.PinType.PS_DDR_VREF:
+                self.number = int(m.group(1))
+            elif self.type == self.PinType.ADC or self.type == self.PinType.ADC_DIODE or \
+                    self.type == self.PinType.ADC_REF or self.type == self.PinType.PS_DDR_CLK or \
+                    self.type == self.PinType.PS_DDR_DCI_REF:
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
             elif self.type == self.PinType.MGT_REFCLK:
                 self.number = int(m.group(1))
                 self.pair = True
                 self.pairNeg = m.group(2) == "N"
-            elif self.type == self.PinType.MGT_RX or self.type == self.PinType.MGT_TX:
+            elif self.type == self.PinType.MGT_RX or self.type == self.PinType.MGT_TX \
+                    or self.type == self.PinType.PS_DDR_DQS:
                 self.number = int(m.group(2))
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
-
 
         # Sort pins by bank->type->number->P/N->name
         def __lt__(self, other):
@@ -406,11 +491,17 @@ class Device:
             forcedSides = {
                 "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, self.Pin.PinType.JTAG, self.Pin.PinType.ADC_REF,
                       self.Pin.PinType.ADC, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_RX,
-                      self.Pin.PinType.MGT_REFCLK, self.Pin.PinType.MGT_RREF],
-                "r": [self.Pin.PinType.MGT_TX],
+                      self.Pin.PinType.MGT_REFCLK, self.Pin.PinType.MGT_RREF, self.Pin.PinType.MGT_RCAL,
+                      self.Pin.PinType.PS_MIO_VREF, self.Pin.PinType.PS_CTL, self.Pin.PinType.PS_DDR_DQ,
+                      self.Pin.PinType.PS_DDR_DQS, self.Pin.PinType.PS_DDR_DM],
+                "r": [self.Pin.PinType.MGT_TX, self.Pin.PinType.PS_DDR_VREF, self.Pin.PinType.PS_DDR_CLK,
+                      self.Pin.PinType.PS_DDR_CTL, self.Pin.PinType.PS_DDR_A, self.Pin.PinType.PS_DDR_BA,
+                      self.Pin.PinType.PS_DDR_DCI_REF, self.Pin.PinType.PS_DDR_ODT],
                 "t": [self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, self.Pin.PinType.AUX_POWER,
-                      self.Pin.PinType.BANK_POWER, self.Pin.PinType.ADC_POWER, self.Pin.PinType.BATT_POWER,
-                      self.Pin.PinType.MGT_POWER, self.Pin.PinType.MGT_VTT],
+                      self.Pin.PinType.AUX_IO_POWER, self.Pin.PinType.BANK_POWER, self.Pin.PinType.ADC_POWER,
+                      self.Pin.PinType.BATT_POWER, self.Pin.PinType.MGT_POWER, self.Pin.PinType.MGT_AUX_POWER,
+                      self.Pin.PinType.MGT_VTT, self.Pin.PinType.PS_VCCPINT, self.Pin.PinType.PS_VCCPAUX,
+                      self.Pin.PinType.PS_VCCPLL],
                 "b": [self.Pin.PinType.GND, self.Pin.PinType.ADC_GND]
             }
 
@@ -444,6 +535,10 @@ class Device:
             # Draw general IO, starting from left side
             genSide = "l"
             genPins = pinsGrouped[self.Pin.PinType.GENERAL] if self.Pin.PinType.GENERAL in pinsGrouped else []
+
+            if self.Pin.PinType.PS_GENERAL in pinsGrouped:
+                genPins.extend(pinsGrouped[self.Pin.PinType.PS_GENERAL])
+
             for idx in range(0, len(genPins)):
                 # Draw pin horizontally
                 pin = genPins[idx]
@@ -457,12 +552,29 @@ class Device:
                         and (not pin.pair or pin.pairNeg):
                     genSide = "r"
 
+            # Fix offsets
+            if len(genPins) > 0:
+                pinoffsets["l"] = pinoffsets["l"] + 1
+                pinoffsets["r"] = pinoffsets["r"] + 1
+
+            for k,v in pinoffsets.items():
+                if pinoffsets[k] >= 2:
+                    pinoffsets[k] = pinoffsets[k] - 2
+
             # Calc max pin names - for bounding calculation
             for s, l in pinsides.items():
                 for p in l:
-                    maxNames[s] = len(p.name) if len(p.name) > maxNames[s] else maxNames[s]
+                    ceilName = len(p.name) * 48
+                    maxNames[s] = ceilName if ceilName > maxNames[s] else maxNames[s]
 
             maxRowNames = 0
+
+            # Calc max names
+            for s in ["l", "r"]:
+                for lp in pinsides[s]:
+                    l = (len(lp.name)) * 48
+                    if l > maxRowNames:
+                        maxRowNames = l
 
             # Calc max names on same row
             for lp in pinsides["l"]:
@@ -470,7 +582,7 @@ class Device:
                     if lp.at.y != rp.at.y:
                         continue
 
-                    l = len(lp.name) + len(rp.name)
+                    l = (len(lp.name) + len(rp.name)) * 48
                     if l > maxRowNames:
                         maxRowNames = l
 
@@ -479,28 +591,28 @@ class Device:
             maxTBOffset = pinoffsets["t"] if pinoffsets["t"] > pinoffsets["b"] else pinoffsets["b"]
 
             # Pin offset from body - used for pin positioning
-            lPinOffset = pinLength + 20 if len(pinsides["l"]) > 0 else 0
-            rPinOffset = pinLength + 20 if len(pinsides["r"]) > 0 else 0
-            tPinOffset = pinLength + 20 if len(pinsides["t"]) > 0 else 0
-            bPinOffset = pinLength + 20 if len(pinsides["b"]) > 0 else 0
+            lPinOffset = pinLength + 100 if len(pinsides["l"]) > 0 else 100
+            rPinOffset = pinLength + 100 if len(pinsides["r"]) > 0 else 100
+            tPinOffset = pinLength + 50 if len(pinsides["t"]) > 0 else 100
+            bPinOffset = pinLength + 50 if len(pinsides["b"]) > 0 else 100
 
             # vStride - size from center to upper/lower corner
-            vStride = math.ceil(((maxLROffset - 2) * 100 + (maxNames["t"] + maxNames["b"]) * 48) / 2 / 100) * 100
-            top = math.ceil((vStride + tPinOffset) / 100) * 100
-            bottom = -math.ceil((vStride + bPinOffset) / 100) * 100
+            vStride = (maxLROffset * 100 + maxNames["t"] + maxNames["b"])
+            top = math.ceil((vStride / 2 + tPinOffset) / 100) * 100
+            bottom = top - math.ceil((tPinOffset + bPinOffset + maxLROffset * 100 + maxNames["t"] + maxNames["b"]) / 100) * 100
 
             # hStride - size from center to left/right corner
-            hStride = math.ceil(maxRowNames * 48 / 2 / 100) * 100
-            hStrideV = math.ceil((maxTBOffset - 2) / 2) * 100
+            hStride = maxRowNames
+            hStrideV = maxTBOffset * 100
             if hStrideV > hStride:
                 hStride = hStrideV
-            left =  -math.ceil((hStride + lPinOffset) / 100) * 100
-            right = math.ceil((hStride + rPinOffset) / 100) * 100
+            left = -math.ceil((hStride / 2 + lPinOffset) / 100) * 100
+            right = left + math.ceil((lPinOffset + rPinOffset + hStride) / 100) * 100
 
             # Pin draw starts
-            hStartY = math.floor((vStride - maxNames["t"] * 48) / 100) * 100
-            tStartX = -math.floor((pinoffsets["t"] - 1) / 2) * 100
-            bStartX = -math.floor((pinoffsets["b"] - 1) / 2) * 100
+            hStartY = top - math.ceil((tPinOffset + maxNames["t"]) / 100) * 100
+            tStartX = -math.ceil(pinoffsets["t"] / 2) * 100
+            bStartX = -math.ceil(pinoffsets["b"] / 2) * 100
 
             # Move/rotate pins
             for s, l in pinsides.items():
@@ -521,10 +633,10 @@ class Device:
                     self.symbol.drawing.append(dp)
 
             # Draw body
-            rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left - 100
-            rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right + 100
-            rectY0 = bottom + pinLength if len(pinsides["b"]) > 0 else bottom - 100
-            rectY1 = top - pinLength if len(pinsides["t"]) > 0 else top + 100
+            rectX0 = left + pinLength if len(pinsides["l"]) > 0 else left
+            rectX1 = right - pinLength if len(pinsides["r"]) > 0 else right
+            rectY0 = bottom + pinLength if len(pinsides["b"]) > 0 else bottom
+            rectY1 = top - pinLength if len(pinsides["t"]) > 0 else top
 
             self.symbol.drawing.append(DrawingRectangle(Point(rectX0, rectY0), Point(rectX1, rectY1),
                                                         unit_idx=bankIdx + 1,
