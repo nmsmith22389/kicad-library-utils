@@ -61,15 +61,6 @@ class Device:
     }
     _PACKAGE_REGEXP = re.compile("([a-zA-Z]+)(\d+)")
 
-    _PACKAGE_FILTER_MAP = {
-        re.compile("ftg?b?196"):    "BGA*196*15.0x15.0mm*Layout14x14*P1.0mm*",
-        re.compile("fgg?a?484"):    "BGA*484*23.0x23.0mm*Layout22x22*P1.0mm*",
-        re.compile("fgg?a?676"):    "BGA*676*27.0x27.0mm*Layout26x26*P1.0mm*",
-        re.compile("cpg?a?196"):    "BGA*196*8.0x8.0mm*Layout14x14*P0.5mm*",
-        re.compile("csg?a?225"):    "BGA*225*13.0x13.0mm*Layout15x15*P0.8mm*",
-        re.compile("csg?a?32[45]"): "BGA*324*15.0x15.0mm*Layout18x18*P0.8mm*",
-    }
-
     class Pin:
         # FPGA pin types. Pin with same pin type grouped together.
         class PinType(IntEnum):
@@ -432,22 +423,17 @@ class Device:
             self.packagePins = int(pm.group(2))
 
         # Try to find footprint
-        self.footprintFilter = None
         self.footprint = None
-        for r, f in self._PACKAGE_FILTER_MAP.items():
-            if r.match(self.packageName):
-                self.footprintFilter = f
+        self.footprintFilter = f"Xilinx*{self.packageName.upper()}*"
 
-                # A bit ugly here - find footprint in Package_BGA.pretty only
-                fpFile = glob.glob(os.path.join(FOOTPRINT_PATH, "Package_BGA.pretty/", f))
-                if len(fpFile) > 0:
-                    self.footprint  = f"Package_BGA:{os.path.basename(fpFile[0])}"
-                break
+        # A bit ugly here - find footprint in Package_BGA.pretty only
+        fpFile = glob.glob(os.path.join(FOOTPRINT_PATH, "Package_BGA.pretty/", self.footprintFilter))
+        if len(fpFile) > 0:
+            self.footprint = f"Package_BGA:{os.path.splitext(os.path.basename(fpFile[0]))[0]}"
 
         if not self.footprint:
-            logging.warning(f"{self.libraryName} - cannot find footprint file")
-        if not self.footprintFilter:
-            logging.warning(f"{self.libraryName} - unknown footprint")
+            self.footprint = f"Package_BGA:Xilinx_{self.packageName.upper()}"
+            logging.warning(f"{self.libraryName} - cannot find footprint file, suggested {self.footprint}")
 
         self.readPins()
 
