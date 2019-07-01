@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import argparse
 
-from kicad_mod import *
+from kicad_mod import *     
 from print_color import *
 
 common = os.path.abspath(os.path.join(sys.path[0], '..', 'common'))
@@ -49,7 +49,7 @@ class Config:
 
     def valid_pretty_names(self):
         try:
-            prettys = sorted([f.split('.')[0] for f in os.listdir(self.pretty_root) if os.path.isdir(os.path.join(self.pretty_root, f)) and f.endswith('.pretty')])
+            prettys = sorted([f.split('.pretty')[0] for f in os.listdir(self.pretty_root) if os.path.isdir(os.path.join(self.pretty_root, f)) and f.endswith('.pretty')])
         except FileNotFoundError:
             printer.red('EXIT: problem reading from module root: {mr:s}'.format(mr=self.pretty_root))
             sys.exit(1)
@@ -116,12 +116,16 @@ def parse_module(filename, warnings):
     try:
         long_reference = module.models[0]['file']
     except IndexError:
-        printer.yellow("- No model file specified in {fn:s}".format(fn=filename))
-        warnings += 1
+        if module.attribute != 'virtual':
+            printer.yellow("- No model file specified in {fn:s}".format(fn=filename))
+            warnings += 1
         return None
     try:
         # Accept both forward and backward slash characters in path
         long_reference = '/'.join(long_reference.split('\\'))
+        if not long_reference.startswith('${KISYS3DMOD}'):
+            printer.yellow('No KISYS3DMOD In: {fn:s}'.format(fn=filename))
+            warnings += 1
         return os.path.basename(long_reference)
     except:
         printer.yellow("- Invalid model reference {f:s}".format(f=full))
