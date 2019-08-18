@@ -35,3 +35,113 @@ Block_FL:
     - va_rating: 52
       footprint: "Transformer_Block_FL-42_83.5x70x39mm"
     voltage: [5, 6, 8, 9, 12, 15, 18, 24]
+
+Block_VB:
+  name: "{series}-{va_rating}-{secondaries}-{voltage}"
+  manufacturer: Block
+  series: VB
+  description: "{va_rating}VA short-circuit proof PCB transformer"
+  datasheet: "https://www.block.eu/fileadmin/Blaetterkatalog_und_ebook/eBook.pdf#page=248"
+  keywords: "{va_rating}VA PCB transformer {text_primaries} primary {text_secondaries} secondary"
+  dots: bottom
+  primary: 1
+  core: true
+  footprint_library: "Transformer_THT"
+  footprint: "Transformer_{manufacturer}_{series}-{va_rating}-{secondaries}_{size}mm"
+  variants:
+    secondary: [1, 2]
+    power_rating:
+      - va_rating: "0,35"
+        size: 22x27.5x15
+      - va_rating: "0,5"
+        size: 22x27.5x19
+      - va_rating: "1,0"
+        size: 32.3x27.3x21.8
+      - va_rating: "1,2"
+        size: 32.3x27.3x23.8
+      - va_rating: "1,5"
+        size: 32.3x27.3x23.8
+      - va_rating: "2,0"
+        size: 32.3x27.3x26.8
+      - va_rating: "2,3"
+        size: 32.3x27.3x29
+      - va_rating: "2,8"
+        size: 32.3x27.3x34
+      - va_rating: "3,2"
+        size: 41x35x30.8
+    voltage: [6, 8, 9, 12, 15, 18, 24]
+
+Block_AVB:
+  name: "{series}-{va_rating}-{secondaries}-{voltage}"
+  manufacturer: Block
+  series: AVB
+  description: "{va_rating}VA short-circuit proof PCB transformer"
+  datasheet: "https://www.block.eu/fileadmin/Blaetterkatalog_und_ebook/eBook.pdf#page=253"
+  keywords: "{va_rating}VA PCB transformer {text_primaries} primary {text_secondaries} secondary"
+  dots: bottom
+  primary: 2
+  core: true
+  footprint_library: "Transformer_THT"
+  footprint: "Transformer_{manufacturer}_{series}-{va_rating}-{secondaries}_{size}mm"
+  variants:
+    - secondary: [[5,6], [7,8]]
+      variants:
+        - va_rating: 0,35
+          size: 22x22.7x15
+          variants:
+            voltage: [6, 9, 12, 18, 24]
+        - va_rating: 0,5
+          size: 22x22.7x19
+          variants:
+            voltage: [6, 8, 9, 12, 15, 18, 24]
+    - secondary: [[5,6], [8,9]]
+      variants:
+        - va_rating: 1,0
+          size: 32.3x27.3x21.8
+          variants:
+            voltage: [6, 9, 12, 15, 18, 24]
+        - va_rating: 1,5
+          size: 32.3x27.3x23.8
+          variants:
+            voltage: [6, 8, 9, 12, 15, 18, 24]
+        - va_rating: 2,0
+          size: 32.3x27.3x26.8
+          voltage: 8
+        - va_rating: 2,3
+          size: 32.3x27.3x29
+          variants:
+            voltage: [6, 9, 12, 15, 18, 24]
+        - va_rating: 2,3
+          size: 32.3x27.3x39
+          voltage: 8
+        - va_rating: 3,2
+          size: 41x35x30.8
+          variants:
+            voltage: [6, 9, 12, 15, 18, 24]
+
+Block_VC:
+  name: "{series}-{va_rating}-{secondaries}-{voltage}"
+  manufacturer: Block
+  series: VC
+  description: "{va_rating}VA PCB transformer"
+  datasheet: "https://www.block.eu/fileadmin/Blaetterkatalog_und_ebook/eBook.pdf#page=257"
+  keywords: "{va_rating}VA PCB transformer {text_primaries} primary {text_secondaries} secondary"
+  dots: bottom
+  primary: 1
+  core: true
+  footprint_library: "Transformer_THT"
+  footprint: "Transformer_{manufacturer}_{series}-{va_rating}-{secondaries}_{size}mm"
+  variants:
+    secondary:
+      - [4,5]
+      - [[3,4], [5,6]]
+    voltage: [6, 8, 9, 12, 15, 18, 24]
+    power_rating:
+      - va_rating: 3,2
+        size: 41x35x28.1
+      - va_rating: 5,0
+        size: 44x37x33
+      - va_rating: 10
+        size: 51x43x34.6
+      - va_rating: 16
+        size: 57x48x39
