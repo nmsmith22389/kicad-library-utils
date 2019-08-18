@@ -67,7 +67,8 @@ def generate_transformer(generator, config):
     if config.get("core"):
         drawing.append(draw_core(height))
 
-    translate = drawing_sep % 200 / 2
+    translate = ((max(config["primaries"], config["secondaries"]) - 1)
+            * (drawing_sep % 200) / 2)
     drawing.translate(dict(
         x=0, y=translate))
 
@@ -81,7 +82,9 @@ def generate_transformer(generator, config):
             fontsize=fontsize,
             alignment_vertical=SymbolField.FieldAlignment.CENTER
             )
-    symbol.setDefaultFootprint(value=config["footprint"].format(**config))
+    symbol.setDefaultFootprint(value=(
+        config["footprint_library"] + ":" + config["footprint"]
+        ).format(**config))
 
     for alias in config.get("aliases", []):
         name = alias["name"]
@@ -256,6 +259,7 @@ def expand_definition(name, config):
         last_used_pin = max(max(*prim["pins"]) for prim in exp["primary"])
         exp["secondary"] = expand_coil_definition(exp, exp["secondary"],
                 pin_start=last_used_pin)
+        exp.update(add_naming_helpers(exp))
 
     return expanded
 
@@ -279,6 +283,20 @@ def expand_coil_definition(config, coil_config, pin_start=1):
         coil_conf["pins"] = coil_conf.get("pins", [pin_start+i*2, pin_start+i*2+1])
         out.append(coil_conf)
     return out
+
+def add_naming_helpers(config):
+    """inject extra entries usefull for constructing names"""
+    counting_dict = {
+            1: "single",
+            2: "dual",
+            3: "triple"
+            }
+    return dict(
+            primaries=len(config["primary"]),
+            secondaries=len(config["secondary"]),
+            text_primaries=counting_dict[len(config["primary"])],
+            text_secondaries=counting_dict[len(config["secondary"])],
+            )
 
 def build_symbols(file_path):
     defs = []

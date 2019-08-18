@@ -1,17 +1,15 @@
 Block_FL:
-  reference: TR
   name: "{series}-{va_rating}-{voltage}"
   manufacturer: Block
   series: FL
   description: "{va_rating}VA, 2x{voltage}, Dual Primary, Dual Secondary, Print Transformer"
   keywords: "{va_rating}VA PCB transformer"
+  datasheet: "https://www.block.eu/fileadmin/Blaetterkatalog_und_ebook/eBook.pdf#page=278"
   dots: bottom
   primary: 2
-  secondary:
-  - dot: bottom
-  - dot: bottom
+  secondary: 2
   core: true
-  footprint_library: "Transformer_THT.pretty"
+  footprint_library: "Transformer_THT"
   variants:
     power_rating:
     - va_rating: 2

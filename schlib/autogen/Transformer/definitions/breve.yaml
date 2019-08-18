@@ -1,28 +1,24 @@
 Breve_TEZ:
   manufacturer: Breve
-  name: "{series}{va_rating}-D-{secs}"
-  description: "TEZ{va_rating}/D/{secs}, {va_rating}VA, Cast Resin Transformer"
+  name: "{series}{va_rating}-D-{secondaries}"
+  description: "TEZ{va_rating}/D/{secondaries}, {va_rating}VA, Cast Resin Transformer"
   keywords: "{va_rating}VA PCB Transformer Single Primary"
   datasheet: "https://www.breve.pl/pdf/ANG/TEZ_ang.pdf"
   core: true
   series: TEZ
-  footprint_library: "Transformer_THT.pretty"
+  footprint_library: "Transformer_THT"
   footprint: "Transformer_{manufacturer}_{series}-{fp_size}"
   definitions:
     package_small: &tez_small
       primary: [1, 5]
       variants:
-      - secs: 1
-        secondary: [7, 9]
-      - secs: 2
-        secondary: [[6, 7], [9, 10]]
+      - secondary: [7, 9]
+      - secondary: [[6, 7], [9, 10]]
     package_large: &tez_large
       primary: [1, 7]
       variants:
-      - secs: 1
-        secondary: [9, 13]
-      - secs: 2
-        secondary: [[8, 9], [13, 14]]
+      - secondary: [9, 13]
+      - secondary: [[8, 9], [13, 14]]
   variants:
   - va_rating: "0,5"
     fp_size: "22x24"
@@ -30,10 +26,8 @@ Breve_TEZ:
     - dot: top
       pins: [1, 4]
     variants:
-      - secs: 1
-        secondary: [6, 7]
-      - secs: 2
-        secondary: [[5, 6], [7,8]]
+      - secondary: [6, 7]
+      - secondary: [[5, 6], [7,8]]
   - va_rating: "1,5"
     fp_size: "28x33"
     <<: *tez_small
@@ -59,10 +53,8 @@ Breve_TEZ:
     fp_size: "44x52"
     primary: [1, 6]
     variants:
-      - secs: 1
-        secondary: [8, 11]
-      - secs: 2
-        secondary: [[7, 8], [11, 12]]
+      - secondary: [8, 11]
+      - secondary: [[7, 8], [11, 12]]
   - va_rating: "16,0"
     fp_size: "47x57"
     <<: *tez_large
