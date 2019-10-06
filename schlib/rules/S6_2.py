@@ -8,7 +8,7 @@ class Rule(KLCRule):
     Create the methods check and fix to use with the kicad lib files.
     """
     def __init__(self, component):
-        super(Rule, self).__init__(component, 'Component fields contain the correct information')
+        super(Rule, self).__init__(component, 'Symbols contain the correct metadata and field values')
 
     def checkVisibility(self, field):
         return field['visibility'] == 'V'
@@ -93,12 +93,69 @@ class Rule(KLCRule):
 
         # Datasheet field must be empty
         if not self.checkEmpty(ds):
-            self.error("Datasheet field must be EMPTY")
+            self.error("Datasheet field (.lib file) must be EMPTY")
             fail = True
 
         return fail
 
-    def check(self):
+    def checkDocumentation(self, name, documentation, alias=False, isGraphicOrPowerSymbol=False):
+
+        errors = []
+        warnings = []
+
+        if not documentation:
+            errors.append("Missing all metadata information in the .dcm file (datasheet, keyword and description)")
+        elif (not documentation['description'] or
+            not documentation['keywords'] or
+            not documentation['datasheet']):
+
+            if (not documentation['description']):
+                errors.append("Missing DESCRIPTION entry (in dcm file)")
+            if (not documentation['keywords']):
+                errors.append("Missing KEYWORDS entry (in dcm file)")
+            if (not isGraphicOrPowerSymbol) and (not documentation['datasheet']):
+                errors.append("Missing DATASHEET entry (in dcm file)")
+
+                if (documentation['description'] and
+                    documentation['keywords']):
+                    self.only_datasheet_missing = True
+
+        # Symbol name should not appear in the description
+        desc = documentation.get('description', '')
+        if desc and name.lower() in desc.lower():
+            warnings.append("Symbol name should not be included in description")
+
+        # Datasheet field should look like a a datasheet
+        ds = documentation.get('datasheet', '')
+
+        if ds and len(ds) > 2:
+            link = False
+            links = ['http', 'www', 'ftp']
+            if any([ds.startswith(i) for i in links]):
+                link = True
+            elif ds.endswith('.pdf') or '.htm' in ds:
+                link = True
+
+            if not link:
+                warnings.append("Datasheet entry '{ds}' does not look like a URL".format(ds=ds))
+
+        if len(errors) > 0 or len(warnings) > 0:
+            msg = "{cmp} {name} has metadata errors:".format(
+                cmp="ALIAS" if alias else "Component",
+                name=name)
+            if len(errors) == 0:
+                self.warning(msg)
+            else:
+                self.error(msg)
+
+            for err in errors:
+                self.errorExtra(err)
+            for warn in warnings:
+                self.warningExtra(warn)
+
+        return len(errors) > 0
+
+    def check_lib_file(self):
 
         # Check for required fields
         n = len(self.component.fields)
@@ -133,6 +190,35 @@ class Rule(KLCRule):
             self.checkDatasheet(),
             extraFields
             ])
+
+    def check_dcm_file(self):
+        """
+        Proceeds the checking of the rule.
+        The following variables will be accessible after checking:
+            * only_datasheet_missing
+        """
+
+        self.only_datasheet_missing = False
+        invalid_documentation = 0
+
+        # check part itself
+        if self.checkDocumentation(self.component.name, self.component.documentation, False, self.component.isGraphicSymbol() or self.component.isPowerSymbol()):
+            invalid_documentation += 1
+
+        # check all its aliases too
+        if self.component.aliases:
+            invalid = []
+            for alias in self.component.aliases.keys():
+                if self.checkDocumentation(alias, self.component.aliases[alias], True, self.component.isGraphicSymbol() or self.component.isPowerSymbol()):
+                    invalid_documentation += 1
+
+        return invalid_documentation > 0
+
+    def check(self):
+        lib_result = self.check_lib_file()
+        dcm_result = self.check_dcm_file()
+
+        return lib_result or dcm_result
 
     def fix(self):
         """
