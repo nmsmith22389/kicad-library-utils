@@ -74,6 +74,14 @@ class Rule(KLCRule):
             if not link:
                 warnings.append("Datasheet entry '{ds}' does not look like a URL".format(ds=ds))
 
+        # Handle keyword seperator. Right now it filters based on a regular
+        # expression based on certain symbols. Right now hyphen (-) is still allowed.
+        keywords = documentation.get('keywords', '')
+        forbidden_matches = re.findall('[,.:;?!<>]', keywords)
+        if forbidden_matches:
+            errors.append("Symbol keywords contain forbidden symbols: {}".format(forbidden_matches))
+
+
         if len(errors) > 0 or len(warnings) > 0:
             msg = "{cmp} {name} has metadata errors:".format(
                 cmp="ALIAS" if alias else "Component",
