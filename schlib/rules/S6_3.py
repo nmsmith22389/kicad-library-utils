@@ -76,10 +76,13 @@ class Rule(KLCRule):
 
         # Handle keyword seperator. Right now it filters based on a regular
         # expression based on certain symbols. Right now hyphen (-) is still allowed.
-        keywords = documentation.get('keywords', '')
-        forbidden_matches = re.findall('[,.:;?!<>]', keywords)
-        if forbidden_matches:
-            errors.append("Symbol keywords contain forbidden symbols: {}".format(forbidden_matches))
+        try:
+            keywords = documentation.get('keywords', '')
+            forbidden_matches = re.findall('[,.:;?!<>]', keywords)
+            if forbidden_matches:
+                errors.append("Symbol keywords contain forbidden symbols: {}".format(forbidden_matches))
+        except:
+            warnings.append("Symbol appears to not have any keywords.")
 
 
         if len(errors) > 0 or len(warnings) > 0:
