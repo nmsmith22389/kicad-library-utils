@@ -2,6 +2,7 @@
 
 import sys
 import os
+import re
 
 common = os.path.abspath(os.path.join(sys.path[0], '..', 'common'))
 
