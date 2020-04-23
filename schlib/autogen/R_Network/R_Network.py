@@ -16,7 +16,7 @@ def roundToGrid(x, g):
 
 generator = SymbolGenerator('R_Network')
 
-def generateResistorNetwork(count):
+def generateSIPResistorNetwork(count):
     name = 'R_Network{:02d}'.format(count)
     refdes = 'RN'
     footprint = 'Resistor_THT:R_Array_SIP{0}'.format(count + 1)
@@ -131,6 +131,90 @@ def generateResistorNetwork(count):
             ))
 
         pin_left = pin_left + grid_size
+
+def generateSIPResistorNetworkSplit(count):
+    name = 'R_Network{:02d}_Split'.format(count)
+    refdes = 'RN'
+    footprint = 'Resistor_THT:R_Array_SIP{0}'.format(count + 1)
+    footprint_filter = 'R?Array?SIP*'
+    description = '{0} resistor network, star topology, bussed resistors, split'.format(count)
+    keywords = 'R network star-topology'
+    datasheet = 'http://www.vishay.com/docs/31509/csc.pdf'
+    datasheet = '~'
+
+    pin_length = 50
+    resistor_height = 200
+    resistor_width = 80
+
+    symbol = generator.addSymbol(name,
+        dcm_options = {
+            'datasheet': datasheet,
+            'description': description,
+            'keywords': keywords
+        },
+        footprint_filter = footprint_filter,
+        offset = 0,
+        pin_name_visibility = Symbol.PinMarkerVisibility.INVISIBLE,
+        num_units = count
+    )
+    symbol.setReference(refdes,
+        at = Point(resistor_width, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL
+    )
+    symbol.setValue(
+        at = Point(0, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL
+    )
+    symbol.setDefaultFootprint(
+        at = Point(-resistor_width, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL,
+        value = footprint
+    )
+
+    # Symbol body
+    symbol.drawing.append(DrawingRectangle(
+        end = Point(-resistor_width / 2, -resistor_height / 2),
+        start = Point(resistor_width / 2, resistor_height / 2),
+        unit_idx = 0
+    ))
+
+    for s in range(1, count + 1):
+        # Resistor top pin
+        if s == 1:
+            # The first unit has a real pin
+            symbol.drawing.append(DrawingPin(
+                at = Point(0, resistor_height / 2 + pin_length),
+                name = 'R{0}.1'.format(s),
+                number = s,
+                orientation = DrawingPin.PinOrientation.DOWN,
+                pin_length = pin_length,
+                unit_idx = s
+            ))
+        else:
+            # All subsequent units have a line and '1' text similar to a pin 1
+            symbol.drawing.append(DrawingPolyline(
+                line_width = 0,
+                points = [
+                    Point(0, resistor_height / 2),
+                    Point(0, resistor_height / 2 + pin_length)
+                ],
+                unit_idx = s
+            ))
+            symbol.drawing.append(DrawingText(
+                at = Point(35, resistor_height / 2 + pin_length / 2),
+                text = '1',
+                angle = 90,
+                unit_idx = s
+            ))
+        # Resistor bottom pin
+        symbol.drawing.append(DrawingPin(
+            at = Point(0, -resistor_height / 2 - pin_length),
+            name = 'R{0}.2'.format(s),
+            number = s + 1,
+            orientation = DrawingPin.PinOrientation.UP,
+            pin_length = pin_length,
+            unit_idx = s
+        ))
 
 def generateSIPNetworkDividers(count):
     name = 'R_Network_Dividers_x{:02d}_SIP'.format(count)
@@ -422,6 +506,71 @@ def generateResistorPack(count):
 
         pin_left = pin_left + grid_size
 
+def generateResistorPackSplit(count):
+    name = 'R_Pack{:02d}_Split'.format(count)
+    refdes = 'RN'
+    footprint = ''
+    footprint_filter = ['DIP*', 'SOIC*', 'R*Array*Concave*', 'R*Array*Convex*']
+    description = '{0} resistor network, parallel topology, split'.format(count)
+    keywords = 'R network parallel topology isolated'
+    datasheet = '~'
+
+    pin_length = 50
+    resistor_height = 200
+    resistor_width = 80
+
+    symbol = generator.addSymbol(name,
+        dcm_options = {
+            'datasheet': datasheet,
+            'description': description,
+            'keywords': keywords
+        },
+        footprint_filter = footprint_filter,
+        offset = 0,
+        pin_name_visibility = Symbol.PinMarkerVisibility.INVISIBLE,
+        num_units = count
+    )
+    symbol.setReference(refdes,
+        at = Point(resistor_width, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL
+    )
+    symbol.setValue(
+        at = Point(0, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL
+    )
+    symbol.setDefaultFootprint(
+        at = Point(-resistor_width, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL,
+        value = footprint
+    )
+
+    # Symbol body
+    symbol.drawing.append(DrawingRectangle(
+        end = Point(-resistor_width / 2, -resistor_height / 2),
+        start = Point(resistor_width / 2, resistor_height / 2),
+        unit_idx = 0
+    ))
+
+    for s in range(1, count + 1):
+        # Resistor top pin
+        symbol.drawing.append(DrawingPin(
+            at = Point(0, resistor_height / 2 + pin_length),
+            name = 'R{0}.2'.format(s),
+            number = 2 * count - s + 1,
+            orientation = DrawingPin.PinOrientation.DOWN,
+            pin_length = pin_length,
+            unit_idx = s
+        ))
+        # Resistor bottom pin
+        symbol.drawing.append(DrawingPin(
+            at = Point(0, -resistor_height / 2 - pin_length),
+            name = 'R{0}.1'.format(s),
+            number = s,
+            orientation = DrawingPin.PinOrientation.UP,
+            pin_length = pin_length,
+            unit_idx = s
+        ))
+
 def generateSIPResistorPack(count):
     name = 'R_Pack{:02d}_SIP'.format(count)
     refdes = 'RN'
@@ -516,15 +665,82 @@ def generateSIPResistorPack(count):
 
         pin_left = pin_left + resistor_horizontal_spacing
 
+def generateSIPResistorPackSplit(count):
+    name = 'R_Pack{:02d}_SIP_Split'.format(count)
+    refdes = 'RN'
+    footprint = 'Resistor_THT:R_Array_SIP{0}'.format(count * 2)
+    footprint_filter = 'R?Array?SIP*'
+    description = '{0} resistor network, parallel topology, SIP package, split'.format(count)
+    keywords = 'R network parallel topology isolated'
+    datasheet = 'http://www.vishay.com/docs/31509/csc.pdf'
+
+    pin_length = 50
+    resistor_height = 200
+    resistor_width = 80
+
+    symbol = generator.addSymbol(name,
+        dcm_options = {
+            'datasheet': datasheet,
+            'description': description,
+            'keywords': keywords
+        },
+        footprint_filter = footprint_filter,
+        offset = 0,
+        pin_name_visibility = Symbol.PinMarkerVisibility.INVISIBLE,
+        num_units = count
+    )
+    symbol.setReference(refdes,
+        at = Point(resistor_width, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL
+    )
+    symbol.setValue(
+        at = Point(0, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL
+    )
+    symbol.setDefaultFootprint(
+        at = Point(-resistor_width, 0),
+        orientation = SymbolField.FieldOrientation.VERTICAL,
+        value = footprint
+    )
+
+    # Symbol body
+    symbol.drawing.append(DrawingRectangle(
+        end = Point(-resistor_width / 2, -resistor_height / 2),
+        start = Point(resistor_width / 2, resistor_height / 2),
+        unit_idx = 0
+    ))
+
+    for s in range(1, count + 1):
+        # Resistor top pin
+        symbol.drawing.append(DrawingPin(
+            at = Point(0, resistor_height / 2 + pin_length),
+            name = 'R{0}.2'.format(s),
+            number = s * 2,
+            orientation = DrawingPin.PinOrientation.DOWN,
+            pin_length = pin_length,
+            unit_idx = s
+        ))
+        # Resistor bottom pin
+        symbol.drawing.append(DrawingPin(
+            at = Point(0, -resistor_height / 2 - pin_length),
+            name = 'R{0}.1'.format(s),
+            number = s * 2 - 1,
+            orientation = DrawingPin.PinOrientation.UP,
+            pin_length = pin_length,
+            unit_idx = s
+        ))
+
 if __name__ == '__main__':
     for i in range(3, 14):
-        generateResistorNetwork(i)
+        generateSIPResistorNetwork(i)
+        generateSIPResistorNetworkSplit(i)
 
     for i in range(2, 12):
         generateSIPNetworkDividers(i)
 
     for i in range(2, 8):
         generateSIPResistorPack(i)
+        generateSIPResistorPackSplit(i)
 
     for i in range(2, 12):
         generateResistorPack(i)
