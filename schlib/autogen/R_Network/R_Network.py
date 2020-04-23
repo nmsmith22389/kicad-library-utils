@@ -325,8 +325,8 @@ def generateResistorPack(count):
     name = 'R_Pack{:02d}'.format(count)
     refdes = 'RN'
     footprint = ''
-    footprint_filter = ['DIP*', 'SOIC*']
-    description = '{0} resistor network, parallel topology, DIP package'.format(count)
+    footprint_filter = ['DIP*', 'SOIC*', 'R*Array*Concave*', 'R*Array*Convex*']
+    description = '{0} resistor network, parallel topology'.format(count)
     keywords = 'R network parallel topology isolated'
     datasheet = '~'
 
@@ -524,10 +524,10 @@ if __name__ == '__main__':
         generateSIPNetworkDividers(i)
 
     for i in range(2, 8):
-        generateResistorPack(i)
         generateSIPResistorPack(i)
 
-    for i in range(8, 12):
+    for i in range(2, 12):
         generateResistorPack(i)
+        generateResistorPackSplit(i)
 
     generator.writeFiles()
