@@ -1,111 +1,224 @@
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00161561.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00161566.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00191174.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00191185.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00210831.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00210833.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00210837.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00210843.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00212417.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00220364.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00237391.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00251732.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00253739.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00253742.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00263874.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00277537.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00034689.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00035129.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00037051.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00039193.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00039232.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00046749.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00048356.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00049732.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00058181.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00059126.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00071990.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00077036.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00078075.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00078689.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00081611.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00086815.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00088500.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00090183.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00090510.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00092070.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00093332.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00093333.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00094064.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00097745.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00098321.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00098745.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00100431.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00101621.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00102166.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00102435.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00104043.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00105814.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00105960.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00106442.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00108217.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00108218.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00108219.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00108661.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00108832.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00108833.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00109263.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00109264.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00110868.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00111457.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00112716.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00115237.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00115249.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00115350.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00116561.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00118585.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00133117.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00135027.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00140359.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00140762.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00141036.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00141132.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00141133.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00141136.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00141306.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00141386.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00149404.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00149412.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00150658.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00150671.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00152023.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00162467.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00166114.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00166116.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00172872.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00206508.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00206858.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00208574.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00213872.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00214043.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00219980.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00225424.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00254865.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00257192.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00257195.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00257205.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00257211.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00273119.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00282247.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00282249.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00284207.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00284211.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00330506.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00330507.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00340475.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00340549.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00340637.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00366448.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00366449.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00387108.pdf
-http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00388325.pdf
+# this file is only links for convenience; it is not used by the script
+#
+# STM32F101x8, STM32F101xB
+https://www.st.com/resource/en/datasheet/stm32f101c8.pdf
+# STM32F103x8, STM32F103xB
+https://www.st.com/resource/en/datasheet/stm32f103tb.pdf
+# STM32F101xC, STM32F101xD, STM32F101xE
+https://www.st.com/resource/en/datasheet/stm32f101ze.pdf
+# STM32F103xC, STM32F103xD, STM32F103xE
+https://www.st.com/resource/en/datasheet/stm32f103ze.pdf
+# STM32F102x8, STM32F102xB
+https://www.st.com/resource/en/datasheet/stm32f102rb.pdf
+# STM32F102x4, STM32F102x6
+https://www.st.com/resource/en/datasheet/stm32f102r6.pdf
+# STM32F101x4, STM32F101x6
+https://www.st.com/resource/en/datasheet/stm32f101t6.pdf
+# STM32F103x4,STM32F103x6
+https://www.st.com/resource/en/datasheet/stm32f103t4.pdf
+# STM32F100xC, STM32F100xD, STM32F100xE
+https://www.st.com/resource/en/datasheet/stm32f100ze.pdf
+# STM32F105xx, STM32F107xx
+https://www.st.com/resource/en/datasheet/stm32f107vc.pdf
+# STM32F205xx, STM32F207xx
+https://www.st.com/resource/en/datasheet/stm32f207vg.pdf
+# STM32F100x4, STM32F100x6, STM32F100x8, STM32F100xB
+https://www.st.com/resource/en/datasheet/stm32f100v8.pdf
+# STM32F101xF, STM32F101xG
+https://www.st.com/resource/en/datasheet/stm32f101zf.pdf
+# STM32F103xF, STM32F103xG
+https://www.st.com/resource/en/datasheet/stm32f103rf.pdf
+# STM32F215xx, STM32F217xx
+https://www.st.com/resource/en/datasheet/stm32f217zg.pdf
+# STM32L151x6/8/B, STM32L152x6/8/B
+https://www.st.com/resource/en/datasheet/stm32l152r6.pdf
+# STM32L151xD, STM32L152xD
+https://www.st.com/resource/en/datasheet/stm32l152zd.pdf
+# STM32F415xx, STM32F417xx
+https://www.st.com/resource/en/datasheet/stm32f415og.pdf
+# STM32F405xx, STM32F407xx
+https://www.st.com/resource/en/datasheet/stm32f405og.pdf
+# STM32F051x4, STM32F051x6, STM32F051x8
+https://www.st.com/resource/en/datasheet/stm32f051t8.pdf
+# STM32L162VD,STM32L162ZD, STM32L162QD, STM32L162RD
+https://www.st.com/resource/en/datasheet/stm32l162rd.pdf
+# STM32F373xx
+https://www.st.com/resource/en/datasheet/stm32f373vb.pdf
+# STM32L15xCC, STM32L15xRC, STM32L15xUC, STM32L15xUC
+https://www.st.com/resource/en/datasheet/stm32l151cc.pdf
+# STM32L162VC, STM32L162RC
+https://www.st.com/resource/en/datasheet/stm32l162rc.pdf
+# STM32F303xB, STM32F303xC
+https://www.st.com/resource/en/datasheet/stm32f303vc.pdf
+# STM32F058C8, STM32F058R8, STM32F058T8
+https://www.st.com/resource/en/datasheet/stm32f058t8.pdf
+# STM32F427xx, STM32F429xx
+https://www.st.com/resource/en/datasheet/stm32f429ng.pdf
+# STM32F437xx, STM32F439xx
+https://www.st.com/resource/en/datasheet/stm32f439ai.pdf
+# STM32L100C6, STM32L100R8, STM32L100RB
+https://www.st.com/resource/en/datasheet/stm32l100rb.pdf
+# STM32L151x6/8/B-A, STM32L152x6/8/B-A
+https://www.st.com/resource/en/datasheet/stm32l152vb-a.pdf
+# STM32F313xx (obsolete)
+https://www.st.com/resource/en/datasheet/DM00081611.pdf
+# STM32F401xB, STM32F401xC
+https://www.st.com/resource/en/datasheet/stm32f401vc.pdf
+# STM32F030x4, STM32F030x6, STM32F030x8, STM32F030xC
+https://www.st.com/resource/en/datasheet/stm32f030rc.pdf
+# STM32L100RC
+https://www.st.com/resource/en/datasheet/stm32l100rc.pdf
+# STM32F072x8, STM32F072xB
+https://www.st.com/resource/en/datasheet/stm32f072vb.pdf
+# STM32F303x6/x8
+https://www.st.com/resource/en/datasheet/stm32f303r8.pdf
+# STM32F301x6, STM32F301x8
+https://www.st.com/resource/en/datasheet/stm32f301r8.pdf
+# STM32F302x6, STM32F302x8
+https://www.st.com/resource/en/datasheet/stm32f302r8.pdf
+# STM32F302xB, STM32F302xC
+https://www.st.com/resource/en/datasheet/stm32f302vc.pdf
+# STM32F334x4, STM32F334x6, STM32F334x8
+https://www.st.com/resource/en/datasheet/stm32f334c8.pdf
+# STM32L151xE, STM32L152xE
+https://www.st.com/resource/en/datasheet/stm32l152ze.pdf
+# STM32F071x8, STM32F071xB
+https://www.st.com/resource/en/datasheet/stm32f071v8.pdf
+# STM32F358xC 
+https://www.st.com/resource/en/datasheet/stm32f358vc.pdf
+# STM32F378xx
+https://www.st.com/resource/en/datasheet/stm32f378vc.pdf
+# STM32F401xD, STM32F401xE
+https://www.st.com/resource/en/datasheet/stm32f401ce.pdf
+# STM32L063C8, STM32L063R8
+https://www.st.com/resource/en/datasheet/stm32l063r8.pdf
+# STM32F031x4, STM32F031x6
+https://www.st.com/resource/en/datasheet/stm32f031k6.pdf
+# STM32F042x4, STM32F042x6
+https://www.st.com/resource/en/datasheet/stm32f042k6.pdf
+# STM32L053C6, STM32L053C8, STM32L053R6, STM32L053R8
+https://www.st.com/resource/en/datasheet/stm32l053r8.pdf
+# STM32L162xE
+https://www.st.com/resource/en/datasheet/stm32l162ve.pdf
+# STM32L052x6, STM32L052x8
+https://www.st.com/resource/en/datasheet/stm32l052t8.pdf
+# STM32L062K8, STM32L062T8, STM32L062C8
+https://www.st.com/resource/en/datasheet/stm32l062k8.pdf
+# STM32L051x6, STM32L051x8
+https://www.st.com/resource/en/datasheet/stm32l051t8.pdf
+# STM32L100x6/8/B-A
+https://www.st.com/resource/en/datasheet/stm32l100rb-a.pdf
+# STM32L476xx
+https://www.st.com/resource/en/datasheet/stm32l476me.pdf
+# STM32L486xx
+https://www.st.com/resource/en/datasheet/stm32l486zg.pdf
+# STM32F078CB, STM32F078RB, STM32F078VB
+https://www.st.com/resource/en/datasheet/stm32f078vb.pdf
+# STM32F048C6, STM32F048G6, STM32F048T6
+https://www.st.com/resource/en/datasheet/stm32f048t6.pdf
+# STM32F038x6
+https://www.st.com/resource/en/datasheet/stm32f038k6.pdf
+# STM32L15xQC, STM32L15xRC-A, STM32L15xVC-A, STM32L15xZC
+https://www.st.com/resource/en/datasheet/stm32l152zc.pdf
+# STM32L162QC, STM32L162VC-A, STM32L162ZC, STM32L162RC-A
+https://www.st.com/resource/en/datasheet/DM00112716.pdf
+# STM32F091xB, STM32F091xC
+https://www.st.com/resource/en/datasheet/stm32f091vb.pdf
+# STM32F411xC, STM32F411xE
+https://www.st.com/resource/en/datasheet/stm32f411vc.pdf
+# STM32F318C8, STM32F318K8
+https://www.st.com/resource/en/datasheet/stm32f318k8.pdf
+# STM32F328C8
+https://www.st.com/resource/en/datasheet/stm32f328c8.pdf
+# STM32F303xD, STM32F303xE
+https://www.st.com/resource/en/datasheet/stm32f303zd.pdf
+# STM32F302xD, STM32F302xE
+https://www.st.com/resource/en/datasheet/stm32f302zd.pdf
+# STM32F098CC, STM32F098RC, STM32F098VC
+https://www.st.com/resource/en/datasheet/stm32f098vc.pdf
+# STM32L031x4, STM32L031x6
+https://www.st.com/resource/en/datasheet/stm32l031f6.pdf
+# STM32L083x8, STM32L083xB, STM32L083xZ
+https://www.st.com/resource/en/datasheet/stm32l083vz.pdf
+# STM32L073x8, STM32L073xB, STM32L073xZ
+https://www.st.com/resource/en/datasheet/stm32l073vz.pdf
+# STM32L082KB, STM32L082KZ, STM32L082CZ
+https://www.st.com/resource/en/datasheet/stm32l082kz.pdf
+# STM32L072x8, STM32L072xB, STM32L072xZ
+https://www.st.com/resource/en/datasheet/stm32l072kz.pdf
+# STM32L071x8, STM32L071xB, STM32L071xZ
+https://www.st.com/resource/en/datasheet/stm32l071vz.pdf
+# STM32F446xC/E
+https://www.st.com/resource/en/datasheet/stm32f446ze.pdf
+# STM32F070CB, STM32F070RB, STM32F070C6, STM32F070F6
+https://www.st.com/resource/en/datasheet/stm32f070rb.pdf
+# STM32L471xx
+https://www.st.com/resource/en/datasheet/stm32l471zg.pdf
+# STM32F398VE
+https://www.st.com/resource/en/datasheet/stm32f398ve.pdf
+# STM32L151VD-X, STM32L152VD-X
+https://www.st.com/resource/en/datasheet/stm32l152vd-x.pdf
+# STM32L162VD-X
+https://www.st.com/resource/en/datasheet/stm32l162vd-x.pdf
+# STM32L041x6
+https://www.st.com/resource/en/datasheet/DM00152023.pdf
+# STM32L081CB, STM32L081CZ, STM32L081KZ
+https://www.st.com/resource/en/datasheet/stm32l081kz.pdf
+# STM32F756xx 
+https://www.st.com/resource/en/datasheet/stm32f756zg.pdf
+# STM32F745xx, STM32F746xx
+https://www.st.com/resource/en/datasheet/stm32f746zg.pdf
+# STM32L475xx
+https://www.st.com/resource/en/datasheet/stm32l475vg.pdf
+# STM32L011x3, STM32L011x4
+https://www.st.com/resource/en/datasheet/stm32l011k3.pdf
+# STM32L021D4, STM32L021F4, STM32L021G4, STM32L021K4
+https://www.st.com/resource/en/datasheet/stm32l021k4.pdf
+# STM32F479xx
+https://www.st.com/resource/en/datasheet/stm32f479ng.pdf
+# STM32F412xE, STM32F412xG
+https://www.st.com/resource/en/datasheet/DM00213872.pdf
+# STM32F410x8, STM32F410xB
+https://www.st.com/resource/en/datasheet/stm32f410t8.pdf
+# STM32F469xx
+https://www.st.com/resource/en/datasheet/stm32f469ni.pdf
+# STM32F777xx, STM32F778Ax, STM32F779xx
+https://www.st.com/resource/en/datasheet/DM00225424.pdf
+# STM32L443CC, STM32L443RC, STM32L443VC
+https://www.st.com/resource/en/datasheet/stm32l443vc.pdf
+# STM32L433xx
+https://www.st.com/resource/en/datasheet/stm32l433cb.pdf
+# STM32L442KC
+https://www.st.com/resource/en/datasheet/stm32l442kc.pdf
+# STM32L432KB, STM32L432KC
+https://www.st.com/resource/en/datasheet/stm32l432kc.pdf
+# STM32L431xx
+https://www.st.com/resource/en/datasheet/DM00257211.pdf
+# STM32F765xx, STM32F767xx, STM32F768Ax, STM32F769xx
+https://www.st.com/resource/en/datasheet/DM00273119.pdf
+# STM32F423xH
+https://www.st.com/resource/en/datasheet/DM00282247.pdf
+# STM32F413xG, STM32F413xH
+https://www.st.com/resource/en/datasheet/DM00282249.pdf
+# STM32L4A6xG
+https://www.st.com/resource/en/datasheet/DM00284207.pdf
+# STM32L496xx
+https://www.st.com/resource/en/datasheet/DM00284211.pdf
+# STM32F722xx, STM32F723xx
+https://www.st.com/resource/en/datasheet/DM00330506.pdf
+# STM32F732xx, STM32F733xx
+https://www.st.com/resource/en/datasheet/DM00330507.pdf
+# STM32L451xx
+https://www.st.com/resource/en/datasheet/DM00340475.pdf
+# STM32L452xx
+https://www.st.com/resource/en/datasheet/DM00340549.pdf
+# STM32L462CE, STM32L462RE, STM32L462VE
+https://www.st.com/resource/en/datasheet/DM00340637.pdf
+# STM32L4R5xx, STM32L4R7xx, STM32L4R9xx
+https://www.st.com/resource/en/datasheet/DM00366448.pdf
+# STM32L4S5xx, STM32L4S7xx, STM32L4S9xx
+https://www.st.com/resource/en/datasheet/DM00366449.pdf
+# STM32H742xI/G, STM32H743xI/G
+https://www.st.com/resource/en/datasheet/DM00387108.pdf
+# STM32H753xI
+https://www.st.com/resource/en/datasheet/DM00388325.pdf
