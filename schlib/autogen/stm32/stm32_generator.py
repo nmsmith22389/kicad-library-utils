@@ -344,9 +344,8 @@ class Device:
                 f"{{ram}}KB RAM, {freqstr}{voltstr}{self.io} GPIO, "
                 f"{pkgstr}")
         keywords = f"{self.core} {self.family} {self.line}"
-        datasheet = "" if self.pdf is None else (f"http://www.st.com/"
-                f"st-web-ui/static/active/en/resource/technical/document/"
-                f"datasheet/{self.pdf}")
+        datasheet = "" if self.pdf is None else (f"https://www.st.com/"
+                f"/resource/en/datasheet/{self.pdf}")
 
         # Make the symbol
         self.symbol = gen.addSymbol(self.name, dcm_options={
