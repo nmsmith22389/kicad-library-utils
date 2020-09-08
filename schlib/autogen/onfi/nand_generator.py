@@ -12,8 +12,10 @@ def generateSymbol(name,flash):
     # resolve pin mapping
     if ("BGA-63" in flash['footprint_default']):
         mapping = 'BGA-63'+'_'+flash['ce']+'CE'
-    elif ("TSOP-48" in flash['footprint_default']):
+    elif ("TSOP-I-48" in flash['footprint_default']):
         mapping = 'TSOP-48'+'_'+flash['ce']+'CE'
+    elif ("BGA-100" in flash['footprint_default']):
+        mapping = 'BGA-100'+'_'+flash['ce']+'CE'
     elif ("BGA-132" in flash['footprint_default']):
         mapping = 'BGA-132'+'_'+flash['ce']+'CE'
     elif ("BGA-152" in flash['footprint_default']):
@@ -52,16 +54,18 @@ def generateSymbol(name,flash):
                 pin_length = p['length'], visibility=vis, el_type=DrawingPin.PinElectricalType(p['type'])))
 
     # add alias
-    for alias in flash['alias']:
-        current_symbol.addAlias(alias['name'], dcm_options={
-            'description': flash['density']+'x8 '+flash['cells']+' NAND '+flash['voltage'],
-            'keywords': alias['keywords'],
-            'datasheet': flash['datasheet']}
-        )
+    if 'alias' in flash:
+        for alias in flash['alias']:
+            current_symbol.addAlias(alias['name'], dcm_options={
+                'description': flash['density']+'x8 '+flash['cells']+' NAND '+flash['voltage'],
+                'keywords': alias['keywords'],
+                'datasheet': flash['datasheet']}
+            )
 
     # add footprint filters
-    for filter in flash['footprint_filters']:
-        current_symbol.addFootprintFilter(filter)
+#    print(flash['footprint_filters'])
+#    for filter in flash['footprint_filters']:
+#        current_symbol.addFootprintFilter(filter)
 
 if __name__ == '__main__':
     with open('flashes.json','r') as flashes:
