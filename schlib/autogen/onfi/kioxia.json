@@ -1,0 +1,214 @@
+{
+  "TC58NVG0S3HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "1G",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(2048+128)x8",
+    "block_size": "(128K+8K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG0S3HBAI4"
+  },
+  "TC58NVG0S3HTAx0":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "1G",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(2048+128)x8",
+    "block_size": "(128K+8K)x8",
+    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
+    "datasheet":"",
+    "alias":[
+      {
+        "name":"TC58NVG0S3HTA00",
+        "keywords":"0 70°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG0S3HTA00"
+      },
+      {
+        "name":"TC58NVG0S3HTAI0",
+        "keywords":"-40 +85°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG0S3HTAI0"
+      }
+    ]
+  },
+  "TC58NVG1S3HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "2G",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(2048+128)x8",
+    "block_size": "(128K+8K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG1S3HBAI4"
+  },
+  "TC58NVG1S3HTAx0":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "2G",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(2048+128)x8",
+    "block_size": "(128K+8K)x8",
+    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
+    "datasheet":"",
+    "alias":[
+      {
+        "name":"TC58NVG1S3HTA00",
+        "keywords":"0 70°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG1S3HTA00"
+      },
+      {
+        "name":"TC58NVG1S3HTAI0",
+        "keywords":"-40 +85°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG1S3HTAI0"
+      }
+    ]
+  },
+  "TC58NVG2S0HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "4G",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG2S0HBAI4"
+  },
+  "TC58NVG2S0HTAx0":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "4G",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
+    "datasheet":"",
+    "alias":[
+      {
+        "name":"TC58NVG2S0HTA00",
+        "keywords":"0 70°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG2S0HTA00"
+      },
+      {
+        "name":"TC58NVG2S0HTAI0",
+        "keywords":"-40 +85°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NVG2S0HTAI0"
+      }
+    ]
+  },
+  "TC58NYG0S3HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "1G",
+    "voltage": "1.70 to 1.95",
+    "page_size": "(2048+128)x8",
+    "block_size": "(128K+8K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NYG0S3HBAI4"
+  },
+  "TC58NYG1S3HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "2G",
+    "voltage": "1.70 to 1.95",
+    "page_size": "(2048+128)x8",
+    "block_size": "(128K+8K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NYG1S3HBAI4"
+  },
+  "TC58NYG2S0HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "4G",
+    "voltage": "1.70 to 1.95",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TC58NYG2S0HBAI4"
+  },
+  "TH58NVG3S0HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "8G(4Gx2)",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TH58NVG3S0HBAI4"
+  },
+  "TH58NVG3S0HTAx0":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "8G(4Gx2)",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
+    "datasheet":"",
+    "alias":[
+      {
+        "name":"TH58NVG3S0HTA00",
+        "keywords":"0 70°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TH58NVG3S0HTA00"
+      },
+      {
+        "name":"TH58NVG3S0HTAI0",
+        "keywords":"-40 +85°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TH58NVG3S0HTAI0"
+      }
+    ]
+  },
+  "TH58NVG4S0HTAx0":{
+    "vendor": "Kioxia",
+    "ce": "2",
+    "cells": "SLC",
+    "density": "16G(4Gx4)",
+    "voltage": "2.7 to 3.6",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "temperatur": "0 to 70",
+    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
+    "datasheet":"",
+    "alias":[
+      {
+        "name":"TH58NVG4S0HTA20",
+        "keywords":"0 70°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TH58NVG4S0HTA20"
+      },
+      {
+        "name":"TH58NVG4S0HTAK0",
+        "keywords":"-40 +85°C",
+        "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TH58NVG4S0HTAK0"
+      }
+    ]
+  },
+  "TH58NYG3S0HBAI4":{
+    "vendor": "Kioxia",
+    "ce": "1",
+    "cells": "SLC",
+    "density": "8G(4Gx2)",
+    "voltage": "1.70 to 1.95",
+    "page_size": "(4096+256)x8",
+    "block_size": "(256K+16K)x8",
+    "temperatur": "-40 to 85",
+    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
+    "datasheet": "https://business.kioxia.com/info/docget.jsp?did=14827&prodName=TH58NYG3S0HBAI4"
+  }
+}

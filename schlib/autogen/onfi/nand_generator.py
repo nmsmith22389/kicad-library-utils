@@ -59,7 +59,7 @@ def generateSymbol(name,flash):
             current_symbol.addAlias(alias['name'], dcm_options={
                 'description': flash['density']+'x8 '+flash['cells']+' NAND '+flash['voltage'],
                 'keywords': alias['keywords'],
-                'datasheet': flash['datasheet']}
+                'datasheet': alias['datasheet']}
             )
 
     # add footprint filters
@@ -68,7 +68,7 @@ def generateSymbol(name,flash):
 #        current_symbol.addFootprintFilter(filter)
 
 if __name__ == '__main__':
-    with open('flashes.json','r') as flashes:
+    with open(str(sys.argv[1]),'r') as flashes:
         fdb = json.loads(flashes.read())
         for k, v in fdb.items():
             print("Flash: "+k)
