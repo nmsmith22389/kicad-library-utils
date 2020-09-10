@@ -1,9 +1,9 @@
-unknown1 name number x y length orientation unknown2 unknown3 unknown4 unknown5 type visibility
+unknown1 name number x y length orientation unknown2 unknown3 unit unknown5 type visibility
 X ~CE0 C6 -900 -200 200 R 50 50 1 1 I
 X ~CE1 D6 -700 -300 200 R 50 50 1 1 N N
 X ~CE2 D7 -700 -400 200 R 50 50 1 1 N N
 X ~CE3 E7 -700 -500 200 R 50 50 1 1 N N
-X ~DQS J5 -900 -700 200 R 50 50 1 1 I
+X ~DQS J5 -900 -700 200 R 50 50 1 1 B
 X ~WP C3 -900 400 200 R 50 50 1 1 I
 X ALE C4 -900 200 200 R 50 50 1 1 I
 X CLE D5 -900 100 200 R 50 50 1 1 I
