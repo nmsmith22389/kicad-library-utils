@@ -23,7 +23,7 @@ def getResponse(url):
 def generateSymbol(flash):
     # get fallback values from FlashMaster https://github.com/iTXTech/FlashMaster
     json = getResponse('https://dev.peratx.net:444/fd/decode?lang=eng&pn='+flash['part'])
-    ce = flash['ce'] if (flash['ce']) else json['data']['classification']['ce']
+    ce = flash['ce'] if ('ce' in flash and flash['ce'] ) else json['data']['classification']['ce']
     density = flash['density'] if (flash['density']) else json['data']['density']
     voltage = flash['voltage'] if (flash['voltage']) else json['data']['voltage']
     page_size = flash['page_size'] if (flash['page_size']) else json['data']['extraInfo']['Page size'] if ("Page size" in json['data']['extraInfo']) else "Unknown"
@@ -36,22 +36,27 @@ def generateSymbol(flash):
         print ("Unknown CE")
         return()
 
+    description = vendor + ' ' + cells + ' NAND ' + density + width 
+    keywords = page_size +' Page, ' if (page_size != 'Unknown') else ""
+    keywords += block_size +' Block, ' if (block_size != 'Unknown') else ""
+    keywords += voltage +', ' if (voltage != 'Unknown') else ""
+
     # resolve pin mapping and set unit count
     if ("BGA-63" in flash['footprint_default']):
         mapping = 'BGA-63'+'_'+str(ce)+'CE'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification']) else 1
+        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 1
     elif ("TSOP-I-48" in flash['footprint_default']):
         mapping = 'TSOP-48'+'_'+str(ce)+'CE'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification']) else 1
+        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 1
     elif ("BGA-100" in flash['footprint_default']):
         mapping = 'BGA-100'+'_'+str(ce)+'CE'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification']) else 2
+        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
     elif ("BGA-132" in flash['footprint_default']):
         mapping = 'BGA-132'+'_'+str(ce)+'CE'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification']) else 2
+        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
     elif ("BGA-152" in flash['footprint_default']):
         mapping = 'BGA-152'+'_'+str(ce)+'CE'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification']) else 2
+        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
     else:
         print ("no pin mapping found!")
         return()
@@ -61,8 +66,8 @@ def generateSymbol(flash):
     current_symbol = generator.addSymbol(flash['part'],
         dcm_options = {
             'datasheet': flash['datasheet'],
-            'description': density+width+' '+cells+' NAND '+voltage,
-            'keywords': page_size+' Page, '+block_size+' Block'
+            'description': description,
+            'keywords': keywords + flash['temperature']
         },num_units=units)
     current_symbol.setReference('U', at={'x':0, 'y':0})
     current_symbol.setValue(at={'x':0, 'y':-100})
@@ -90,8 +95,8 @@ def generateSymbol(flash):
     if 'alias' in flash:
         for alias in flash['alias']:
             current_symbol.addAlias(alias['name'], dcm_options={
-                'description': flash['density']+'x8 '+flash['cells']+' NAND '+flash['voltage'],
-                'keywords': alias['keywords'],
+                'description': description,
+                'keywords': keywords + alias['temperature'],
                 'datasheet': alias['datasheet']}
             )
 
