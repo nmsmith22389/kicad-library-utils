@@ -102,7 +102,6 @@ def generateSymbol(flash):
             )
 
     # add footprint filters
-    print(flash['footprint_filters'])
     for filter in flash['footprint_filters']:
         current_symbol.addFootprintFilter(filter)
 
