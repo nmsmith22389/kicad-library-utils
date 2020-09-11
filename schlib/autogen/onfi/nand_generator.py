@@ -79,6 +79,7 @@ def generateSymbol(flash):
         current_symbol.drawing.append(rect)
 
     # add pins
+    current_symbol.pin_name_offset = 20
     with open(mapping + '.part','r') as pinmapping:
         pins = csv.DictReader(pinmapping, delimiter=' ')
         for p in pins:
@@ -101,9 +102,9 @@ def generateSymbol(flash):
             )
 
     # add footprint filters
-#    print(flash['footprint_filters'])
-#    for filter in flash['footprint_filters']:
-#        current_symbol.addFootprintFilter(filter)
+    print(flash['footprint_filters'])
+    for filter in flash['footprint_filters']:
+        current_symbol.addFootprintFilter(filter)
 
 if __name__ == '__main__':
     with open(str(sys.argv[1]),'r') as flashes:
