@@ -1521,32 +1521,30 @@
     "cells": ""
   },
   {
-    "part": "MT29F4G16ABBDAH4-AIT",
+    "part": "MT29F4G16ABBDAH4",
     "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f4g16abbdah4-ait",
+    "datasheet": "",
     "density": "4Gb",
     "width": "x16",
     "voltage": "1.8V",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
-    "temperature": "-40C to +85C",
+    "temperature": "",
     "ce": "",
     "page_size": "",
     "block_size": "",
-    "cells": ""
-  },
-  {
-    "part": "MT29F4G16ABBDAH4-IT",
-    "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f4g16abbdah4-it",
-    "density": "4Gb",
-    "width": "x16",
-    "voltage": "1.8V",
-    "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
-    "temperature": "-40C to +85C",
-    "ce": "",
-    "page_size": "",
-    "block_size": "",
-    "cells": ""
+    "cells": "",
+    "alias":[
+      {
+        "name":"MT29F4G16ABBDAH4-AIT",
+        "temperature": "-40C to +85C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f4g16abbdah4-ait"
+      },
+      {
+        "name":"MT29F4G16ABBDAH4-IT",
+        "temperature": "-40C to +85C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f4g16abbdah4-it"
+      }
+    ]
   },
   {
     "part": "MT29F4G16ABBFAH4-AAT",
@@ -1626,53 +1624,28 @@
     "width": "x8",
     "voltage": "3.3V",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
-    "temperature": "0C to +70C",
+    "temperature": "",
     "ce": "",
     "page_size": "",
     "block_size": "",
-    "cells": ""
-  },
-  {
-    "part": "MT29F8G08ABABAWP-AATX",
-    "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08ababawp-aatx",
-    "density": "8Gb",
-    "width": "x8",
-    "voltage": "3.3V",
-    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
-    "temperature": "-40C to +105C",
-    "ce": "",
-    "page_size": "",
-    "block_size": "",
-    "cells": ""
-  },
-  {
-    "part": "MT29F8G08ABABAWP-AITX",
-    "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08ababawp-aitx",
-    "density": "8Gb",
-    "width": "x8",
-    "voltage": "3.3V",
-    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
-    "temperature": "-40C to +85C",
-    "ce": "",
-    "page_size": "",
-    "block_size": "",
-    "cells": ""
-  },
-  {
-    "part": "MT29F8G08ABABAWP-ITX",
-    "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08ababawp-itx",
-    "density": "8Gb",
-    "width": "x8",
-    "voltage": "3.3V",
-    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
-    "temperature": "-40C to +85C",
-    "ce": "",
-    "page_size": "",
-    "block_size": "",
-    "cells": ""
+    "cells": "",
+    "alias":[
+      {
+        "name":"MT29F8G08ABABAWP-AATX",
+        "temperature": "-40C to +105C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08ababawp-aatx"
+      },
+      {
+        "name":"MT29F8G08ABABAWP-AITX",
+        "temperature": "-40C to +85C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08ababawp-aitx"
+      },
+      {
+        "name":"MT29F8G08ABABAWP-ITX",
+        "temperature": "-40C to +85C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08ababawp-itx"
+      }
+    ]
   },
   {
     "part": "MT29F8G08ABACAH4-IT",
@@ -1745,32 +1718,30 @@
     "cells": ""
   },
   {
-    "part": "MT29F8G08ADAFAWP-AAT",
+    "part": "MT29F8G08ADAFAWP",
     "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08adafawp-aat",
+    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08adafawp",
     "density": "8Gb",
     "width": "x8",
     "voltage": "3.3V",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
-    "temperature": "-40C to +105C",
+    "temperature": "",
     "ce": "",
     "page_size": "",
     "block_size": "",
-    "cells": ""
-  },
-  {
-    "part": "MT29F8G08ADAFAWP-AIT",
-    "vendor": "Micron",
-    "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08adafawp-ait",
-    "density": "8Gb",
-    "width": "x8",
-    "voltage": "3.3V",
-    "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
-    "temperature": "-40C to +105C",
-    "ce": "",
-    "page_size": "",
-    "block_size": "",
-    "cells": ""
+    "cells": "",
+    "alias":[
+      {
+        "name":"MT29F8G08ADAFAWP-AAT",
+        "temperature": "-40C to +105C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08adafawp-aat"
+      },
+      {
+        "name":"MT29F8G08ADAFAWP-AIT",
+        "temperature": "-40C to +105C",
+        "datasheet": "https://www.micron.com/products/nand-flash/slc-nand/part-catalog/mt29f8g08adafawp-ait"
+      }
+    ]
   },
   {
     "part": "MT29F8G08ADBDAH4-AAT",
