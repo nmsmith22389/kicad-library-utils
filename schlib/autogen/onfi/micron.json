@@ -8,7 +8,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -25,7 +25,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -42,7 +42,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -59,7 +59,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-132_12x18mm_Layout11x17_P1.0mm",
     "footprint_filters":[
-      "Package*:*BGA-1?2*12x18mm*11x17*P1.0mm*"
+      "Package*:*BGA*12x18mm*Layout11x17*P1.0mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -76,7 +76,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -105,7 +105,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -122,7 +122,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -139,7 +139,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -156,7 +156,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -173,7 +173,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -202,7 +202,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -219,7 +219,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -253,7 +253,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -292,7 +292,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -326,7 +326,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -360,7 +360,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -377,7 +377,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -406,7 +406,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -440,7 +440,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -457,7 +457,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -474,7 +474,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -503,7 +503,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -537,7 +537,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -554,7 +554,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -593,7 +593,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -632,7 +632,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -681,7 +681,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -698,7 +698,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -732,7 +732,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -749,7 +749,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -783,7 +783,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -811,7 +811,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -845,7 +845,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +85C",
     "ce": "",
@@ -862,7 +862,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -879,7 +879,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -913,7 +913,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -930,7 +930,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -947,7 +947,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-132_12x18mm_Layout11x17_P1.0mm",
     "footprint_filters":[
-      "Package*:*BGA-1?2*12x18mm*11x17*P1.0mm*"
+      "Package*:*BGA*12x18mm*Layout11x17*P1.0mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -964,7 +964,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1003,7 +1003,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1042,7 +1042,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1066,7 +1066,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1090,7 +1090,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -1124,7 +1124,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -1158,7 +1158,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1192,7 +1192,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1221,7 +1221,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1245,7 +1245,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -1279,7 +1279,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1296,7 +1296,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1313,7 +1313,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -1342,7 +1342,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -1359,7 +1359,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-100_10x17_Layout12x18mm_P1.0mm",
     "footprint_filters":[
-      "Package*:*100*10x17*P1.0mm*"
+      "Package*:*BGA*10x17*Layout12x18*P1.0mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1376,7 +1376,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-132_12x18mm_Layout11x17_P1.0mm",
     "footprint_filters":[
-      "Package*:*BGA-1?2*12x18mm*11x17*P1.0mm*"
+      "Package*:*BGA*12x18mm*Layout11x17*P1.0mm*"
     ],
     "temperature": "0C to +70C",
     "ce": "",
@@ -1393,7 +1393,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1410,7 +1410,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1427,7 +1427,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -1461,7 +1461,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1478,7 +1478,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1495,7 +1495,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1512,7 +1512,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1529,7 +1529,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -1546,7 +1546,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "",
     "ce": "",
@@ -1575,7 +1575,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -1592,7 +1592,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +105C",
     "ce": "",
@@ -1609,7 +1609,7 @@
     "voltage": "",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1626,7 +1626,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",
@@ -1643,7 +1643,7 @@
     "voltage": "",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-      "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ],
     "temperature": "-40C to +85C",
     "ce": "",

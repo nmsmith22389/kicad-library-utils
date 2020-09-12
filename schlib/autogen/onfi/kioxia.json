@@ -13,7 +13,7 @@
     "temperature": "-40 to +85C",
     "footprint_default": "Package_BGA:BGA-63_9x11mm_Layout10x12_P0.8mm",
     "footprint_filters":[
-        "Package*:*10x12*P0.8mm*"
+      "Package*:*BGA*Layout10x12*P0.8mm*"
     ]
   },
   {
@@ -30,7 +30,7 @@
     "block_size": "128K+8K",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "alias":[
       {
@@ -76,7 +76,7 @@
     "block_size": "128K+8K",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "alias":[
       {
@@ -122,7 +122,7 @@
     "block_size": "256K+16K",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "alias":[
       {
@@ -219,7 +219,7 @@
     "block_size": "256K+16K",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "alias":[
       {
@@ -248,7 +248,7 @@
     "block_size": "256K+16K",
     "footprint_default": "Package_SO:TSOP-I-48_18.4x12mm_P0.5mm",
     "footprint_filters":[
-      "Package*:*48*18.4x12mm*P0.5mm*"
+      "Package*:*TSOP*18.4x12mm*P0.5mm*"
     ],
     "alias":[
       {
