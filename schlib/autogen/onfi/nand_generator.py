@@ -32,10 +32,30 @@ def generateSymbol(flash):
     width = flash['width'] if (flash['width']) else json['data']['deviceWidth']
     cells = flash['cells'] if (flash['cells']) else json['data']['cellLevel']
 
-    if (ce == "Unknown" or ce == 0):
-        print ("Unknown CE")
+    if (flash['mode']):
+        mode = flash['mode']
+    else:
+        if (("sync" in json['data']['interface'] and json['data']['interface']['sync']) or ("toggle" in json['data']['interface'] and json['data']['interface']['toggle'])):
+            mode = 'DDR'
+        elif (("async" in json['data']['interface'] and json['data']['interface']['async']) or ("toggle" in json['data']['interface'] and not json['data']['interface']['toggle'])):
+            mode = 'SDR'
+        else:
+            mode = "Unknown"
+
+    # abort with invalid data
+    if (ce == "Unknown" or ce == 0 or mode== "Unknown"):
+        print ("flash not properly detected")
+        print ("CE:" + ce)
+        print ("mode:" + str(mode))
+        return()
+    if (width != "x8"):
+        print ("width != 'x8' currently not supported")
+        return()
+    if (mode not in ["SDR","DDR","DDR2","DDR3"] ):
+        print ("not supported mode: " + mode)
         return()
 
+    # combine strings
     description = vendor + ' ' + cells + ' NAND ' + density + width 
     keywords = page_size +' Page, ' if (page_size != 'Unknown') else ""
     keywords += block_size +' Block, ' if (block_size != 'Unknown') else ""
@@ -43,19 +63,19 @@ def generateSymbol(flash):
 
     # resolve pin mapping and set unit count
     if ("BGA-63" in flash['footprint_default']):
-        mapping = 'BGA-63'+'_'+str(ce)+'CE'
+        mapping = 'BGA-63'
         units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 1
     elif ("TSOP-I-48" in flash['footprint_default']):
-        mapping = 'TSOP-48'+'_'+str(ce)+'CE'
+        mapping = 'TSOP-48'
         units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 1
     elif ("BGA-100" in flash['footprint_default']):
-        mapping = 'BGA-100'+'_'+str(ce)+'CE'
+        mapping = 'BGA-100'
         units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
     elif ("BGA-132" in flash['footprint_default']):
-        mapping = 'BGA-132'+'_'+str(ce)+'CE'
+        mapping = 'BGA-132'
         units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
     elif ("BGA-152" in flash['footprint_default']):
-        mapping = 'BGA-152'+'_'+str(ce)+'CE'
+        mapping = 'BGA-152'
         units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
     else:
         print ("no pin mapping found!")
@@ -80,17 +100,19 @@ def generateSymbol(flash):
 
     # add pins
     current_symbol.pin_name_offset = 20
-    with open(mapping + '.part','r') as pinmapping:
-        pins = csv.DictReader(pinmapping, delimiter=' ')
+    with open(mapping + '.csv','r') as pinmapping:
+        pins = csv.DictReader(pinmapping, delimiter=';')
         for p in pins:
-            if p['visibility'] is None:
-                vis=DrawingPin.PinVisibility('')
-            else:
-                vis=DrawingPin.PinVisibility('N')
+            if ((p['mode'] == "") or (mode in p['mode'].split(","))):
+                if (int(p['ce']) <= int(ce)):
+                    if p['visibility'] == 'N':
+                        vis=DrawingPin.PinVisibility('N')
+                    else:
+                        vis=DrawingPin.PinVisibility('')
 
-            current_symbol.drawing.append(DrawingPin(at=Point({'x':p['x'], 'y':p['y']},
-                grid=50), number=p['number'], name = p['name'], orientation = DrawingPin.PinOrientation(p['orientation']),
-                pin_length = p['length'], visibility=vis, el_type=DrawingPin.PinElectricalType(p['type']),unit_idx=p['unit']))
+                    current_symbol.drawing.append(DrawingPin(at=Point({'x':p['x'], 'y':p['y']},
+                        grid=50), number=p['pin'], name = p['name'], orientation = DrawingPin.PinOrientation(p['orientation']),
+                        pin_length = 200, visibility=vis, el_type=DrawingPin.PinElectricalType(p['type']),unit_idx=p['unit']))
 
     # add alias
     if 'alias' in flash:
