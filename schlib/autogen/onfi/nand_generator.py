@@ -1,137 +1,114 @@
 #!/usr/bin/env python3
 
 import sys, os
-import csv, json
-import urllib.request, ssl
-
-ssl._create_default_https_context = ssl._create_unverified_context
+import json, pyexcel
+import flash_decoder as fd
+from csv import DictReader
 
 sys.path.append(os.path.join(sys.path[0], '..'))
 from KiCadSymbolGenerator import *
 
 generator = SymbolGenerator('Memory_Flash_NAND')
 
-def getResponse(url):
-    operUrl = urllib.request.urlopen(url)
-    if(operUrl.getcode()==200):
-        data = operUrl.read()
-        jsonData = json.loads(data)
-    else:
-        print("Error receiving data", operUrl.getcode())
-    return jsonData
 
-def generateSymbol(flash):
-    # get fallback values from FlashMaster https://github.com/iTXTech/FlashMaster
-    json = getResponse('https://dev.peratx.net:444/fd/decode?lang=eng&pn='+flash['part'])
-    ce = flash['ce'] if ('ce' in flash and flash['ce'] ) else json['data']['classification']['ce']
-    density = flash['density'] if (flash['density']) else json['data']['density']
-    voltage = flash['voltage'] if (flash['voltage']) else json['data']['voltage']
-    page_size = flash['page_size'] if (flash['page_size']) else json['data']['extraInfo']['Page size'] if ("Page size" in json['data']['extraInfo']) else "Unknown"
-    block_size = flash['block_size'] if (flash['block_size']) else json['data']['extraInfo']['Block size'] if ("Block size" in json['data']['extraInfo']) else "Unknown"
-    vendor = flash['vendor'] if (flash['vendor']) else json['data']['vendor']
-    width = flash['width'] if (flash['width']) else json['data']['deviceWidth']
-    cells = flash['cells'] if (flash['cells']) else json['data']['cellLevel']
+def generateSymbol(flashCSV):
+    # resolve flash properties
+    flashDECOD = fd.decode(flashCSV['name'])
+    if flashDECOD is None:
+        return()
+#    print(flashDECOD)
+    vendor = flashDECOD['vendor']
+    ce = int(flashDECOD['classification']['ce'])
+    density = flashDECOD['density']
+    voltage = json.dumps(flashDECOD['voltage'])
+    page_size = flashDECOD['page_size'] if flashDECOD['page_size'] else flashCSV['page_size']
+    block_size = flashDECOD['block_size'] if flashDECOD['block_size'] else flashCSV['block_size']
+    width = flashDECOD['width']
+    cells = flashDECOD['cells']
+    interface = flashDECOD['interface']
+    channels = flashDECOD['classification']['ch']
+    footprint = flashDECOD['footprint'] if flashDECOD['footprint'] else flashCSV['footprint']
 
-    if (flash['mode']):
-        mode = flash['mode']
-    else:
-        if (("sync" in json['data']['interface'] and json['data']['interface']['sync']) or ("toggle" in json['data']['interface'] and json['data']['interface']['toggle'])):
-            mode = 'DDR'
-        elif (("async" in json['data']['interface'] and json['data']['interface']['async']) or ("toggle" in json['data']['interface'] and not json['data']['interface']['toggle'])):
-            mode = 'SDR'
+    # translate interface
+    mode =""
+    if 'toggle' in interface:
+        if interface['toggle'] is True:
+            mode='DDR'
+        elif interface['toggle'] is False:
+            mode='SDR'
         else:
-            mode = "Unknown"
+            print ("not supported interface: " + json.dumps(interface))
+            return()
+    elif 'sync' in interface:
+        if interface['sync'] is True:
+            mode='DDR'
+        elif interface['async'] is True:
+            mode='SDR'
+        else:
+            print ("not supported interface: " + json.dumps(interface))
+            return()
 
     # abort with invalid data
-    if (ce == "Unknown" or ce == 0 or mode== "Unknown"):
+    if (ce is None):
         print ("flash not properly detected")
         print ("CE:" + ce)
-        print ("mode:" + str(mode))
-        return()
-    if (width != "x8"):
-        print ("width != 'x8' currently not supported")
-        return()
-    if (mode not in ["SDR","DDR","DDR2","DDR3"] ):
-        print ("not supported mode: " + mode)
         return()
 
     # combine strings
-    description = vendor + ' ' + cells + ' NAND ' + density + width 
-    keywords = page_size +' Page, ' if (page_size != 'Unknown') else ""
-    keywords += block_size +' Block, ' if (block_size != 'Unknown') else ""
-    keywords += voltage +', ' if (voltage != 'Unknown') else ""
-
-    # resolve pin mapping and set unit count
-    if ("BGA-63" in flash['footprint_default']):
-        mapping = 'BGA-63'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 1
-    elif ("TSOP-I-48" in flash['footprint_default']):
-        mapping = 'TSOP-48'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 1
-    elif ("BGA-100" in flash['footprint_default']):
-        mapping = 'BGA-100'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
-    elif ("BGA-132" in flash['footprint_default']):
-        mapping = 'BGA-132'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
-    elif ("BGA-152" in flash['footprint_default']):
-        mapping = 'BGA-152'
-        units=json['data']['classification']['ch'] if ("ch" in json['data']['classification'] and json['data']['classification']['ch'] != "Unknown") else 2
-    else:
-        print ("no pin mapping found!")
-        return()
-    print ('pin mapping used: ' + mapping)
+    description = vendor + ' ' + cells + ' NAND ' + density + width + ', ' + mode
+    keywords = page_size +' Page, ' if page_size  else ""
+    keywords += block_size +' Block, ' if block_size else ""
+    keywords += voltage if (voltage is not None) else ""
 
     # symbol properties
-    current_symbol = generator.addSymbol(flash['part'],
+    current_symbol = generator.addSymbol(flashCSV['name'],
         dcm_options = {
-            'datasheet': flash['datasheet'],
+            'datasheet': flashCSV['datasheet'],
             'description': description,
-            'keywords': keywords + flash['temperature']
-        },num_units=units)
-    current_symbol.setReference('U', at={'x':0, 'y':0})
-    current_symbol.setValue(at={'x':0, 'y':-100})
-    current_symbol.setDefaultFootprint (value=flash['footprint_default'], alignment_vertical=SymbolField.FieldAlignment.CENTER, visibility=SymbolField.FieldVisibility.INVISIBLE)
+            'keywords': keywords + ', ' + flashDECOD['temperature']
+        },num_units=channels)
+    current_symbol.setReference('U', at={'x':0, 'y':100})
+    current_symbol.setValue(at={'x':0, 'y':0})
+    current_symbol.setDefaultFootprint (value=footprint, alignment_vertical=SymbolField.FieldAlignment.CENTER, visibility=SymbolField.FieldVisibility.INVISIBLE)
 
     # draw body
-    for u in range (0,units):
+    for u in range (0,channels):
         rect = DrawingRectangle(start={'x':-700, 'y':1000}, end={'x':700, 'y':-1000}, fill=ElementFill.FILL_BACKGROUND,unit_idx=u)
         current_symbol.drawing.append(rect)
 
     # add pins
     current_symbol.pin_name_offset = 20
-    with open(mapping + '.csv','r') as pinmapping:
-        pins = csv.DictReader(pinmapping, delimiter=';')
-        for p in pins:
-            if ((p['mode'] == "") or (mode in p['mode'].split(","))):
-                if (int(p['ce']) <= int(ce)):
-                    if p['visibility'] == 'N':
-                        vis=DrawingPin.PinVisibility('N')
-                    else:
-                        vis=DrawingPin.PinVisibility('')
+    package = pyexcel.get_sheet(file_name="pinmap.ods", name_columns_by_row=0, sheet_name=footprint.split(':')[1])
+    for pin in package.to_records():
+        if ((pin['interface'] == "") or (mode in pin['interface'].split(","))) and (pin['name']):
+            if (int(pin['ce']) <= ce) and (pin['width']==width or not pin['width']):
+                if pin['visibility'] == 'N':
+                    vis=DrawingPin.PinVisibility('N')
+                else:
+                    vis=DrawingPin.PinVisibility('')
 
-                    current_symbol.drawing.append(DrawingPin(at=Point({'x':p['x'], 'y':p['y']},
-                        grid=50), number=p['pin'], name = p['name'], orientation = DrawingPin.PinOrientation(p['orientation']),
-                        pin_length = 200, visibility=vis, el_type=DrawingPin.PinElectricalType(p['type']),unit_idx=p['unit']))
+                current_symbol.drawing.append(DrawingPin(at=Point({'x':pin['x'], 'y':pin['y']},
+                    grid=50), number=pin['pin'], name = pin['name'], orientation = DrawingPin.PinOrientation(pin['orientation']),
+                    pin_length = 200, visibility=vis, el_type=DrawingPin.PinElectricalType(pin['type']),unit_idx=pin['channel']))
 
     # add alias
-    if 'alias' in flash:
-        for alias in flash['alias']:
-            current_symbol.addAlias(alias['name'], dcm_options={
-                'description': description,
-                'keywords': keywords + alias['temperature'],
-                'datasheet': alias['datasheet']}
-            )
+#    if 'alias' in flash:
+#        for alias in flashCSV['alias']:
+#            current_symbol.addAlias(alias['name'], dcm_options={
+#                'description': description,
+#                'keywords': keywords + ', ' + alias['temperature'],
+#                'datasheet': alias['datasheet']}
+#            )
 
     # add footprint filters
-    for filter in flash['footprint_filters']:
+    for filter in flashCSV['footprint_filters']:
         current_symbol.addFootprintFilter(filter)
 
+
 if __name__ == '__main__':
-    with open(str(sys.argv[1]),'r') as flashes:
-        fdb = json.loads(flashes.read())
-        for i in fdb:
-            print("Flash: "+i['part'])
-            generateSymbol(i)
+    with open('flashes.csv', 'r') as read_obj:
+        csv_dict_reader = DictReader(read_obj, delimiter=";")
+        for row in csv_dict_reader:
+           generateSymbol(row)
 
     generator.writeFiles()
