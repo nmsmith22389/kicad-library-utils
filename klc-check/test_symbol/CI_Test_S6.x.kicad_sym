@@ -315,7 +315,6 @@
       (effects (font (size 1.27 1.27)) hide)
     )
   )
-<<<<<<< HEAD
   (symbol "CI_Test_S6.x:Fail__S6.2__ExtraDefaultNamedField" (in_bom yes) (on_board yes)
     (property "Reference" "U" (id 0) (at 7.62 12.7 0)
       (effects (font (size 1.27 1.27)))
@@ -398,8 +397,6 @@
       (effects (font (size 1.27 1.27)) hide)
     )
   )
-=======
->>>>>>> 4636d47... Added S6.2 test cases mv dir
   (symbol "CI_Test_S6.x:Fail__S6.2__InvisibleReference" (in_bom yes) (on_board yes)
     (property "Reference" "U" (id 0) (at 7.62 12.7 0)
       (effects (font (size 1.27 1.27)) hide)
