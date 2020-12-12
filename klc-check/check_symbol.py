@@ -161,6 +161,27 @@ class SymbolCheck():
         self.warning_count += warning_count
         return (error_count, warning_count)
 
+
+def worker(inp, outp, lock, selected_rules, excluded_rules, verbosity, footprints, args, i=0):
+    # have one instance of SymbolCheck per worker
+    c = SymbolCheck(selected_rules, excluded_rules, verbosity, footprints, use_color = not args.nocolor, no_warnings = args.nowarnings, silent = args.silent, log = args.log)
+    c.printer.buffered = True
+    for fn in iter(inp.get, 'STOP'):
+        # run the check on this file
+        c.check_library(fn, args.component, args.pattern, args.unittest)
+        # print the console output, all at once while we have the lock
+        lock.acquire()
+        c.printer.flush()
+        lock.release()
+        # signal that we are done with this item
+        inp.task_done()
+    # output all the metrics at one
+    outp.put(c)
+    # exit the worker
+    inp.task_done()
+    return
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Checks KiCad library files (.kicad_sym) against KiCad Library Convention (KLC) rules. You can find the KLC at http://kicad-pcb.org/libraries/klc/')
     parser.add_argument('kicad_sym_files', nargs='+')
@@ -221,32 +242,13 @@ if __name__ == '__main__':
     task_queue = JoinableQueue()
     out_queue = Queue()
 
-    def worker(inp, outp, lock, i=0):
-        # have one instance of SymbolCheck per worker
-        c = SymbolCheck(selected_rules, excluded_rules, verbosity, footprints, use_color = not args.nocolor, no_warnings = args.nowarnings, silent = args.silent, log = args.log)
-        c.printer.buffered = True
-        for fn in iter(inp.get, 'STOP'):
-            # run the check on this file
-            c.check_library(fn, args.component, args.pattern, args.unittest)
-            # print the console output, all at once while we have the lock
-            lock.acquire()
-            c.printer.flush()
-            lock.release()
-            # signal that we are done with this item
-            inp.task_done()
-        # output all the metrics at one
-        outp.put(c)
-        # exit the worker
-        inp.task_done()
-        return
-
     for (filename, size) in files:
         task_queue.put(filename)
 
     # create the workers
     lock = Lock()
     for i in range(int(args.multiprocess) if args.multiprocess else 1):
-        Process(target=worker, args=(task_queue, out_queue, lock, i)).start()
+        Process(target=worker, args=(task_queue, out_queue, lock, selected_rules, excluded_rules, verbosity, footprints, args, i)).start()
         # add a stop sign to each
         task_queue.put('STOP')
 
