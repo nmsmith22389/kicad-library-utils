@@ -696,9 +696,10 @@ class Drawing:
             start = Point(distance = a.radius, angle = a.angle_start/10).translate(a.at)
             end = Point(distance = a.radius, angle = a.angle_end/10).translate(a.at)
 
-            arc = kicad_sym.Arc(kicad_sym.mil_to_mm(a.at.x), kicad_sym.mil_to_mm(a.at.y), kicad_sym.mil_to_mm(start.x), kicad_sym.mil_to_mm(start.y),
+            arc = kicad_sym.Arc(kicad_sym.mil_to_mm(start.x), kicad_sym.mil_to_mm(start.y),
                                 kicad_sym.mil_to_mm(end.x), kicad_sym.mil_to_mm(end.y),
-                                kicad_sym.mil_to_mm(a.radius), a.angle_start, a.angle_end)
+                                kicad_sym.mil_to_mm(a.at.x), kicad_sym.mil_to_mm(a.at.y), 
+                                kicad_sym.mil_to_mm(a.radius), a.angle_start/10, a.angle_end/10)
 
             arc.stroke_width = kicad_sym.mil_to_mm (a.line_width)
             arc.fill_type = a.fill
