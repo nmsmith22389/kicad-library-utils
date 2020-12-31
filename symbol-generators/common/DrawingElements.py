@@ -67,8 +67,8 @@ class DrawingPin:
             return self.value
 
     class PinVisibility(Enum):
-        INVISIBLE = True
-        VISIBLE = False
+        INVISIBLE = 0
+        VISIBLE = 1
 
         def __str__(self):
             return self.value
@@ -683,7 +683,7 @@ class Drawing:
 
         for p in self.pins:
             pin = kicad_sym.Pin (p.name, str(p.num), str(p.el_type), kicad_sym.mil_to_mm(p.at.x), kicad_sym.mil_to_mm(p.at.y), kicad_sym.Pin.dir_to_rotation(str(p.orientation)), str(p.style), kicad_sym.mil_to_mm(p.pin_length))
-            pin.is_hidden = p.visibility == False
+            pin.is_hidden = p.visibility == DrawingPin.PinVisibility.INVISIBLE
             pin.name_effect.sizex = kicad_sym.mil_to_mm (p.fontsize_pinname)
             pin.name_effect.sizey = pin.name_effect.sizex
             pin.number_effect.sizex = kicad_sym.mil_to_mm (p.fontsize_pinnumber)
