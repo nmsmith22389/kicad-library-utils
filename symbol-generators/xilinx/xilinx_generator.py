@@ -11,8 +11,9 @@ import math
 from enum import IntEnum
 import glob
 
-sys.path.append(os.path.join(sys.path[0],'..'))
-from KiCadSymbolGenerator import *
+sys.path.append(os.path.join(sys.path[0],'..','..','common'))
+from kicad_sym import *
+from kicad_sym import Pin as KicadPin
 
 FOOTPRINT_PATH = "/usr/share/kicad/modules"
 
@@ -158,55 +159,55 @@ class Device:
 
         # Default KiCAD electrical type for pin types
         _TYPE_DEFAULT_ELTYPE = {
-            PinType.GENERAL:        DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            PinType.PS_GENERAL:     DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            PinType.CONFIG:         DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.BOOT:           DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.JTAG:           DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.ADC_REF:        DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.ADC:            DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.ADC_DIODE:      DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.CORE_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.BRAM_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.AUX_POWER:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.ADC_POWER:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.BATT_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.BANK_POWER:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.GND:            DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.ADC_GND:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.NC:             DrawingPin.PinElectricalType.EL_TYPE_NC,
-            PinType.MGT_RREF:       DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.MGT_RCAL:       DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.MGT_REFCLK:     DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.MGT_RX:         DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.MGT_TX:         DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.MGT_POWER:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.MGT_VTT:        DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.MGT_AUX_POWER:  DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.PS_CTL:         DrawingPin.PinElectricalType.EL_TYPE_INPUT,
-            PinType.PS_DDR_DQ:      DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            PinType.PS_DDR_DQS:     DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            PinType.PS_DDR_DM:      DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.PS_DDR_A:       DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.PS_DDR_BA:      DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.PS_DDR_CTL:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.PS_DDR_CLK:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.PS_DDR_DCI_REF: DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.PS_DDR_ODT:     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
-            PinType.PS_DDR_VREF:    DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.PS_VCCPINT:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.PS_VCCPAUX:     DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.PS_VCCPLL:      DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT,
-            PinType.PS_MIO_VREF:    DrawingPin.PinElectricalType.EL_TYPE_PASSIVE,
-            PinType.AUX_IO_POWER:   DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT
+            PinType.GENERAL:        "bidirectional",
+            PinType.PS_GENERAL:     "bidirectional",
+            PinType.CONFIG:         "input",
+            PinType.BOOT:           "input",
+            PinType.JTAG:           "input",
+            PinType.ADC_REF:        "passive",
+            PinType.ADC:            "input",
+            PinType.ADC_DIODE:      "passive",
+            PinType.CORE_POWER:     "power_in",
+            PinType.BRAM_POWER:     "power_in",
+            PinType.AUX_POWER:      "power_in",
+            PinType.ADC_POWER:      "power_in",
+            PinType.BATT_POWER:     "power_in",
+            PinType.BANK_POWER:     "power_in",
+            PinType.GND:            "power_in",
+            PinType.ADC_GND:        "power_in",
+            PinType.NC:             "unconnected",
+            PinType.MGT_RREF:       "passive",
+            PinType.MGT_RCAL:       "passive",
+            PinType.MGT_REFCLK:     "input",
+            PinType.MGT_RX:         "input",
+            PinType.MGT_TX:         "output",
+            PinType.MGT_POWER:      "power_in",
+            PinType.MGT_VTT:        "power_in",
+            PinType.MGT_AUX_POWER:  "power_in",
+            PinType.PS_CTL:         "input",
+            PinType.PS_DDR_DQ:      "bidirectional",
+            PinType.PS_DDR_DQS:     "bidirectional",
+            PinType.PS_DDR_DM:      "output",
+            PinType.PS_DDR_A:       "output",
+            PinType.PS_DDR_BA:      "output",
+            PinType.PS_DDR_CTL:     "output",
+            PinType.PS_DDR_CLK:     "output",
+            PinType.PS_DDR_DCI_REF: "passive",
+            PinType.PS_DDR_ODT:     "output",
+            PinType.PS_DDR_VREF:    "passive",
+            PinType.PS_VCCPINT:     "power_in",
+            PinType.PS_VCCPAUX:     "power_in",
+            PinType.PS_VCCPLL:      "power_in",
+            PinType.PS_MIO_VREF:    "passive",
+            PinType.AUX_IO_POWER:   "power_in"
         }
 
         # Some dedicated pins has different electrical type...
         _SPECIAL_ELTYPE = {
-            re.compile("^CCLK"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            re.compile("^DONE"):    DrawingPin.PinElectricalType.EL_TYPE_BIDIR,
-            re.compile("^INIT"):    DrawingPin.PinElectricalType.EL_TYPE_OPEN_COLECTOR,
-            re.compile("^TDO"):     DrawingPin.PinElectricalType.EL_TYPE_OUTPUT,
+            re.compile("^CCLK"):    "bidirectional",
+            re.compile("^DONE"):    "bidirectional",
+            re.compile("^INIT"):    "open_collector",
+            re.compile("^TDO"):     "output",
         }
 
         _BANK_REGEXP = re.compile(".+_(\d+)$")
@@ -302,17 +303,17 @@ class Device:
         def __str__(self):
             return f"({self.name}, {self.pin}, {self.bank}, {self.bankType}, {self.number}, {self.type}, {self.pair}, {self.pairNeg})"
 
-        def drawingPin(self, **kwargs):
+        def kicadPin(self, **kwargs):
             # Try to find electrical type
             eltype = self._TYPE_DEFAULT_ELTYPE[self.type] if self.type in self._TYPE_DEFAULT_ELTYPE else \
-                DrawingPin.PinElectricalType.EL_TYPE_PASSIVE
+                "passive"
 
             for r,t in self._SPECIAL_ELTYPE.items():
                 if r.match(self.name):
                     eltype = t
                     break
 
-            return DrawingPin(at=Point(0, 0), number=self.pin, name=self.name, el_type=eltype, **kwargs)
+            return KicadPin(number=self.pin, name=self.name, etype=eltype, **kwargs)
 
     def __init__(self, file):
         self.csvFile = file;
@@ -455,16 +456,15 @@ class Device:
             pinList.extend(l)
 
         # Basic info
-        self.symbol.setReference('U')
-        self.symbol.setValue(value=self.libraryName.upper())
+        self.symbol.get_property('Reference').value = 'U'
+        self.symbol.get_property('Value').value = self.libraryName.upper()
         if self.footprint:
-            self.symbol.setDefaultFootprint(value=self.footprint)
+            self.symbol.get_property('Footprint').value = self.footprint
         if self.footprintFilter:
-            self.symbol.addFootprintFilter(self.footprintFilter)
+            self.symbol.get_property('ki_fp_filters').value = self.footprintFilter
 
         # I/O Bank = KiCAD Unit
-        self.symbol.num_units = len(bankList)
-        self.symbol.interchangable = Symbol.UnitsInterchangable.NOT_INTERCHANGEABLE
+        self.symbol.unit_count = len(bankList)
 
         # Calc max package pin name
         maxPackagePin = 0
@@ -474,7 +474,7 @@ class Device:
         pinLength = 200 if maxPackagePin > 2 else 100
 
         # Generate units
-        for bankIdx in range(0, self.symbol.num_units):
+        for bankIdx in range(0, self.symbol.unit_count):
             bank, pins = bankList[bankIdx]
 
             # Different sides of symbol (left, right, top, bottom)
@@ -515,20 +515,20 @@ class Device:
 
                     mergedPins = {}
                     for p in pinsGrouped[g]:
-                        dp = p.drawingPin()
+                        dp = p.kicadPin()
                         if p.name in mergedPins:
                             # Merging pins with same name within group
-                            dp.translate(mergedPins[p.name].at)
-                            dp.visibility = DrawingPin.PinVisibility.INVISIBLE
-                            if (dp.el_type == DrawingPin.PinElectricalType.EL_TYPE_POWER_INPUT) or \
-                                (dp.el_type == DrawingPin.PinElectricalType.EL_TYPE_POWER_OUTPUT):
-                                dp.el_type = DrawingPin.PinElectricalType.EL_TYPE_PASSIVE
+                            dp.posx = mergedPins[p.name].posx
+                            dp.posy = mergedPins[p.name].posy
+                            dp.is_hidden = True
+                            if (dp.etype == "power_in") or (dp.etype == "power_out"):
+                                dp.etype = "passive"
                         else:
                             # Draw pin vertically or horizontally
                             if s == "l" or s == "r":
-                                dp.translate(Point(0, -pinoffsets[s] * 100))
+                                dp.posy = -pinoffsets[s] * 100
                             else:
-                                dp.translate(Point(pinoffsets[s] * 100, 0))
+                                dp.posx = pinoffsets[s] * 100
                             mergedPins[p.name] = dp
                             pinoffsets[s] = pinoffsets[s] + 1
                         pinsides[s].append(dp)
@@ -545,8 +545,8 @@ class Device:
             for idx in range(0, len(genPins)):
                 # Draw pin horizontally
                 pin = genPins[idx]
-                dp = pin.drawingPin()
-                dp.translate(Point(0, -pinoffsets[genSide] * 100))
+                dp = pin.kicadPin()
+                dp.posy = -pinoffsets[genSide] * 100
                 pinsides[genSide].append(dp)
                 pinoffsets[genSide] = pinoffsets[genSide] + 1
                 pinList.remove(pin)
@@ -603,47 +603,52 @@ class Device:
             # Move/rotate pins
             for s, l in pinsides.items():
                 for dp in l:
-                    dp.unit_idx = bankIdx + 1
-                    dp.pin_length = pinLength
+                    dp.unit = bankIdx + 1
                     if s == "l":
-                        dp.orientation = DrawingPin.PinOrientation.RIGHT
-                        dp.translate(Point(left - pinLength, hStartY))
+                        dp.rotation = 0
+                        dp.posx += left - pinLength
+                        dp.posy += hStartY
                     elif s == "r":
-                        dp.translate(Point(right + pinLength, hStartY))
+                        dp.rotation = 180
+                        dp.posx += right + pinLength
+                        dp.posy += hStartY
                     elif s == "t":
-                        dp.orientation = DrawingPin.PinOrientation.DOWN
-                        dp.translate(Point(tStartX, top + pinLength))
+                        dp.rotation = 270
+                        dp.posx += tStartX
+                        dp.posy += top + pinLength
                     elif s == "b":
-                        dp.orientation = DrawingPin.PinOrientation.UP
-                        dp.translate(Point(bStartX, bottom - pinLength))
-                    self.symbol.drawing.append(dp)
+                        dp.rotation = 90
+                        dp.posx += bStartX
+                        dp.posy += bottom - pinLength
+                    dp.posx = f"{(dp.posx * 0.0254):.2f}"
+                    dp.posy = f"{(dp.posy * 0.0254):.2f}"
+                    dp.length = f"{(pinLength * 0.0254):.2f}"
+                    self.symbol.pins.append(dp)
 
             # Draw body
-            self.symbol.drawing.append(DrawingRectangle(Point(left, bottom), Point(right, top),
-                                                        unit_idx=bankIdx + 1,
-                                                        fill=ElementFill.FILL_BACKGROUND))
+            self.symbol.rectangles.append(Rectangle(f"{(left * 0.0254):.2f}", 
+                                                    f"{(bottom * 0.0254):.2f}", 
+                                                    f"{(right * 0.0254):.2f}", 
+                                                    f"{(top * 0.0254):.2f}",
+                                                    unit=bankIdx + 1,
+                                                    fill_type="background"))
 
         for pin in pinList:
             if pin.type != self.Pin.PinType.NC:
                 logging.warning(f"Unplaced pin: {pin.name} ({pin.pin})")
 
-    def createSymbol(self, gen):
+    def createSymbol(self, library):
         if not self.valid:
             return
 
-        # Make strings for DCM entries
-        desc = (f"Xilinx {self.familyName} FPGA, {self.name.upper()}, {self.packageName.upper()}")
-        keywords = f"Xilinx FPGA {self.familyName}"
-        datasheet = self._FAMILY_DATASHEETS[self.family]
-
         # Make the symbol
-        self.symbol = gen.addSymbol(self.libraryName, dcm_options={
-                'description': desc,
-                'keywords': keywords,
-                'datasheet': datasheet},
-                offset=20)
-        # Draw
+        self.symbol = KicadSymbol(self.libraryName, f"FPGA_Xilinx_{self.family}")
+        self.symbol.add_default_properties()
+        self.symbol.get_property('Datasheet').value = self._FAMILY_DATASHEETS[self.family]
+        self.symbol.get_property('ki_keywords').value = f"Xilinx FPGA {self.familyName}"
+        self.symbol.get_property('ki_description').value = f"Xilinx {self.familyName} FPGA, {self.name.upper()}, {self.packageName.upper()}"
         self.drawSymbol()
+        library.symbols.append(self.symbol)
 
 
 if __name__ == "__main__":
@@ -682,12 +687,11 @@ if __name__ == "__main__":
                 fpga = Device(fullpath)
                 # If there isn't a SymbolGenerator for this family yet, make one
                 if fpga.family not in libraries:
-                    libraries[fpga.family] = SymbolGenerator(
-                        lib_name=f"FPGA_Xilinx_{fpga.family}")
+                    libraries[fpga.family] = KicadLibrary(f"FPGA_Xilinx_{fpga.family}.kicad_sym")
                 # Make a symbol for part
                 fpga.createSymbol(libraries[fpga.family])
 
     # Write libraries
     for gen in libraries.values():
-        gen.writeFiles()
+        gen.write()
 
