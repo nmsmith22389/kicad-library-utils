@@ -45,19 +45,19 @@ class Rule(KLCRule):
         self.power_errors = []
 
         for stack in self.component.get_pinstacks().values():
-          for pin in stack:
-            name = pin.name.lower()
-            etype = pin.etype
+            for pin in stack:
+                name = pin.name.lower()
+                etype = pin.etype
 
-            if self.test(name.lower(), self.POWER_INPUTS) and (not etype.lower() == 'power_in'):
-                if len(self.power_errors) == 0:
-                    self.error("Power pins should be of type POWER INPUT or POWER OUTPUT")
-                    if len(stack) > 1:
-                        self.errorExtra("NOTE: If power-pins have been stacked, you may ignore this error in some cases (Ensure to check rule S4.3 in addition to recognize such stacks).")
-                self.power_errors.append(pin)
-                self.errorExtra("{pin} is of type {t}".format(
-                    pin=pinString(pin),
-                    t=etype))
+                if self.test(name.lower(), self.POWER_INPUTS) and (not etype.lower() == 'power_in'):
+                    if len(self.power_errors) == 0:
+                        self.error("Power pins should be of type POWER INPUT or POWER OUTPUT")
+                        if len(stack) > 1:
+                            self.errorExtra("NOTE: If power-pins have been stacked, you may ignore this error in some cases (Ensure to check rule S4.3 in addition to recognize such stacks).")
+                    self.power_errors.append(pin)
+                    self.errorExtra("{pin} is of type {t}".format(
+                        pin=pinString(pin),
+                        t=etype))
 
         return len(self.power_errors) > 0
 
