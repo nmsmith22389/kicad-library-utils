@@ -209,6 +209,23 @@ class Device:
             re.compile("^INIT"):    "open_collector",
             re.compile("^TDO"):     "output",
         }
+        
+        _POWER_BANK_TYPES = [
+            PinType.CORE_POWER,
+            PinType.BRAM_POWER,
+            PinType.AUX_POWER,
+            PinType.ADC_POWER,
+            PinType.BATT_POWER,
+            PinType.MGT_POWER,
+            PinType.MGT_AUX_POWER,
+            PinType.MGT_VTT,
+            PinType.GND,
+            PinType.ADC_GND,
+            PinType.PS_VCCPINT,
+            PinType.PS_VCCPAUX,
+            PinType.PS_VCCPLL,
+            PinType.AUX_IO_POWER
+        ]
 
         _BANK_REGEXP = re.compile(".+_(\d+)$")
 
@@ -258,6 +275,9 @@ class Device:
 
             if self.type == self.PinType.UNKNOWN:
                 logging.warning(f"Unknown pin type for pin {self.name}")
+                
+            if self.type in self._POWER_BANK_TYPES:
+                self.bank = -1;                
 
             if self.type == self.PinType.GENERAL:
                 # General I/O pins has number and can be in pair
@@ -313,7 +333,9 @@ class Device:
                     eltype = t
                     break
 
-            return KicadPin(number=self.pin, name=self.name, etype=eltype, **kwargs)
+            pin = KicadPin(number=self.pin, name=self.name, etype=eltype, **kwargs)
+            pin.origin = self
+            return pin
 
     def __init__(self, file):
         self.csvFile = file;
@@ -450,6 +472,7 @@ class Device:
 
     def drawSymbol(self):
         bankList = list(self.banks.items())
+        bankList.sort()
         pinList = []
 
         for b, l in bankList:
@@ -491,20 +514,39 @@ class Device:
 
             # Force some pin group to specific side and draw them
             forcedSides = {
-                "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, self.Pin.PinType.JTAG, self.Pin.PinType.ADC_REF,
-                      self.Pin.PinType.ADC, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_RX,
-                      self.Pin.PinType.MGT_REFCLK, self.Pin.PinType.MGT_RREF, self.Pin.PinType.MGT_RCAL,
+                "l": [self.Pin.PinType.CONFIG, self.Pin.PinType.BOOT, self.Pin.PinType.ADC_REF,
+                      self.Pin.PinType.ADC, self.Pin.PinType.MGT_RX, self.Pin.PinType.MGT_REFCLK, 
+                      self.Pin.PinType.MGT_RREF, self.Pin.PinType.MGT_RCAL, 
                       self.Pin.PinType.PS_MIO_VREF, self.Pin.PinType.PS_CTL, self.Pin.PinType.PS_DDR_DQ,
-                      self.Pin.PinType.PS_DDR_DQS, self.Pin.PinType.PS_DDR_DM],
-                "r": [self.Pin.PinType.MGT_TX, self.Pin.PinType.PS_DDR_VREF, self.Pin.PinType.PS_DDR_CLK,
-                      self.Pin.PinType.PS_DDR_CTL, self.Pin.PinType.PS_DDR_A, self.Pin.PinType.PS_DDR_BA,
-                      self.Pin.PinType.PS_DDR_DCI_REF, self.Pin.PinType.PS_DDR_ODT],
-                "t": [self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, self.Pin.PinType.AUX_POWER,
-                      self.Pin.PinType.AUX_IO_POWER, self.Pin.PinType.BANK_POWER, self.Pin.PinType.ADC_POWER,
+                      self.Pin.PinType.PS_DDR_DQS, self.Pin.PinType.PS_DDR_DM,
+                      self.Pin.PinType.PS_VCCPINT, self.Pin.PinType.PS_VCCPAUX,
+                      self.Pin.PinType.PS_VCCPLL, self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, self.Pin.PinType.AUX_POWER, self.Pin.PinType.GND,
+                      self.Pin.PinType.AUX_IO_POWER],
+                "r": [self.Pin.PinType.JTAG, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_TX, self.Pin.PinType.PS_DDR_VREF, 
+                      self.Pin.PinType.PS_DDR_CLK, self.Pin.PinType.PS_DDR_CTL, self.Pin.PinType.PS_DDR_A, self.Pin.PinType.PS_DDR_BA,
+                      self.Pin.PinType.PS_DDR_DCI_REF, self.Pin.PinType.PS_DDR_ODT, self.Pin.PinType.ADC_POWER,
                       self.Pin.PinType.BATT_POWER, self.Pin.PinType.MGT_POWER, self.Pin.PinType.MGT_AUX_POWER,
-                      self.Pin.PinType.MGT_VTT, self.Pin.PinType.PS_VCCPINT, self.Pin.PinType.PS_VCCPAUX,
-                      self.Pin.PinType.PS_VCCPLL],
-                "b": [self.Pin.PinType.GND, self.Pin.PinType.ADC_GND]
+                      self.Pin.PinType.MGT_VTT, self.Pin.PinType.ADC_GND],
+                "t": [self.Pin.PinType.BANK_POWER],
+                "b": []
+            }
+            snapToBorderTypes = {
+                self.Pin.PinType.GND: "b",
+                self.Pin.PinType.ADC_GND: "b"
+            }
+            sparseTypes = {
+                self.Pin.PinType.PS_VCCPINT: 3,
+                self.Pin.PinType.PS_VCCPAUX: 3,
+                self.Pin.PinType.PS_VCCPLL: 3,
+                self.Pin.PinType.CORE_POWER: 3,
+                self.Pin.PinType.BRAM_POWER: 3,
+                self.Pin.PinType.AUX_POWER: 3,
+                self.Pin.PinType.AUX_IO_POWER: 3,
+                self.Pin.PinType.ADC_POWER: 3,
+                self.Pin.PinType.BATT_POWER: 3,
+                self.Pin.PinType.MGT_POWER: 3,
+                self.Pin.PinType.MGT_AUX_POWER: 3,
+                self.Pin.PinType.MGT_VTT: 3
             }
 
             # Draw all non-I/O pin groups
@@ -514,8 +556,13 @@ class Device:
                         continue
 
                     mergedPins = {}
+                    sparse = 1
                     for p in pinsGrouped[g]:
                         dp = p.kicadPin()
+                        
+                        if p.type in sparseTypes:
+                            sparse = sparseTypes[p.type]
+                            
                         if p.name in mergedPins:
                             # Merging pins with same name within group
                             dp.posx = mergedPins[p.name].posx
@@ -530,10 +577,11 @@ class Device:
                             else:
                                 dp.posx = pinoffsets[s] * 100
                             mergedPins[p.name] = dp
-                            pinoffsets[s] = pinoffsets[s] + 1
+                            pinoffsets[s] = pinoffsets[s] + 1;
                         pinsides[s].append(dp)
                         pinList.remove(p)
-                    pinoffsets[s] = pinoffsets[s] + 1
+                            
+                    pinoffsets[s] = pinoffsets[s] + 1 * sparse;
 
             # Draw general IO, starting from left side
             genSide = "l"
@@ -568,7 +616,7 @@ class Device:
             # Calc max pin names - for bounding calculation
             for s, l in pinsides.items():
                 for p in l:
-                    ceilName = len(p.name) * 48
+                    ceilName = len(p.name) * 45
                     maxNames[s] = ceilName if ceilName > maxNames[s] else maxNames[s]
 
             maxRowNames = maxNames["l"] if maxNames["l"] > maxNames["r"] else maxNames["r"]
@@ -590,7 +638,7 @@ class Device:
             right = width / 2
             top = height / 2
             bottom = - height / 2
-
+                             
             # Pin draw starts
             if maxRowNames > maxTBWidth:
                 hStartY =  height / 2 - _roundUp((height - maxLRHeight) / 2)
@@ -620,6 +668,18 @@ class Device:
                         dp.rotation = 90
                         dp.posx += bStartX
                         dp.posy += bottom - pinLength
+                        
+                    if dp.origin.type in snapToBorderTypes:
+                        b = snapToBorderTypes[dp.origin.type]
+                        if b == 't':
+                            dp.posy = top - 100
+                        elif b == 'b':
+                            dp.posy = bottom + 100
+                        elif b == 'l':
+                            dp.posy = left + 100
+                        elif b == 'r':
+                            dp.posy = right - 100
+                                        
                     dp.posx = f"{(dp.posx * 0.0254):.2f}"
                     dp.posy = f"{(dp.posy * 0.0254):.2f}"
                     dp.length = f"{(pinLength * 0.0254):.2f}"
