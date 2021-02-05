@@ -226,6 +226,14 @@ class Device:
             PinType.PS_VCCPLL,
             PinType.AUX_IO_POWER
         ]
+        
+        _GPIO_BANK_TYPES = [
+            PinType.GENERAL,
+            PinType.PS_GENERAL,
+            PinType.BANK_POWER,
+            PinType.PS_CTL,
+            PinType.PS_MIO_VREF
+        ]
 
         _BANK_REGEXP = re.compile(".+_(\d+)$")
 
@@ -345,6 +353,9 @@ class Device:
         self.valid = False
 
         self.parseFile()
+        
+    def __lt__(self, other):
+        return self.libraryName < other.libraryName
 
     def readPins(self):
         f = open(self.csvFile, "r")
@@ -495,6 +506,9 @@ class Device:
             for pin in pins:
                 maxPackagePin = len(pin.pin) if len(pin.pin) > maxPackagePin else maxPackagePin
         pinLength = 200 if maxPackagePin > 2 else 100
+        
+        # Default bank width for GPIO banks
+        gpioBankWidth = 1200
 
         # Generate units
         for bankIdx in range(0, self.symbol.unit_count):
@@ -505,12 +519,15 @@ class Device:
             pinoffsets = {"l": 0, "r": 0, "t": 0, "b": 0}
             maxNames = {"l": 0, "r": 0, "t": 0, "b": 0}
             pinsGrouped = {}
+            gpioBank = True 
 
             # Extract pin groups
             for p in pins:
                 if p.type not in pinsGrouped:
                     pinsGrouped[p.type] = []
                 pinsGrouped[p.type].append(p)
+                if p.type not in self.Pin._GPIO_BANK_TYPES:
+                    gpioBank = False
 
             # Force some pin group to specific side and draw them
             forcedSides = {
@@ -520,8 +537,9 @@ class Device:
                       self.Pin.PinType.PS_MIO_VREF, self.Pin.PinType.PS_CTL, self.Pin.PinType.PS_DDR_DQ,
                       self.Pin.PinType.PS_DDR_DQS, self.Pin.PinType.PS_DDR_DM,
                       self.Pin.PinType.PS_VCCPINT, self.Pin.PinType.PS_VCCPAUX,
-                      self.Pin.PinType.PS_VCCPLL, self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, self.Pin.PinType.AUX_POWER, self.Pin.PinType.GND,
-                      self.Pin.PinType.AUX_IO_POWER],
+                      self.Pin.PinType.PS_VCCPLL, self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, 
+                      self.Pin.PinType.AUX_POWER, self.Pin.PinType.AUX_IO_POWER,
+                      self.Pin.PinType.GND],
                 "r": [self.Pin.PinType.JTAG, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_TX, self.Pin.PinType.PS_DDR_VREF, 
                       self.Pin.PinType.PS_DDR_CLK, self.Pin.PinType.PS_DDR_CTL, self.Pin.PinType.PS_DDR_A, self.Pin.PinType.PS_DDR_BA,
                       self.Pin.PinType.PS_DDR_DCI_REF, self.Pin.PinType.PS_DDR_ODT, self.Pin.PinType.ADC_POWER,
@@ -535,18 +553,18 @@ class Device:
                 self.Pin.PinType.ADC_GND: "b"
             }
             sparseTypes = {
-                self.Pin.PinType.PS_VCCPINT: 3,
-                self.Pin.PinType.PS_VCCPAUX: 3,
-                self.Pin.PinType.PS_VCCPLL: 3,
-                self.Pin.PinType.CORE_POWER: 3,
-                self.Pin.PinType.BRAM_POWER: 3,
-                self.Pin.PinType.AUX_POWER: 3,
-                self.Pin.PinType.AUX_IO_POWER: 3,
-                self.Pin.PinType.ADC_POWER: 3,
-                self.Pin.PinType.BATT_POWER: 3,
-                self.Pin.PinType.MGT_POWER: 3,
-                self.Pin.PinType.MGT_AUX_POWER: 3,
-                self.Pin.PinType.MGT_VTT: 3
+                self.Pin.PinType.PS_VCCPINT: 4,
+                self.Pin.PinType.PS_VCCPAUX: 4,
+                self.Pin.PinType.PS_VCCPLL: 4,
+                self.Pin.PinType.CORE_POWER: 4,
+                self.Pin.PinType.BRAM_POWER: 4,
+                self.Pin.PinType.AUX_POWER: 4,
+                self.Pin.PinType.AUX_IO_POWER: 4,
+                self.Pin.PinType.ADC_POWER: 4,
+                self.Pin.PinType.BATT_POWER: 4,
+                self.Pin.PinType.MGT_POWER: 4,
+                self.Pin.PinType.MGT_AUX_POWER: 4,
+                self.Pin.PinType.MGT_VTT: 4
             }
 
             # Draw all non-I/O pin groups
@@ -600,14 +618,22 @@ class Device:
                 pinList.remove(pin)
 
                 # Switch side to right when left side is filled
-                if genSide == "l" and (pinoffsets["l"] >= (pinoffsets["r"] + (len(genPins) - idx - 1))) \
-                        and (not pin.pair or pin.pairNeg):
-                    genSide = "r"
+                #if genSide == "l" and (pinoffsets["l"] >= (pinoffsets["r"] + (len(genPins) - idx - 1))) \
+                #        and (not pin.pair or pin.pairNeg):
+                #    genSide = "r"
 
             # Fix offsets
             if len(genPins) > 0:
-                pinoffsets["l"] = pinoffsets["l"] + 1
-                pinoffsets["r"] = pinoffsets["r"] + 1
+                if pinoffsets["l"] > 0:
+                    pinoffsets["l"] = pinoffsets["l"] + 1
+                if pinoffsets["r"] > 0:
+                    pinoffsets["r"] = pinoffsets["r"] + 1
+            
+            # Move bank power pins from center if one side is empty
+            if pinoffsets["l"] == 0:
+                snapToBorderTypes[self.Pin.PinType.BANK_POWER] = "l"
+            if pinoffsets["r"] == 0:
+                snapToBorderTypes[self.Pin.PinType.BANK_POWER] = "r"
 
             for k,v in pinoffsets.items():
                 if pinoffsets[k] >= 2:
@@ -620,6 +646,9 @@ class Device:
                     maxNames[s] = ceilName if ceilName > maxNames[s] else maxNames[s]
 
             maxRowNames = maxNames["l"] if maxNames["l"] > maxNames["r"] else maxNames["r"]
+            #if gpioBank:
+            #    maxRowNames = gpioBankWidth if maxNames["l"] > 0 or maxNames["r"] > 0 else 0
+            
             if pinoffsets["l"] > 0 and pinoffsets["r"] > 0:
                 maxRowNames = maxRowNames * 2
 
@@ -676,9 +705,9 @@ class Device:
                         elif b == 'b':
                             dp.posy = bottom + 100
                         elif b == 'l':
-                            dp.posy = left + 100
+                            dp.posx = left + 100
                         elif b == 'r':
-                            dp.posy = right - 100
+                            dp.posx = right - 100
                                         
                     dp.posx = f"{(dp.posx * 0.0254):.2f}"
                     dp.posy = f"{(dp.posy * 0.0254):.2f}"
@@ -740,17 +769,21 @@ if __name__ == "__main__":
 
     # Load devices from CSV, sorted by family
     libraries = {}
+    devices = []
     for path, dirs, files in os.walk(args.dir):
         for file in files:
             fullpath = os.path.join(path, file)
             if fnmatch.fnmatch(fullpath.lower(), '*.csv'):
-                fpga = Device(fullpath)
-                # If there isn't a SymbolGenerator for this family yet, make one
-                if fpga.family not in libraries:
-                    libraries[fpga.family] = KicadLibrary(f"FPGA_Xilinx_{fpga.family}.kicad_sym")
-                # Make a symbol for part
-                fpga.createSymbol(libraries[fpga.family])
+                devices.append(Device(fullpath))
+    devices.sort()
 
+    for fpga in devices:
+        # If there isn't a SymbolGenerator for this family yet, make one
+        if fpga.family not in libraries:
+            libraries[fpga.family] = KicadLibrary(f"FPGA_Xilinx_{fpga.family}.kicad_sym")
+        # Make a symbol for part
+        fpga.createSymbol(libraries[fpga.family])
+                
     # Write libraries
     for gen in libraries.values():
         gen.write()
