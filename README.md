@@ -40,7 +40,7 @@ KiCad utilities
 
 **check_3d_coverage.py**: Script for checking which KiCad footprints in a `.pretty` library have 3D models. It also shows unused 3D model files.
 
-[KLC]: http://kicad-pcb.org/libraries/klc/
+[KLC]: http://kicad.org/libraries/klc/
 
 How to use
 ==========
