@@ -396,7 +396,10 @@ class Arc(KicadSymbolBase):
         # the 1st element
         (startx, starty) = _get_xy(sexpr, 'start')
         (endx, endy) = _get_xy(sexpr, 'end')
-        rad = _get_array(sexpr, 'radius')[0]
+        try:
+            rad = _get_array(sexpr, 'radius')[0]
+        except:
+            return None
         (centerx, centery) = _get_xy(rad, 'at')
         length = _get_value_of(rad, 'length')
         (angle_start, angle_stop) = _get_xy(rad, 'angles')
