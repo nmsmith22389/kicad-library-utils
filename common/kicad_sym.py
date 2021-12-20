@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass, field
 from typing import List
+from pathlib import Path
 
 import re, math
 import sys, os
@@ -358,17 +359,13 @@ class Circle(KicadSymbolBase):
 
 @dataclass
 class Arc(KicadSymbolBase):
-    # (arc (start 2.54 12.7) (end 12.7 5.08) (radius (at 3.81 3.81) (length 8.9803) (angles 98.1 8.1))
-    # TODO: Currently the arc is over-specified. Figure out how we can add a 'simple' arc
+    # (arc (start -5.08 -1.27) (mid 0 -6.35) (end 5.08 -1.27)
     startx: float
     starty: float
     endx: float
     endy: float
-    centerx: float
-    centery: float
-    length: float = 0
-    angle_start: float = 0
-    angle_stop: float = 0
+    midx: float
+    midy: float
     stroke_width: float = 0.254
     stroke_color: Color = None
     fill_type: str = 'none'
@@ -377,13 +374,7 @@ class Arc(KicadSymbolBase):
     demorgan: int = 0
 
     def get_sexpr(s):
-        sx = [ 'arc', ['start', s.startx, s.starty], ['end', s.endx, s.endy]]
-        r = ['radius', ['at', s.centerx, s.centery]]
-        if s.length:
-            r.append(['length', s.length])
-        if s.angle_start and s.angle_stop:
-            r.append(['angles', s.angle_start, s.angle_stop])
-        sx.append(r)
+        sx = [ 'arc', ['start', s.startx, s.starty], ['mid', s.midx, s.midy], ['end', s.endx, s.endy]]
         sx.append(['stroke', ['width', s.stroke_width]])
         sx.append(['fill', ['type', s.fill_type]])
         return sx
@@ -393,16 +384,12 @@ class Arc(KicadSymbolBase):
         sexpr_orig = sexpr.copy()
         if (sexpr.pop(0) != 'arc'):
             return None
-        # the 1st element
         (startx, starty) = _get_xy(sexpr, 'start')
         (endx, endy) = _get_xy(sexpr, 'end')
-        rad = _get_array(sexpr, 'radius')[0]
-        (centerx, centery) = _get_xy(rad, 'at')
-        length = _get_value_of(rad, 'length')
-        (angle_start, angle_stop) = _get_xy(rad, 'angles')
+        (midx, midy) = _get_xy(sexpr, 'mid')
         (stroke, scolor) = _get_stroke(sexpr)
         (fill, fcolor) = _get_fill(sexpr)
-        return Arc(startx, starty, endx, endy, centerx, centery, length, angle_start, angle_stop, stroke, scolor, fill, fcolor, unit=unit, demorgan=demorgan)
+        return Arc(startx, starty, endx, endy, midx, midy, stroke, scolor, fill, fcolor, unit=unit, demorgan=demorgan)
 
 @dataclass
 class Point(KicadSymbolBase):
@@ -624,7 +611,7 @@ class Property(KicadSymbolBase):
 class KicadSymbol(KicadSymbolBase):
     name: str
     libname: str
-    filename: str = field(default="", compare = False)
+    filename: str
     properties: List[Property] = field(default_factory=list)
     pins: List[Pin] = field(default_factory=list)
     rectangles: List[Rectangle] = field(default_factory=list)
@@ -644,11 +631,12 @@ class KicadSymbol(KicadSymbolBase):
 
     def __post_init__(self):
         if self.filename == "":
-            self.filename = self.libname + ".kicad_sym"
+            raise ValueError("Filename can not be empty")
+        self.libname = Path(self.filename).stem
 
     def get_sexpr(s):
         # add header
-        full_name = s.quoted_string("{}:{}".format(s.libname, s.name))
+        full_name = s.quoted_string("{}".format(s.name))
         sx = [
             'symbol', full_name
         ]
@@ -838,7 +826,7 @@ class KicadLibrary(KicadSymbolBase):
     filename: str
     symbols: List[KicadSymbol] = field(default_factory=list)
     generator: str = 'kicad-library-utils'
-    version: str = '20201113'
+    version: str = '20211218'
 
     def write(s):
         lib_file = open(s.filename,"w")
@@ -864,84 +852,91 @@ class KicadLibrary(KicadSymbolBase):
 
         #i parse s-expr
         sexpr_data = sexpr.parse_sexp(lines)
-        sym_list = _get_array(sexpr_data, 'symbol')
+        sym_list = _get_array(sexpr_data, 'symbol', max_level=2)
         f_name.close()
 
         # itertate over symbol
         for item in sym_list:
             if item.pop(0) != 'symbol':
-              print ('unexpected token in file')
-              continue
-            name = item.pop(0)
-            m0 = re.match(r'^(.*?):(.*)$', name)
-            m1 = re.match(r'^.*_(\d+?)_(\d+?)$', name)
-            if (m0 is not None):
-                # we found a new part, split symbol and libname
-                (libname, partname) = (m0.group(1), m0.group(2))
-                symbol = KicadSymbol(str(partname), str(libname), filename = filename)
+                raise ValueError('unexpected token in file')
+            # retrieving only the `partname` if formated as `libname:partname` (legacy format)
+            partname = item.pop(0).split(':')[-1]
 
-                # extract extends property
-                extends = _get_array2(item, 'extends')
-                if len(extends) > 0:
-                  symbol.extends = extends[0][1]
+            # we found a new part, extract the symbol name
+            symbol = KicadSymbol(str(partname), libname = filename, filename = filename)
 
-                # extract properties
-                for prop in _get_array(item, 'property'):
-                    symbol.properties.append(Property.from_sexpr(prop))
+            # extract extends property
+            extends = _get_array2(item, 'extends')
+            if len(extends) > 0:
+              symbol.extends = extends[0][1]
 
-                # get flags
-                if _has_value(item, 'in_bom'):
-                    symbol.in_bom = True
-                if _has_value(item, 'power'):
-                    symbol.is_power = True
-                if _has_value(item, 'on_board'):
-                    symbol.on_board = True
+            # extract properties
+            for prop in _get_array(item, 'property'):
+                symbol.properties.append(Property.from_sexpr(prop))
 
-                # get pin-numbers properties
-                pin_numbers_info = _get_array2(item, 'pin_numbers')
-                if pin_numbers_info:
-                    if 'hide' in pin_numbers_info[0]:
-                        symbol.hide_pin_numbers = True
+            # get flags
+            if _has_value(item, 'in_bom'):
+                symbol.in_bom = True
+            if _has_value(item, 'power'):
+                symbol.is_power = True
+            if _has_value(item, 'on_board'):
+                symbol.on_board = True
 
-                # get pin-name properties
-                pin_names_info = _get_array2(item, 'pin_names')
-                if pin_names_info:
-                    if 'hide' in pin_names_info[0]:
-                        symbol.hide_pin_names = True
-                    # sometimes the pin_name_offset value does not exist, then use 20mil as default
-                    symbol.pin_names_offset = _get_value_of(pin_names_info[0], 'offset', 0.508)
-             
-                # add it to the list of symbols
-                library.symbols.append(symbol)
+            # get pin-numbers properties
+            pin_numbers_info = _get_array2(item, 'pin_numbers')
+            if pin_numbers_info:
+                if 'hide' in pin_numbers_info[0]:
+                    symbol.hide_pin_numbers = True
 
-            elif (m1 is not None):
+            # get pin-name properties
+            pin_names_info = _get_array2(item, 'pin_names')
+            if pin_names_info:
+                if 'hide' in pin_names_info[0]:
+                    symbol.hide_pin_names = True
+                # sometimes the pin_name_offset value does not exist, then use 20mil as default
+                symbol.pin_names_offset = _get_value_of(pin_names_info[0], 'offset', 0.508)
+
+
+            # get the actual geometry information
+            # it is split over units
+            subsymbols = _get_array2(item, 'symbol')
+            for unit_data in subsymbols:
                 # we found a new 'subpart' (no clue how to call it properly)
-                (unit, demorgan) = (m1.group(1), m1.group(2))
-                unit = int(unit)
-                demorgan = int(demorgan)
+                if unit_data.pop(0) != 'symbol':
+                    raise ValueError('unexpected token in file')
+                name = unit_data.pop(0)
+
+                # split the name
+                m1 = re.match(r'^'+re.escape(partname)+'_(\d+?)_(\d+?)$', name)
+                if not m1:
+                    raise ValueError('failed to parse subsymbol')
+
+                (unit_idx, demorgan_idx) = (m1.group(1), m1.group(2))
+                unit_idx = int(unit_idx)
+                demorgan_idx = int(demorgan_idx)
 
                 # update the amount of units, alternative-styles (demorgan)
-                symbol.unit_count = max(unit, symbol.unit_count)
-                symbol.demorgan_count = max(demorgan, symbol.demorgan_count)
+                symbol.unit_count = max(unit_idx, symbol.unit_count)
+                symbol.demorgan_count = max(demorgan_idx, symbol.demorgan_count)
 
                 # extract pins and graphical items
-                for pin in _get_array(item, 'pin'):
-                    symbol.pins.append(Pin.from_sexpr(pin, unit, demorgan))
-                for circle in _get_array(item, 'circle'):
-                    symbol.circles.append(Circle.from_sexpr(circle, unit, demorgan))
-                for arc in _get_array(item, 'arc'):
-                    symbol.arcs.append(Arc.from_sexpr(arc, unit, demorgan))
-                for rect in _get_array(item, 'rectangle'):
+                for pin in _get_array(unit_data, 'pin'):
+                    symbol.pins.append(Pin.from_sexpr(pin, unit_idx, demorgan_idx))
+                for circle in _get_array(unit_data, 'circle'):
+                    symbol.circles.append(Circle.from_sexpr(circle, unit_idx, demorgan_idx))
+                for arc in _get_array(unit_data, 'arc'):
+                    symbol.arcs.append(Arc.from_sexpr(arc, unit_idx, demorgan_idx))
+                for rect in _get_array(unit_data, 'rectangle'):
                     #symbol.polylines.append(Rectangle.from_sexpr(rect, unit, demorgan).as_polyline())
-                    symbol.rectangles.append(Rectangle.from_sexpr(rect, unit, demorgan))
-                for poly in _get_array(item, 'polyline'):
-                    symbol.polylines.append(Polyline.from_sexpr(poly, unit, demorgan))
-                for text in _get_array(item, 'text'):
-                    symbol.texts.append(Text.from_sexpr(text, unit, demorgan))
+                    symbol.rectangles.append(Rectangle.from_sexpr(rect, unit_idx, demorgan_idx))
+                for poly in _get_array(unit_data, 'polyline'):
+                    symbol.polylines.append(Polyline.from_sexpr(poly, unit_idx, demorgan_idx))
+                for text in _get_array(unit_data, 'text'):
+                    symbol.texts.append(Text.from_sexpr(text, unit_idx, demorgan_idx))
 
-            else:
-                print("could not match entry")
-                continue
+            # add it to the list of symbols
+            library.symbols.append(symbol)
+
 
         return library
 
