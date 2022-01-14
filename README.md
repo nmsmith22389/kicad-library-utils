@@ -49,7 +49,7 @@ Contains various python libraries used by the check scripts and the generators.
 ## tools directory
 
 **compare_sexpr_files.sh**: Normalizes and compares two sexpr files. Those can be `kicad_sym` or `kicad_mod` files.
-**cnt_fps.py**: Input is a path to the footprint repo directory. Search and report findings for `*.pretty` dirs and `*.kicad_mod` files. Also outputs a file ending with branch name under `/output` dir.
+**count_footprints.py**: Input is a path to the footprint repo directory. Search and report findings for `*.pretty` dirs and `*.kicad_mod` files. Also outputs a file ending with branch name under `/output` dir.
 
 
 ## test directory
