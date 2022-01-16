@@ -63,7 +63,7 @@ How to use
 
     # run the script passing the files to be checked
     ./check_footprint.py path_to_fp1.kicad_mod path_to_fp2.kicad_mod
-    
+
     # Add `-v`, `-vv`, or `-vvv` for extra verbose output. The most useful is `-vv`, which explains in details the violations. Ex: 
     ./check_footprint.py path_to_fp1.kicad_mod path_to_fp2.kicad_mod -vv
 
@@ -99,9 +99,41 @@ How to use
     # run the following 'h'elp command to see other options
     ./comparelibs.py -h
 
+## Check before commiting
+
+    Usually, you commit the footprint (or symbol) and let CI check your job.
+    You can let git pass the check before actually commiting. If it's red
+    fix your footprint (or symbol) !
+
+    To automate the call, place a hook file in the footprint git's hooks directory,
+     **/usr/local/share/kicad/kicad-footprints/.git/hooks/pre-commit**
+     wich contains:
+
+    ```
+    #!/bin/sh
+
+    ERR=0
+    STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+    for F in $STAGED_FILES; do
+      [[ "${F: -10}"  == ".kicad_mod" ]] &&
+      {
+        x=$(python3  /somewhere/kicad-library-utils/klc-check/check_footprint.py  -vv $F)
+        echo "$x"
+        echo "$x"| grep -q "Violating" &&  ERR=1
+      }
+    done
+    exit $ERR
+    ```
+    diff-filter stands for Added Copied Modified
+
+    The script skips non footprint-files
+
+    Place the script in the footprint (or symbol) directory, not in the library-utils'git !
+
 Notice
 ======
 
 The scripts use a different algorithm to generate files in relation to the KiCad saving action. That will result output files with more modified lines than expected, because the line generally are repositioned. However, the file still functional.
 
 Always check the generated files by opening them on KiCad. Additionally, if you are working over a git repository (if not, you should) you can commit your work before proceed with the scripts, this will put you safe of any trouble. Also, you would use git diff to give a look at the modifications.
+/usr/local/share/kicad/kicad-footprints/.git/hooks
