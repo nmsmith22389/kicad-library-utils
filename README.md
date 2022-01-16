@@ -101,15 +101,15 @@ How to use
 
 ## Check before commiting
 
-    Usually, you commit the footprint (or symbol) and let CI check your job.
-    You can let git pass the check before actually commiting. If it's red
-    fix your footprint (or symbol) !
+Usually, you commit the footprint (or symbol) and let CI check your job.
+You can let git pass the check before actually commiting. If it's red
+fix your footprint (or symbol) !
 
-    To automate the call, place a hook file in the footprint git's hooks directory,
-     **/usr/local/share/kicad/kicad-footprints/.git/hooks/pre-commit**
-     wich contains:
+To automate the call, place a hook file in the footprint git's hooks directory,
+**/usr/local/share/kicad/kicad-footprints/.git/hooks/pre-commit**
+wich contains:
 
-    ```
+```
     #!/bin/sh
 
     ERR=0
@@ -123,12 +123,12 @@ How to use
       }
     done
     exit $ERR
-    ```
-    diff-filter stands for Added Copied Modified
+```
+diff-filter stands for Added Copied Modified
 
-    The script skips non footprint-files
+The script skips non footprint-files
 
-    Place the script in the footprint (or symbol) directory, not in the library-utils'git !
+Place the script in the footprint (or symbol) directory, not in the library-utils'git !
 
 Notice
 ======
