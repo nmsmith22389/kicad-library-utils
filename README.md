@@ -102,14 +102,13 @@ How to use
 ## Check before commiting
 
 Usually, you commit the footprint (or symbol) and let CI check your job.
-You can let git pass the check before actually commiting. If it's red
+You can let git pass the check before actually commiting. If it's red,
 fix your footprint (or symbol) !
 
 To automate the call, place a hook file in the footprint git's hooks directory,
-**/usr/local/share/kicad/kicad-footprints/.git/hooks/pre-commit**
-wich contains:
+**/usr/local/share/kicad/kicad-footprints/.git/hooks** named **pre-commit**
+with containt:
 
-```
     #!/bin/sh
 
     ERR=0
@@ -123,8 +122,8 @@ wich contains:
       }
     done
     exit $ERR
-```
-diff-filter stands for Added Copied Modified
+
+diff-filter=ACM stands for Added, Copied, Modified
 
 The script skips non footprint-files
 
