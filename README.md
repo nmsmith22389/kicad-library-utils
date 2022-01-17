@@ -108,26 +108,25 @@ fix your footprint (or symbol) !
 To automate the call, place a hook file in the footprint git's hooks directory,
 **/usr/local/share/kicad/kicad-footprints/.git/hooks** named **pre-commit**
 with containt:
+```
+#!/bin/bash
 
-    #!/bin/sh
-
-    ERR=0
-    STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
-    for F in $STAGED_FILES; do
-      [[ "${F: -10}"  == ".kicad_mod" ]] &&
-      {
-        x=$(python3  /somewhere/kicad-library-utils/klc-check/check_footprint.py  -vv $F)
-        echo "$x"
-        echo "$x"| grep -q "Violating" &&  ERR=1
-      }
-    done
-    exit $ERR
-
+ERR=0
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+for F in $STAGED_FILES; do
+  if [[ "${F: -10}"  == ".kicad_mod" ]] ; then
+    x=$(python3  /somewhere/kicad-library-utils/klc-check/check_footprint.py  -vv "$F")
+    echo "$x"
+    echo "$x" | grep -q "Violating" &&  ERR=1
+  fi
+done
+exit $ERR
+```
 diff-filter=ACM stands for Added, Copied, Modified
 
 The script skips non footprint-files
 
-Place the script in the footprint (or symbol) directory, not in the library-utils'git !
+Place the script in the footprint (or symbol) directory, not in the library-utils' git !
 
 Notice
 ======
