@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 import fnmatch, os, sys
 
+if (len(sys.argv)>1):
+    fp_lib_path = str(sys.argv[1])
+else:
+    #Set the path to the directory that git clone creates.
+    fp_lib_path = input("Enter footprint library directory path to search in : ")
 try:
     from colorama import init, Fore, Back, Style
 except ImportError:
@@ -18,9 +23,6 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 init() #init() function to enable text coloring
-
-#Set the path to the directory that git clone creates.
-fp_lib_path = input("Enter footprint library directory path to search in : ")
 
 if os.path.isdir(fp_lib_path):
     print(bcolors.OKGREEN + "Folder path is correct!")
