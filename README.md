@@ -124,7 +124,7 @@ exit $ERR
 ```
 diff-filter=ACM stands for Added, Copied, Modified
 
-The script skips non footprint-files
+The script skips non footprint-files. Use *git commit --no-verify* to bypass the hook.
 
 Place the script in the footprint (or symbol) directory, not in the library-utils' git !
 
