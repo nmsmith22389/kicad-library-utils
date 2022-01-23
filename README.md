@@ -124,9 +124,10 @@ exit $ERR
 ```
 diff-filter=ACM stands for Added, Copied, Modified
 
-The script skips non footprint-files. Use *git commit --no-verify* to bypass the hook.
+The script skips non footprint-files. Use **git commit --no-verify** to bypass the hook.
 
 Place the script in the footprint (or symbol) directory, not in the library-utils' git !
+
 
 Notice
 ======
@@ -134,4 +135,3 @@ Notice
 The scripts use a different algorithm to generate files in relation to the KiCad saving action. That will result output files with more modified lines than expected, because the line generally are repositioned. However, the file still functional.
 
 Always check the generated files by opening them on KiCad. Additionally, if you are working over a git repository (if not, you should) you can commit your work before proceed with the scripts, this will put you safe of any trouble. Also, you would use git diff to give a look at the modifications.
-/usr/local/share/kicad/kicad-footprints/.git/hooks
