@@ -106,7 +106,7 @@ You can let git pass the check before actually commiting. If it's red,
 fix your footprint (or symbol) !
 
 To automate the call, place a hook file in the footprint git's hooks directory,
-**/usr/local/share/kicad/kicad-footprints/.git/hooks** named **pre-commit**
+**/somewhere/kicad/kicad-footprints/.git/hooks** named **pre-commit**
 with containt:
 ```
 #!/bin/bash
