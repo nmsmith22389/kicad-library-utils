@@ -383,16 +383,16 @@ class KicadMod(object):
                 ry  = ( ((p1x_2+p1y_2)*(p3x-p2x)) + ((p2x_2+p2y_2)*(p1x-p3x)) + ((p3x_2+p3y_2) * (p2x-p1x) ) )  / A
 
                 # Then get diff between  vectors End-Center, Start-Center
-                A   =  math.atan2(  p3y-ry, p3x-rx ) - math.atan2(  p1y-ry, p1x-rx )
-                #print ("\nangle =" , math.degrees(A))
+                Diff = math.atan2(  p3y-ry, p3x-rx ) - math.atan2(  p1y-ry, p1x-rx )
+                #print ("\nangle =" , math.degrees( Diff ))
 
-                #  A is allways the shorter angle , ignoring Mid. Need to adjust
-                if A < 0.0:
-                    A = 2*math.pi + A
+                #  Diff is allways the shorter angle , ignoring Mid. Need to adjust
+                if Diff < 0.0:
+                    Diff = 2*math.pi + Diff
 
-                #print ("\n corrected angle =" , math.degrees(A))
+                #print ("\n corrected angle =" , math.degrees( Diff ))
 
-                arc_dict['angle']  = A
+                arc_dict['angle']  = Diff
                 try:
                     a = self._getArray(arc, 'layer')[0]
                     arc_dict['layer'] = a[1]
