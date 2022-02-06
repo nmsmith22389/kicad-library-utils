@@ -220,8 +220,10 @@ class AltFunction(KicadSymbolBase):
     name: str
     etype: str
     shape: str = 'line'
+
     def get_sexpr(s):
         return ['alternate', s.quoted_string(s.name), s.etype, s.shape]
+
     @classmethod
     def from_sexpr(cls, sexpr):
         (id, name, etype, shape) = sexpr
@@ -242,9 +244,9 @@ class Pin(KicadSymbolBase):
     number_int: int = None
     name_effect: TextEffect = None
     number_effect: TextEffect = None
+    altfuncs: List[AltFunction] = field(default_factory=list)
     unit: int = 0
     demorgan: int = 0
-    altfuncs: List[AltFunction] = field(default_factory=list)
 
     def __post_init__(self):
         # try to parse the pin_number into an integer if possible
@@ -342,9 +344,9 @@ class Pin(KicadSymbolBase):
                    number_int,
                    name_effect,
                    number_effect,
+                   altfuncs = altfuncs,
                    unit = unit,
-                   demorgan = demorgan,
-                   altfuncs = altfuncs)
+                   demorgan = demorgan)
 
 @dataclass
 class Circle(KicadSymbolBase):
