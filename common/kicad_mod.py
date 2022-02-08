@@ -49,8 +49,11 @@ def _movePoint(point, offset):
 
 class KicadMod(object):
     """
-    A class to parse kicad_mod files format of the KiCad
+    A class to parse KiCad footprint files (.kicad_mod format)
     """
+
+    SEXPR_BOARD_FILE_VERSION  = 20210108
+
     def __init__(self, filename):
         self.filename = filename
 
@@ -64,6 +67,12 @@ class KicadMod(object):
 
         # module name
         self.name = str(self.sexpr_data[1])
+
+        # file version
+        self.version = self._getValue('version', 0, 2)
+
+        # generator
+        self.generator = self._getValue('generator', '', 2)
 
         # module layer
         self.layer = self._getValue('layer', 'through_hole', 2)
@@ -88,7 +97,7 @@ class KicadMod(object):
         self.solder_paste_ratio = self._getValue('solder_paste_ratio', 0, 2)
 
         # attribute
-        self.attribute =  self._getValue('attr', 'virtual', 2)
+        self._getAttributes()
 
         # reference
         self.reference = self._getText('reference')[0]
@@ -594,6 +603,29 @@ class KicadMod(object):
             models.append(model_dict)
 
         return models
+
+    def _getAttributes(self):
+        attribs = self._getArray(self.sexpr_data, 'attr')
+
+        # Note : see pcb_parser.cpp in KiCad source
+
+        self.attribute = 'virtual'
+        self.exclude_from_pos_files = False
+        self.exclude_from_bom = False
+
+        if attribs:
+            for tok in attribs[0][1:]:
+                if tok in ['smd', 'through_hole']:
+                    self.attribute = tok
+                elif tok == 'virtual':
+                    self.exclude_from_pos_files = True
+                    self.exclude_from_bom = True
+                elif tok == 'exclude_from_pos_files':
+                    self.exclude_from_pos_files = True
+                elif tok == 'exclude_from_bom':
+                    self.exclude_from_bom = True
+        elif self.version < 20200826:
+            self.attribute = 'through_hole'
 
     # Add a 3D model
     def addModel(self, filename, pos=[0,0,0], scale=[1,1,1], rotate=[0,0,0]):
@@ -1191,17 +1223,21 @@ class KicadMod(object):
         if not filename:
             filename = self.filename
 
-        se = sexpr.SexprBuilder('module')
+        se = sexpr.SexprBuilder('footprint')
 
         # Hex value of current epoch timestamp (in seconds)
         tedit = hex(int(time.time())).upper()[2:]
+
+        self.version = self.SEXPR_BOARD_FILE_VERSION
+        self.generator = 'KicadMod'
 
         # Output must be precisely formatted
 
         """ Header order is as follows
         (*items are optional)
 
-        module <name> locked* <layer>  <tedit>
+        module <name> locked* <version> <generator> <layer> 
+        <tedit>
         descr
         tags
         autoplace_cost_90*
@@ -1221,6 +1257,8 @@ class KicadMod(object):
         header = [self.name]
         if self.locked:
             header.append('locked')
+        header.append({'version': self.version})
+        header.append({'generator': self.generator})
         header.append({'layer': self.layer})
         header.append({'tedit': tedit})
 
@@ -1237,10 +1275,17 @@ class KicadMod(object):
         se.addOptItem('solder_paste_ratio', self.solder_paste_ratio)
         se.addOptItem('clearance', self.clearance)
 
-        # Set attribute, the default is 'virtual' and not written to the file
+        # Set attribute
         attr = self.attribute.lower()
-        if attr in ['smd', 'through_hole']:
-            se.addItems({'attr': attr})
+        if attr in ['smd', 'through_hole'] or self.exclude_from_bom or self.exclude_from_pos_files:
+            params = []
+            if attr in ['smd', 'through_hole']:
+                params.append (attr)
+            if self.exclude_from_bom:
+                params.append ('exclude_from_bom')
+            if self.exclude_from_pos_files:
+                params.append ('exclude_from_pos_files')
+            se.addItems({'attr': params})
 
         # Add text items
         self._formatText('reference', self.reference, se)
