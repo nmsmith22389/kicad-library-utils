@@ -1,6 +1,6 @@
 #! /usr/bin/python3.9
 # -*- coding: utf-8 -*-
-import fnmatch, os, sys
+import fnmatch, os, sys, platform
 
 if (len(sys.argv)>1):
     fp_lib_path = str(sys.argv[1])
@@ -80,7 +80,16 @@ for base, dirs, files in os.walk(fp_lib_path):
     if base.endswith(fp_dir_type_ending):
         #for directories in dirs:
         totalDir += 1
-        str_list = base.replace(fp_lib_path + "\\", "")
+        if (platform.system() == "Windows"):
+            print(platform.system())
+            str_list = base.replace(fp_lib_path + "\\", "")
+        elif (platform.system() == "Linux"):
+            print(platform.system())
+            str_list = fp_lib_path
+        elif (platform.system() == "Darwin"):
+            print("Please provide a patch with a MR in the official repo.")
+            exit(0)
+        
         for file in os.listdir(base):
             # check the files which end with specific extension
             if file.endswith(fp_file_type_ending):
