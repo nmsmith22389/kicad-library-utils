@@ -1,6 +1,8 @@
 #! /usr/bin/python3.9
 # -*- coding: utf-8 -*-
-import fnmatch, os, sys
+import fnmatch, os, sys, platform
+
+os_var = "Windows"
 
 if (len(sys.argv)>1):
     fp_lib_path = str(sys.argv[1])
@@ -60,17 +62,19 @@ except git.exc.GitError:
    #exit(0)
    found_repo = "no"
 
-try:
-    os.mkdir(r"output")
-    print(bcolors.WARNING + "output" + bcolors.OKGREEN + " directory created.")
-except OSError as error:
-    print(bcolors.WARNING + "output" + bcolors.FAIL + " directory exists.")
-    pass
+if (platform.system() == os_var):
+    try:
+        os.mkdir(r"output")
+        print(bcolors.WARNING + "output" + bcolors.OKGREEN + " directory created.")
+    except OSError as error:
+        print(bcolors.WARNING + "output" + bcolors.FAIL + " directory exists.")
+        pass
 
-if found_repo == "yes":
-    f = open(fp_out_abs_path + fp_search_repo.active_branch.name + ".txt", 'w+')
-elif found_repo == "no":
-    f = open(fp_out_abs_path_no_git + folder_name + ".txt", 'w+')
+if (platform.system() == os_var):
+    if found_repo == "yes":
+        f = open(fp_out_abs_path + fp_search_repo.active_branch.name + ".txt", 'w+')
+    elif found_repo == "no":
+        f = open(fp_out_abs_path_no_git + folder_name + ".txt", 'w+')
 
 totalFiles = 0
 totalDir = 0
@@ -89,7 +93,8 @@ for base, dirs, files in os.walk(fp_lib_path):
                 #print(os.path.join(r'Footprint: ', file))
                 totalFiles += 1
                 fps_in_lib += 1
-        f.write("Library: " + str(str_list) + " Hosts: " + str(fps_in_lib) + " footprints." + "\n")
+        if (platform.system() == os_var):
+            f.write("Library: " + str(str_list) + " Hosts: " + str(fps_in_lib) + " footprints." + "\n")
         print(bcolors.OKGREEN + "\nLibrary:" + bcolors.WARNING, str_list, bcolors.OKGREEN + "\nHosts:" + bcolors.WARNING, fps_in_lib, bcolors.OKGREEN + "footprints.")
     for file in os.listdir(base):
         # check the files which end with specific extension
@@ -98,24 +103,29 @@ for base, dirs, files in os.walk(fp_lib_path):
             #print(bcolors.WARNING + os.path.join(r'Footprint: ' + bcolors.OKBLUE, file))
             totalTotalFiles += 1
 
-if found_repo == "yes":
-    f.write('\n' + "Current active branch: " + fp_search_repo.active_branch.name)
-elif found_repo == "no":
-    f.write('\n' + "Current directory: " + fp_lib_path)
+if (platform.system() == os_var):
+    if found_repo == "yes":
+        f.write('\n' + "Current active branch: " + fp_search_repo.active_branch.name)
+    elif found_repo == "no":
+        f.write('\n' + "Current directory: " + fp_lib_path)
 
-f.write("\n" + "Total Number of footprint libraries: " + str(totalDir))
-f.write("\n" + "Number of footprint files under *.pretty/ directories: " + str(totalFiles))
-#Obsolete or footprint files in non *.pretty library file
-f.write("\n" + "Obsolete footprints under non *.pretty: " + str(totalTotalFiles - totalFiles))
-f.write("\n" + "TOTAL number of footprint files: " + str(totalTotalFiles))
-f.close()
+    f.write("\n" + "Total Number of footprint libraries: " + str(totalDir))
+    f.write("\n" + "Number of footprint files under *.pretty/ directories: " + str(totalFiles))
+    #Obsolete or footprint files in non *.pretty library file
+    f.write("\n" + "Obsolete footprints under non *.pretty: " + str(totalTotalFiles - totalFiles))
+    f.write("\n" + "TOTAL number of footprint files: " + str(totalTotalFiles))
+    f.close()
 print(bcolors.OKGREEN + "\n" + "Footprint search directory: " + bcolors.WARNING + fp_lib_path)
 
 if found_repo == "yes":
     print(bcolors.OKGREEN + "Current active branch: " + bcolors.WARNING + fp_search_repo.active_branch.name)
-    print(bcolors.OKGREEN + "Output file directory: " + bcolors.WARNING + fp_out_abs_path + fp_search_repo.active_branch.name + ".txt")
+    if (platform.system() == os_var):
+        print(bcolors.OKGREEN + "Output file directory: " + bcolors.WARNING + fp_out_abs_path + fp_search_repo.active_branch.name + ".txt")
 elif found_repo == "no":
-    print(bcolors.OKGREEN + "Output file directory: " + bcolors.WARNING + fp_out_abs_path_no_git +  folder_name + ".txt")
+    if (platform.system() == os_var):
+        print(bcolors.OKGREEN + "Output file directory: " + bcolors.WARNING + fp_out_abs_path_no_git +  folder_name + ".txt")
+    else:
+        print(bcolors.WARNING + "No repo found.")
 
 print("\n" + bcolors.OKGREEN + "Total Number of footprint libraries:" + bcolors.WARNING, totalDir)
 print(bcolors.OKGREEN + "Number of footprint files under *.pretty/ directories:" + bcolors.WARNING, totalFiles)
