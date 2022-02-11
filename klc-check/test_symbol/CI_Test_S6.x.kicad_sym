@@ -500,7 +500,7 @@
     (property "Footprint" "Package_DIP:DIP-8-N6_W7.62mm" (id 2) (at 0 -12.7 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Datasheet" "https://www.st.com/resource/en/datasheet/viper26.pdf" (id 3) (at 0 0 0)
+    (property "Datasheet" "~" (id 3) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "ki_keywords" "Pass" (id 4) (at 0 0 0)
