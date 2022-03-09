@@ -32,16 +32,20 @@ class SymbolCheck():
         self.silent = silent
         self.error_count = 0
         self.warning_count = 0
+        self.excluded_rules = excluded_rules
+        self.selected_rules = selected_rules
 
+    def select_rules(self):
         # build a list of rules to work with
-        self.rules = []
+        rules = []
         for r in all_rules:
             r_name = r.replace('_', '.')
-            if selected_rules == None or r_name in selected_rules:
-                if excluded_rules != None and r_name in excluded_rules:
+            if self.selected_rules == None or r_name in self.selected_rules:
+                if self.excluded_rules != None and r_name in self.excluded_rules:
                     pass
                 else:
-                    self.rules.append(globals()[r].Rule)
+                    rules.append(globals()[r].Rule)
+        return rules
 
     def do_unittest(self, symbol):
         error_count = 0
@@ -52,7 +56,7 @@ class SymbolCheck():
         unittest_result = m.group(1)
         unittest_rule = m.group(2)
         unittest_descrp = m.group(3)
-        for rule in self.rules:
+        for rule in self.select_rules():
             rule.footprints_dir = self.footprints
             rule = rule(symbol)
             if unittest_rule == rule.name:
@@ -79,7 +83,7 @@ class SymbolCheck():
         symbol_error_count = 0
         symbol_warning_count = 0
         first = True
-        for rule in self.rules:
+        for rule in self.select_rules():
             rule.footprints_dir = self.footprints
             rule = rule(symbol)
 
