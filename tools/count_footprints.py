@@ -1,5 +1,9 @@
 #! /usr/bin/python3.9
+
 # -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
 import fnmatch, os, sys, platform
 
 os_var = "Windows"
@@ -9,29 +13,23 @@ if (len(sys.argv)>1):
 else:
     #Set the path to the directory that git clone creates.
     fp_lib_path = input("Enter footprint library directory path to search in: ")
-try:
-    from colorama import init, Fore, Back, Style
-except ImportError:
-   print("If missing try: pip install colorama")
-   exit(0)
-#The colours of the things
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-init() #init() function to enable text coloring
+
+common = os.path.abspath(os.path.join(sys.path[0], '..','common'))
+
+if not common in sys.path:
+    sys.path.append(common)
+
+from print_color import *
+printer = PrintColor()
 
 if os.path.isdir(fp_lib_path):
-    print(bcolors.OKGREEN + "Folder path is correct!")
+    printer.green("Folder path is correct!")
 else:
     #if there are any errors, print 'fail' for these errors
-    print(bcolors.FAIL + "Directory:", bcolors.WARNING + fp_lib_path, bcolors.FAIL + "hasn't found.")
-    print(bcolors.FAIL + "Wrong source.")
+    printer.inln_red("Directory:")
+    printer.inln_yellow(fp_lib_path)
+    printer.red("hasn't found.")
+    printer.red("Wrong source.")
     exit(0)
 
 fp_dir_type_ending = '.pretty'
@@ -51,23 +49,25 @@ try:
     import git
     from git import Repo
 except ImportError:
-   print("If missing try: pip install gitpython")
+   printer.yellow("If missing try: pip install gitpython")
    exit(0)
 
 try:
     fp_search_repo = Repo(fp_lib_path)
     found_repo = "yes"
 except git.exc.GitError:
-   print(bcolors.FAIL + "Missing repo." + bcolors.WARNING)
+   printer.yellow("Missing repo.")
    #exit(0)
    found_repo = "no"
 
 if (platform.system() == os_var):
     try:
         os.mkdir(r"output")
-        print(bcolors.WARNING + "output" + bcolors.OKGREEN + " directory created.")
+        printer.inln_yellow("output")
+        printer.green("directory created.")
     except OSError as error:
-        print(bcolors.WARNING + "output" + bcolors.FAIL + " directory exists.")
+        printer.inln_yellow("output")
+        printer.cyan("directory exists.")
         pass
 
 if (platform.system() == os_var):
@@ -85,7 +85,7 @@ for base, dirs, files in os.walk(fp_lib_path):
         #for directories in dirs:
         totalDir += 1
         str_list = base.replace(fp_lib_path, "")
-        
+
         for file in os.listdir(base):
             # check the files which end with specific extension
             if file.endswith(fp_file_type_ending):
@@ -95,7 +95,14 @@ for base, dirs, files in os.walk(fp_lib_path):
                 fps_in_lib += 1
         if (platform.system() == os_var):
             f.write("Library: " + str(str_list) + " Hosts: " + str(fps_in_lib) + " footprints." + "\n")
-        print(bcolors.OKGREEN + "\nLibrary:" + bcolors.WARNING, str_list, bcolors.OKGREEN + "\nHosts:" + bcolors.WARNING, fps_in_lib, bcolors.OKGREEN + "footprints.")
+        #print(bcolors.OKGREEN + "\nLibrary:" + bcolors.WARNING, str_list, bcolors.OKGREEN + "\nHosts:" + bcolors.WARNING, fps_in_lib, bcolors.OKGREEN + "footprints.")
+        print("\n")
+        printer.inln_green("Library:")
+        printer.yellow(str(str_list))
+        printer.inln_green("Hosts:")
+        printer.inln_yellow(str(fps_in_lib))
+        printer.inln_green("footprints.")
+
     for file in os.listdir(base):
         # check the files which end with specific extension
         if file.endswith(fp_file_type_ending):
@@ -115,21 +122,32 @@ if (platform.system() == os_var):
     f.write("\n" + "Obsolete footprints under non *.pretty: " + str(totalTotalFiles - totalFiles))
     f.write("\n" + "TOTAL number of footprint files: " + str(totalTotalFiles))
     f.close()
-print(bcolors.OKGREEN + "\n" + "Footprint search directory: " + bcolors.WARNING + fp_lib_path)
+print("\n")
+printer.inln_cyan("Footprint search directory:")
+printer.yellow(fp_lib_path)
 
 if found_repo == "yes":
-    print(bcolors.OKGREEN + "Current active branch: " + bcolors.WARNING + fp_search_repo.active_branch.name)
+    printer.inln_cyan("Current active branch:")
+    printer.yellow(fp_search_repo.active_branch.name)
     if (platform.system() == os_var):
-        print(bcolors.OKGREEN + "Output file directory: " + bcolors.WARNING + fp_out_abs_path + fp_search_repo.active_branch.name + ".txt")
+        printer.inln_cyan("Output file directory:")
+        printer.yellow(fp_out_abs_path + fp_search_repo.active_branch.name + ".txt")
 elif found_repo == "no":
     if (platform.system() == os_var):
-        print(bcolors.OKGREEN + "Output file directory: " + bcolors.WARNING + fp_out_abs_path_no_git +  folder_name + ".txt")
+        printer.inln_cyan("Output file directory:")
+        printer.yellow(fp_out_abs_path_no_git +  folder_name + ".txt")
+        
     else:
-        print(bcolors.WARNING + "No repo found.")
+        printer.yellow("No repo found.")
 
-print("\n" + bcolors.OKGREEN + "Total Number of footprint libraries:" + bcolors.WARNING, totalDir)
-print(bcolors.OKGREEN + "Number of footprint files under *.pretty/ directories:" + bcolors.WARNING, totalFiles)
+print("\n", end="")
+printer.inln_cyan("Total Number of footprint libraries:")
+printer.yellow(str(totalDir))
+printer.inln_cyan("Number of footprint files under *.pretty/ directories:")
+printer.yellow(str(totalFiles))
 #Obsolete or footprint files in non *.pretty library file
-print(bcolors.WARNING + "Obsolete footprints under non *.pretty:" + bcolors.FAIL, (totalTotalFiles - totalFiles))
-print(bcolors.OKGREEN + "TOTAL number of footprint files:" + bcolors.WARNING, totalTotalFiles)
+printer.inln_yellow("Obsolete footprints under non *.pretty:")
+printer.red(str((totalTotalFiles - totalFiles)))
+printer.inln_cyan("TOTAL number of footprint files:")
+printer.yellow(str(totalTotalFiles))
 exit(0)

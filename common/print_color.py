@@ -281,6 +281,7 @@ if __name__ == "__main__":
         " sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
         " Quisque tortor tortor, semper at justo ac, elementum posuere nulla."
     )
+
     printer = PrintColor(max_width=100, indentation=4)
     printer.red(msg)
     printer.blue(msg, 50, 2)
