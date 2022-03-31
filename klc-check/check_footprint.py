@@ -178,11 +178,6 @@ if args.rule:
 else:
     selected_rules = None
 
-rules = []
-for r in all_rules:
-    r_name = r.replace('_', '.')
-    if selected_rules == None or r_name in selected_rules:
-        rules.append(globals()[r].Rule)
 
 # figure out which files should be checked
 files = []
@@ -198,6 +193,13 @@ metrics = []
 error_count = 0
 warning_count = 0
 for filename in files:
+    # create new instances of the rule classes for each file
+    rules = []
+    for r in all_rules:
+        r_name = r.replace('_', '.')
+        if selected_rules == None or r_name in selected_rules:
+            rules.append(globals()[r].Rule)
+    # now run the check
     (ec, wc) = check_library(filename, rules, metrics, args)
     error_count += ec
     warning_count += wc
