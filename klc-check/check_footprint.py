@@ -1,32 +1,35 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-
 import argparse
+import os
+import sys
 import traceback
+from glob import glob
+from typing import List, Tuple
 
-import sys,os
+from common.rulebase import PrintColor, Verbosity
 
 common = os.path.abspath(os.path.join(sys.path[0], '..','common'))
 
 if not common in sys.path:
     sys.path.append(common)
-from kicad_mod import *
 
+from kicad_mod import *
 from print_color import *
-from rules_footprint import __all__ as all_rules
-from rules_footprint import *
-from rules_footprint.rule import KLCRule
 from rulebase import logError
 
-# enable windows wildcards
-from glob import glob
+from rules_footprint import *
+from rules_footprint import __all__ as all_rules
+from rules_footprint.rule import KLCRule
 
 
+def check_library(filename: str, rules, metrics: List[str], args) -> Tuple[int, int]:
+    """
+    Returns (error count, warning count)
+    """
 
-def check_library(filename, rules, metrics, args):
     if not os.path.exists(filename):
-        printer.red('File does not exist: %s' % filename)
+        printer.red(f'File does not exist: {filename}')
         return (1, 0)
 
     if not filename.endswith('.kicad_mod'):
@@ -47,7 +50,7 @@ def check_library(filename, rules, metrics, args):
                 traceback.print_exc()
             return (1, 0)
 
-    if args.rotate!=0:
+    if args.rotate != 0:
         module.rotateFootprint(int(args.rotate))
         printer.green('rotated footprint by {deg} degrees'.format(deg=int(args.rotate)))
 
@@ -63,7 +66,7 @@ def check_library(filename, rules, metrics, args):
     return (ec, wc)
 
 
-def do_unittest(footprint, rules, metrics):
+def do_unittest(footprint, rules, metrics) -> Tuple[int, int]:
     error_count = 0
     m = re.match(r'(\w+)__(.+)__(.+)', footprint.name)
     if not m:
@@ -94,16 +97,14 @@ def do_unittest(footprint, rules, metrics):
            continue
     return (error_count, warning_count)
 
-def do_rulecheck(module, rules, metrics):
+def do_rulecheck(module, rules, metrics) -> Tuple[int, int]:
     ec = 0
     wc = 0
-    no_warnings = True
-    output = []
     first = True
 
     for rule in rules:
         rule = rule(module,args)
-        if verbosity > 2:
+        if verbosity.value > Verbosity.HIGH.value:
             printer.white("Checking rule " + rule.name)
         rule.check()
 
@@ -167,7 +168,7 @@ if args.fixmore:
 printer = PrintColor(use_color=not args.nocolor)
 
 # Set verbosity globally
-verbosity = 0
+verbosity: Verbosity = Verbosity.NONE
 if args.verbose:
     verbosity = args.verbose
 KLCRule.verbosity = verbosity
@@ -204,10 +205,10 @@ for filename in files:
 
 # done checking all files
 if args.metrics or args.unittest:
-  metrics_file = file2 = open(r"metrics.txt","a+")
-  for line in metrics:
-    metrics_file.write(line + "\n")
-  metrics_file.close()
+    metrics_file = file2 = open("metrics.txt", "a+")
+    for line in metrics:
+        metrics_file.write(line + "\n")
+    metrics_file.close()
 
 if args.fix:
     printer.light_red('Some files were updated - ensure that they still load correctly in KiCad')
