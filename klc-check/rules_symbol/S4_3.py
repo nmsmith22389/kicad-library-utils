@@ -96,7 +96,7 @@ class Rule(KLCRule):
                 if pin.etype != common_etype:
                     # this could be one of the special cases
                     # at least one of the two checked pins need to be 'special' type. if not, this is an error
-                    if pin.etype in self.special_power_pins or common_etype in self.special_power_pins:
+                    if pin.etype in self.SPECIAL_POWER_PINS or common_etype in self.SPECIAL_POWER_PINS:
                         possible_power_pin_stacks.append(pos)
                     else:
                         if not pos in self.different_types:
