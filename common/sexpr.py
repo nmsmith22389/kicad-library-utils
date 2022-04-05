@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # code extracted from: http://rosettacode.org/wiki/S-Expressions
 
+from __future__ import print_function
 import re
-from typing import Any, Optional
 
-dbg: bool = False
+dbg = False
 
 term_regex = r'''(?mx)
     \s*(?:
@@ -15,16 +15,14 @@ term_regex = r'''(?mx)
         (?P<s>[^(^)\s]+)
        )'''
 
-def parse_sexp(sexp: str) -> Any:
+def parse_sexp(sexp):
     stack = []
     out = []
     if dbg: print("%-6s %-14s %-44s %-s" % tuple("term value out stack".split()))
     for termtypes in re.finditer(term_regex, sexp):
         term, value = [(t,v) for t,v in termtypes.groupdict().items() if v][0]
-        if dbg:
-            print("%-7s %-14s %-44r %-r" % (term, value, out, stack))
-
-        if term == 'brackl':
+        if dbg: print("%-7s %-14s %-44r %-r" % (term, value, out, stack))
+        if   term == 'brackl':
             stack.append(out)
             out = []
         elif term == 'brackr':
@@ -33,8 +31,7 @@ def parse_sexp(sexp: str) -> Any:
             out.append(tmpout)
         elif term == 'num':
             v = float(value)
-            if v.is_integer():
-                v = int(v)
+            if v.is_integer(): v = int(v)
             out.append(v)
         elif term == 'sq':
             out.append(value[1:-1].replace(r'\"', '"'))
@@ -44,17 +41,17 @@ def parse_sexp(sexp: str) -> Any:
             raise NotImplementedError("Error: %r" % (term, value))
     assert not stack, "Trouble with nesting of brackets"
     return out[0]
-
+    
 # Form a valid sexpr (single line)
-def SexprItem(val: Any, key: Optional[str] = None) -> str:
+def SexprItem(val, key=None):
     if key:
         fmt = "(" + key + " {val})"
     else:
         fmt = "{val}"
-
+    
     t = type(val)
-
-    if not val or t == str and len(val) == 0:
+    
+    if val is None or t == str and len(val) == 0:
         val = '""'
     elif t in [list, tuple]:
         val = ' '.join([SexprItem(v) for v in val])
@@ -68,29 +65,29 @@ def SexprItem(val: Any, key: Optional[str] = None) -> str:
     elif t == int:
         val = str(val)
     elif t == str and re.search(r'[\s()\"]', val):
-        val = '"%s"' % repr(val)[1:-1].replace('"', '\"')
-
+        val = '"%s"' % repr(val)[1:-1].replace('"', r'\"') 
+    
     return fmt.format(val=val)
-
+    
 class SexprBuilder(object):
     def __init__(self, key):
-        self.indent: int = 0
-        self.output: str = ''
+        self.indent = 0
+        self.output = ''
         self.items = []
         if key is not None:
             self.startGroup(key, newline=False)
-
-    def _indent(self) -> None:
+       
+    def _indent(self):
         self.output += ' ' * 2 * self.indent
-
-    def _newline(self) -> None:
+   
+    def _newline(self):
         self.output += '\n'
-
-    def _addItems(self) -> None:
-        self.output += ' '.join(map(str, self.items))
+        
+    def _addItems(self):
+        self.output += ' '.join(map(str,self.items))
         self.items = []
-
-    def startGroup(self, key: Optional[Any] = None, newline: bool = True, indent: bool = False) -> None:
+       
+    def startGroup(self, key=None, newline=True, indent=False):
         self._addItems()
         if newline and indent:
             self.indent += 1
@@ -100,8 +97,8 @@ class SexprBuilder(object):
         self.output += '('
         if key:
             self.output += str(key) + ' '
-
-    def endGroup(self, newline: bool = True) -> None:
+            
+    def endGroup(self, newline=True):
         self._addItems()
         if newline:
             self._newline()
@@ -109,23 +106,23 @@ class SexprBuilder(object):
                 self.indent -= 1
             self._indent()
         self.output += ')'
-
-    def addOptItem(self, key, item, newline: bool = True, indent: bool = False):
+        
+    def addOptItem(self, key, item, newline=True, indent=False):
         if item in [None, 0, False]:
             return
-
+            
         self.addItems({key: item}, newline=newline, indent=indent)
-
-    def addItem(self, item, newline: bool = True, indent: bool = False):
+            
+    def addItem(self, item, newline=True, indent=False):
         self._addItems()
         if newline and indent:
             self.indent += 1
         if newline:
             self.newLine()
         self.items.append(SexprItem(item))
-
+            
     # Add a (preformatted) item
-    def addItems(self, items, newline: bool = True, indent: bool = False):
+    def addItems(self, items, newline=True, indent=False):
         self._addItems()
         if indent:
             self.indent += 1
@@ -136,21 +133,21 @@ class SexprBuilder(object):
                 self.items.append(SexprItem(item))
         else:
             self.items.append(SexprItem(items))
-
-    def newLine(self, indent: bool = False) -> None:
+            
+    def newLine(self, indent=False):
         self._addItems()
         self._newline()
         if indent:
             self.indent += 1
         self._indent()
-
-    def unIndent(self) -> None:
+        
+    def unIndent(self):
         if self.indent > 0:
             self.indent -= 1
-
-def build_sexp(exp, key=None) -> str:
+        
+def build_sexp(exp, key=None):
     out = ''
-
+    
     # Special case for multi-values
     if type(exp) == type([]):
         out += '('+ ' '.join(build_sexp(x) for x in exp) + ')'
@@ -169,13 +166,13 @@ def build_sexp(exp, key=None) -> str:
             out += '""'
         else:
             out += '%s' % exp
-
+    
     if key is not None:
         out = "({key} {val})".format(key=key, val=out)
-
+        
     return out
 
-def format_sexp(sexp: str, indentation_size: int = 2, max_nesting: int = 2) -> str:
+def format_sexp(sexp, indentation_size=2, max_nesting=2):
     out = ''
     n = 0
     for termtypes in re.finditer(term_regex, sexp):
@@ -184,15 +181,13 @@ def format_sexp(sexp: str, indentation_size: int = 2, max_nesting: int = 2) -> s
         if term == 'brackl':
             if out:
                 if n <= max_nesting:
-                    if out[-1] == ' ':
-                        out = out[:-1]
+                    if out[-1] == ' ': out = out[:-1]
                     indentation = '\n' + (' ' * indentation_size * n)
                 else:
                     if out[-1] == ')': out += ' '
             n += 1
         elif term == 'brackr':
-            if out and out[-1] == ' ':
-                out = out[:-1]
+            if out and out[-1] == ' ': out = out[:-1]
             n -= 1
         elif term == 'num':
             value += ' '

@@ -3,37 +3,31 @@
 # math and comments from Michal script
 # https://github.com/michal777/KiCad_Lib_Check
 
-import os
-import re
-from typing import Any, Dict, List, Optional
+import re, os, math, sys
 
-from common.boundingbox import BoundingBox
-from common.kicad_mod import KicadMod
+
+#sys.path.append(os.path.join('..','..','common'))
 from rules_footprint.klc_constants import *
 from rules_footprint.rule import *
-from rules_footprint.rule import (KLCRule, getEndPoint, getStartPoint,
-                                  graphItemString, mapToGrid, mmToNanoMeter)
-
+from boundingbox import BoundingBox
 
 class Rule(KLCRule):
-    """
-    Courtyard layer requirements
-    """
+    """Courtyard layer requirements"""
 
-    def __init__(self, component: KicadMod, args):
+    def __init__(self, component, args):
         super().__init__(component, args)
 
-        self.module_dir: str = ''
+        self.module_dir = ''
 
-        self.bad_grid: List[Dict[str, Any]] = []
-        self.bad_width: List[Dict[str, Any]] = []
-        self.unconnected: List[Dict[str, Any]] = []
+        self.bad_grid = []
+        self.bad_width = []
+        self.unconnected = []
 
-        self.fCourtyard: List[Dict[str, Any]] = []
-        self.bCourtyard: List[Dict[str, Any]] = []
+        self.fCourtyard = []
+        self.bCourtyard = []
 
     # Get the superposed boundary of pads and fab layer
-    def getFootprintBounds(self) -> BoundingBox:
+    def getFootprintBounds(self):
         module = self.module
 
         padBounds = module.overpadsBounds()
@@ -54,7 +48,7 @@ class Rule(KLCRule):
         return padBounds
 
     # Return best-guess for courtyard offset
-    def defaultOffset(self) -> float:
+    def defaultOffset(self):
         module = self.module
         module_dir = os.path.split(os.path.dirname(os.path.realpath(module.filename)))[-1]
         self.module_dir = "{0}".format(os.path.splitext(module_dir))
@@ -62,10 +56,10 @@ class Rule(KLCRule):
         # Default offset
         offset = 0.25
 
-        bb = self.getFootprintBounds()
+        bb=self.getFootprintBounds()
 
         # Smaller offset for miniature components
-        if bb.width < 2.0 and bb.height < 2.0:
+        if bb.width < 2 and bb.height < 2:
             offset = 0.15
 
         # BGA components required 1.0mm clearance
@@ -85,7 +79,7 @@ class Rule(KLCRule):
 
         return offset
 
-    def defaultCourtyard(self) -> Optional[Dict[str, float]]:
+    def defaultCourtyard(self):
         bb = self.getFootprintBounds()
 
         offset = self.defaultOffset()
@@ -107,62 +101,67 @@ class Rule(KLCRule):
             return None
 
 
-    def isClosed(self, layer) -> List[Any]:
-        def isSame(p1: Dict[str, float], p2: Dict[str, float], tolerance: float) -> bool:
-            s = abs(p1['x'] - p2['x']) <= tolerance and abs(p1['y'] - p2['y']) <= tolerance
-            return s
+    def isClosed(self, layer):
+      def isSame(p1, p2, tolerance):
+        s = abs(p1['x'] - p2['x']) <= tolerance and abs(p1['y'] - p2['y']) <= tolerance
+        return s
 
-        # no line is considered as closed
-        if len(layer) == 0:
-            return []
+      # no line is considered as closed
+      if len(layer) == 0:
+        return []
 
-        # clone the lines, so we can remove them from the list
-        lines = layer[0:]
-        curr_line = lines.pop()
-        curr_point = getStartPoint(curr_line)
-        end_point = getEndPoint(curr_line)
-        tolerance = 0.0
+      # clone the lines, so we can remove them from the list
+      lines = layer[0:]
+      curr_line = lines.pop()
+      curr_point = getStartPoint(curr_line)
+      end_point = getEndPoint(curr_line)
+      tolerance = 0
 
-        while len(lines) > 0:
-            tolerance = 0.0
-            match = False
-            for line in lines:
-                if 'angle' in line or 'angle' in curr_line:
-                    tolerance = 0.01
-                if isSame(curr_point, getStartPoint(line), tolerance):
-                    curr_line = line
-                    curr_point = getEndPoint(line)
-                    lines.remove(line)
-                    match = True
-                    break
-                if isSame(curr_point, getEndPoint(line), tolerance):
-                    curr_line = line
-                    curr_point = getStartPoint(line)
-                    lines.remove(line)
-                    match = True
-                    break
+      while len(lines) > 0:
+        tolerance = 0
+        match = False
+        for line in lines:
+          if 'angle' in line or 'angle' in curr_line:
+            tolerance = 0.01
+          if isSame(curr_point, getStartPoint(line), tolerance):
+            curr_line = line
+            curr_point = getEndPoint(line)
+            lines.remove(line)
+            match = True
+            break
+          if isSame(curr_point, getEndPoint(line), tolerance):
+            curr_line = line
+            curr_point = getStartPoint(line)
+            lines.remove(line)
+            match = True
+            break
+        # we should hit a continue
+        # if now, that means no line connects
+        if not match:
+          return [curr_line]
+      # now check the if the last points match
+      if isSame(curr_point, end_point, tolerance):
+        return []
+      else:
+        return [curr_line]
 
-            # we should hit a continue
-            # if now, that means no line connects
-            if not match:
-                return [curr_line]
-
-        # now check the if the last points match
-        if isSame(curr_point, end_point, tolerance):
-            return []
-        else:
-            return [curr_line]
-
-    def check(self) -> bool:
+    def check(self):
         """
         Proceeds the checking of the rule.
         The following variables will be accessible after checking:
-            * bad_grid
+            * f_courtyard_all
+            * b_courtyard_all
+            * f_courtyard_lines
+            * b_courtyard_lines
             * bad_width
-            * unconnected
-            * fCourtyard
-            * bCourtyard
+            * bad_grid
+            * crt_offset
+            * actual_crt_rectangle
+            * expected_crt_rectangle
+            * courtyard_rectangle_layer
         """
+
+        error = False
 
         module = self.module
 
@@ -246,10 +245,11 @@ class Rule(KLCRule):
             len(self.unconnected) > 0
             ])
 
-    def fix(self) -> None:
+    def fix(self):
         """
         Proceeds the fixing of the rule, if possible.
         """
+        module = self.module
 
         if len(self.bad_width) > 0:
             self.info("Fixing line width of courtyard items")

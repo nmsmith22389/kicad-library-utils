@@ -2,19 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import time
+import re
 import math
 import os
 import sys
-import time
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 sys.path.append(os.path.join('..','common'))
 import sexpr
 from boundingbox import BoundingBox
 
-
 # Rotate a point by given angle (in degrees)
-def _rotatePoint(point: Dict[str, float], degrees: float) -> Dict[str, float]:
+def _rotatePoint(point, degrees):
 
     # Create a new point (copy)
     p = {}
@@ -35,7 +34,7 @@ def _rotatePoint(point: Dict[str, float], degrees: float) -> Dict[str, float]:
     return p
 
 # Move point by certain offset
-def _movePoint(point: Dict[str, float], offset: Dict[str, float]) -> Dict[str, float]:
+def _movePoint(point, offset):
 
     # Copy all points
 
@@ -53,10 +52,10 @@ class KicadMod(object):
     A class to parse KiCad footprint files (.kicad_mod format)
     """
 
-    SEXPR_BOARD_FILE_VERSION = 20210108
+    SEXPR_BOARD_FILE_VERSION  = 20210108
 
-    def __init__(self, filename: str):
-        self.filename: str = filename
+    def __init__(self, filename):
+        self.filename = filename
 
         # read the s-expression data
         f = open(filename)
@@ -67,7 +66,7 @@ class KicadMod(object):
         self.sexpr_data = sexpr_data
 
         # module name
-        self.name: str = str(self.sexpr_data[1])
+        self.name = str(self.sexpr_data[1])
 
         # file version
         self.version = self._getValue('version', 0, 2)
@@ -107,10 +106,10 @@ class KicadMod(object):
         self.value = self._getText('value')[0]
 
         # user text
-        self.userText: List[Dict[str, Any]] = self._getText('user')
+        self.userText = self._getText('user')
 
         # lines
-        self.lines: List[Dict[str, Any]] = self._getLines()
+        self.lines = self._getLines()
 
         # rects
         self.rects = self._getRects()
@@ -131,7 +130,7 @@ class KicadMod(object):
         self.models = self._getModels()
 
     # check if value exists in any element of data
-    def _hasValue(self, data: Iterable[Any], value: str) -> bool:
+    def _hasValue(self, data, value):
         for i in data:
             if type(i) in [list, tuple]:
                 if self._hasValue(i, value):
@@ -141,18 +140,18 @@ class KicadMod(object):
         return False
 
     # return the array which has value as first element
-    def _getArray(self, data, value, result: Optional[Any] = None, level: int = 0, max_level: Optional[int] = None) -> List[Any]:
-        if not result:
-            result = []
+    def _getArray(self, data, value, result=None, level=0, max_level = None):
+        if result is None: result = []
 
-        if max_level and max_level <= level:
+        if max_level is not None and max_level <= level:
             return result
 
         level += 1
 
         for i in data:
             if type(i) == type([]):
-                self._getArray(i, value, result, level, max_level)
+                self._getArray(i, value, result, level=level,
+                        max_level=max_level)
             else:
                 if i == value:
                     result.append(data)
@@ -189,13 +188,12 @@ class KicadMod(object):
     # return the second element of the array because the array is expected
     # to have the following format: [key value]
     # returns def_value if not field the value
-    def _getValue(self, array, def_value: Optional[Any] = None, max_level = None) -> Any:
+    def _getValue(self, array, def_value=None, max_level=None):
         a = self._getArray(self.sexpr_data, array, max_level=max_level)
         return def_value if not a else a[0][1]
 
-    def _getText(self, which_text) -> List[Any]:
+    def _getText(self, which_text):
         result = []
-
         for text in self._getArray(self.sexpr_data, 'fp_text'):
             if text[1] == which_text:
                 text_dict = {}
@@ -203,7 +201,7 @@ class KicadMod(object):
 
                 # text position
                 a = self._getArray(text, 'at')[0]
-                text_dict['pos'] = {'x': a[1], 'y': a[2], 'orientation': 0}
+                text_dict['pos'] = {'x':a[1], 'y':a[2], 'orientation':0}
                 if len(a) > 3: text_dict['pos']['orientation'] = a[3]
 
                 # text layer
@@ -236,19 +234,18 @@ class KicadMod(object):
 
         return result
 
-    def addUserText(self, text: str, params: Dict[str, Any]) -> None:
+    def addUserText(self, text, params):
         user = {'user': text}
-
         for key in params:
             user[key] = params[key]
 
         self.userText.append(user)
 
-    def _getLines(self, layer: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _getLines(self, layer=None):
         lines = []
         for line in self._getArray(self.sexpr_data, 'fp_line'):
             line_dict = {}
-            if self._hasValue(line, layer) or layer is None:
+            if self._hasValue(line, layer) or layer == None:
                 a = self._getArray(line, 'start')[0]
                 line_dict['start'] = {'x':a[1], 'y':a[2]}
 
@@ -271,7 +268,7 @@ class KicadMod(object):
 
         return lines
 
-    def _getRects(self, layer=None) -> List[Dict[str, Any]]:
+    def _getRects(self, layer=None):
         rects = []
         for rect in self._getArray(self.sexpr_data, 'fp_rect'):
             rect_dict = {}
@@ -298,12 +295,12 @@ class KicadMod(object):
 
         return rects
 
-    def _getCircles(self, layer = None) -> List[Dict[str, Any]]:
+    def _getCircles(self, layer=None):
         circles = []
         for circle in self._getArray(self.sexpr_data, 'fp_circle'):
             circle_dict = {}
             # filter layers, None = all layers
-            if self._hasValue(circle, layer) or layer is None:
+            if self._hasValue(circle, layer) or layer == None:
                 a = self._getArray(circle, 'center')[0]
                 circle_dict['center'] = {'x':a[1], 'y':a[2]}
 
@@ -326,12 +323,12 @@ class KicadMod(object):
 
         return circles
 
-    def _getPolys(self, layer = None) -> List[Dict[str, Any]]:
+    def _getPolys(self, layer=None):
         polys = []
         for poly in self._getArray(self.sexpr_data, 'fp_poly'):
             poly_dict = {}
             # filter layers, None = all layers
-            if self._hasValue(poly, layer) or layer is None:
+            if self._hasValue(poly, layer) or layer == None:
                 points = []
                 pts = self._getArray(poly, 'pts')[0]
                 for point in self._getArray(pts, 'xy'):
@@ -357,12 +354,12 @@ class KicadMod(object):
 
         return polys
 
-    def _getArcs(self, layer = None) -> List[Dict[str, Any]]:
+    def _getArcs(self, layer=None):
         arcs = []
         for arc in self._getArray(self.sexpr_data, 'fp_arc'):
             arc_dict = {}
             # filter layers, None = all layers
-            if self._hasValue(arc, layer) or layer is None:
+            if self._hasValue(arc, layer) or layer == None:
                 a = self._getArray(arc, 'start')[0]
                 arc_dict['start'] = {'x':a[1], 'y':a[2]}
 
@@ -421,7 +418,7 @@ class KicadMod(object):
 
         return arcs
 
-    def _getPads(self) -> List[Dict[str, Any]]:
+    def _getPads(self):
         pads = []
         for pad in self._getArray(self.sexpr_data, 'pad'):
             # number, type, shape
@@ -581,7 +578,7 @@ class KicadMod(object):
 
         return pads
 
-    def _getModels(self) -> List[Dict[str, Any]]:
+    def _getModels(self):
         models_array = self._getArray(self.sexpr_data, 'model')
 
         models = []
@@ -631,33 +628,33 @@ class KicadMod(object):
             self.attribute = 'through_hole'
 
     # Add a 3D model
-    def addModel(self, filename: str, pos: Tuple[float, float, float] = (0.0, 0.0, 0.0), scale: Tuple[float, float, float] = (1.0, 1.0, 1.0), rotate: Tuple[float, float, float] = (0.0, 0.0, 0.0)) -> None:
-        model_dict = {'file': filename}
+    def addModel(self, filename, pos=[0,0,0], scale=[1,1,1], rotate=[0,0,0]):
+        model_dict = {'file':filename}
         # position
-        model_dict['pos'] = {'x': pos[0], 'y': pos[1], 'z': pos[2]}
+        model_dict['pos'] = {'x':pos[0], 'y':pos[1], 'z':pos[2]}
         # scale
-        model_dict['scale'] = {'x': scale[0], 'y': scale[1], 'z': scale[2]}
+        model_dict['scale'] = {'x':scale[0], 'y':scale[1], 'z':scale[2]}
         # rotate
-        model_dict['rotate'] = {'x': rotate[0], 'y': rotate[1], 'z': rotate[2]}
+        model_dict['rotate'] = {'x':rotate[0], 'y':rotate[1], 'z':rotate[2]}
         self.models.append(model_dict)
 
-    def addLine(self, start: List[float], end: List[float], layer: str, width: float) -> None:
-        line = {
-            'start': {'x': start[0], 'y': start[1]},
-            'end': {'x': end[0], 'y': end[1]},
-            'layer': layer,
-            'width': width
-            }
-        self.lines.append(line)
+    def addLine(self, start, end, layer, width):
+        line={
+               'start': {'x': start[0], 'y': start[1]},
+               'end': {'x': end[0], 'y': end[1]},
+               'layer': layer,
+               'width': width
+             }
+        self.lines.append( line)
 
-    def addRectangle(self, start: List[float], end: List[float], layer: str, width: float) -> None:
+    def addRectangle(self, start, end, layer, width):
         self.addLine( [ start[0], start[1] ], [ end[0], start[1] ], layer, width)
         self.addLine( [ start[0], start[1] ], [ start[0], end[1] ], layer, width)
         self.addLine( [ end[0], end[1] ], [ end[0], start[1] ], layer, width)
         self.addLine( [ end[0], end[1] ], [ start[0], end[1] ], layer, width)
 
 
-    def setAnchor(self, anchor_point: List[float]) -> None:
+    def setAnchor(self, anchor_point):
         # change reference position
         self.reference['pos']['x'] -= anchor_point[0]
         self.reference['pos']['y'] -= anchor_point[1]
@@ -699,10 +696,12 @@ class KicadMod(object):
 
         # change models
         for model in self.models:
-            model['pos']['x'] -= anchor_point[0] / 25.4
-            model['pos']['y'] += anchor_point[1] / 25.4
+            model['pos']['x'] -= anchor_point[0]/25.4
+            model['pos']['y'] += anchor_point[1]/25.4
 
-    def rotateFootprint(self, degrees: float):
+
+
+    def rotateFootprint(self, degrees):
         # change reference position
         self.reference['pos']=_rotatePoint(self.reference['pos'], degrees)
 
@@ -738,7 +737,7 @@ class KicadMod(object):
             model['pos']=_rotatePoint(model['pos'], -degrees)
             model['rotate']['z']=model['rotate']['z']-degrees
 
-    def filterLines(self, layer: str) -> List[Dict[str, Any]]:
+    def filterLines(self, layer):
         lines = []
         for line in self.lines:
             if line['layer'] == layer:
@@ -746,7 +745,7 @@ class KicadMod(object):
 
         return lines
 
-    def filterRectsAsLines(self, layer: str) -> List[Dict[str, Any]]:
+    def filterRectsAsLines(self, layer):
         lines = []
         for rect in self.rects:
             if rect['layer'] == layer:
@@ -763,7 +762,7 @@ class KicadMod(object):
 
         return lines
 
-    def filterPolysAsLines(self, layer: str) -> List[Dict[str, Any]]:
+    def filterPolysAsLines(self, layer):
         lines = []
         for poly in self.polys:
             if poly['layer'] == layer:
@@ -776,7 +775,7 @@ class KicadMod(object):
                     })
         return lines
 
-    def filterRects(self, layer: str) -> List[Dict[str, Any]]:
+    def filterRects(self, layer):
         rects = []
         for rect in self.rects:
             if rect['layer'] == layer:
@@ -784,7 +783,7 @@ class KicadMod(object):
 
         return rects
 
-    def filterCircles(self, layer: str) -> List[Dict[str, Any]]:
+    def filterCircles(self, layer):
         circles = []
         for circle in self.circles:
             if circle['layer'] == layer:
@@ -792,7 +791,7 @@ class KicadMod(object):
 
         return circles
 
-    def filterPolys(self, layer: str) -> List[Dict[str, Any]]:
+    def filterPolys(self, layer):
         polys = []
         for poly in self.polys:
             if poly['layer'] == layer:
@@ -800,7 +799,7 @@ class KicadMod(object):
 
         return polys
 
-    def filterArcs(self, layer: str) -> List[Dict[str, Any]]:
+    def filterArcs(self, layer):
         arcs = []
         for arc in self.arcs:
             if arc['layer'] == layer:
@@ -810,7 +809,7 @@ class KicadMod(object):
 
     # Return the geometric bounds for a given layer
     # Includes lines, arcs, circles, rects
-    def geometricBoundingBox(self, layer: str) -> BoundingBox:
+    def geometricBoundingBox(self, layer):
 
         bb = BoundingBox()
 
@@ -882,14 +881,14 @@ class KicadMod(object):
         return bb
 
 
-    def filterGraphs(self, layer: str):
+    def filterGraphs(self, layer):
         return (self.filterLines(layer) +
                 self.filterRectsAsLines(layer) +
                 self.filterCircles(layer) +
                 self.filterPolysAsLines(layer) +
                 self.filterArcs(layer))
 
-    def getPadsByNumber(self, pad_number: Union[str, int]) -> List[Dict[str, Any]]:
+    def getPadsByNumber(self, pad_number):
         pads = []
         for pad in self.pads:
             if str(pad['number']).upper() == str(pad_number).upper():
@@ -897,7 +896,7 @@ class KicadMod(object):
 
         return pads
 
-    def filterPads(self, pad_type: str) -> List[Dict[str, Any]]:
+    def filterPads(self, pad_type):
         pads = []
         for pad in self.pads:
             if pad['type'] == pad_type:
@@ -909,16 +908,16 @@ class KicadMod(object):
 
     # Get the middle position between pads
     # Use the outer dimensions of pads to handle footprints with pads of different sizes
-    def padMiddlePosition(self, pads: Optional[List[Dict[str, Any]]] = None) -> Dict[str, float]:
+    def padMiddlePosition(self, pads=None):
 
         bb = self.overpadsBounds(pads)
         return bb.center
 
-    def padsBounds(self, pads: Optional[List[Dict[str, Any]]] = None) -> BoundingBox:
+    def padsBounds(self, pads=None):
 
         bb = BoundingBox()
 
-        if pads is None:
+        if pads == None:
             pads = self.pads
 
         for pad in pads:
@@ -927,11 +926,11 @@ class KicadMod(object):
 
         return bb
 
-    def overpadsBounds(self, pads: Optional[List[Dict[str, Any]]] = None) -> BoundingBox:
+    def overpadsBounds(self, pads=None):
 
         bb = BoundingBox()
 
-        if pads is None:
+        if pads == None:
             pads = self.pads
 
         for pad in pads:
@@ -996,7 +995,7 @@ class KicadMod(object):
 
         return bb
 
-    def _formatText(self, text_type, text, se: sexpr.SexprBuilder) -> None:
+    def _formatText(self, text_type, text, se):
 
         """
         Text is formatted like thus:
@@ -1011,8 +1010,8 @@ class KicadMod(object):
         # Extract position informat
         tp = text['pos']
         pos = [tp['x'], tp['y']]
-        rot = tp.get('orientation', 0)
-        if rot not in [0, None]:
+        rot = tp.get('orientation',0)
+        if not rot in [0, None]:
             pos.append(rot)
 
         se.addItems([text_type, text[text_type], {'at': pos}, {'layer': text['layer']}], newline=False)
@@ -1029,7 +1028,7 @@ class KicadMod(object):
         se.endGroup(False)
         se.endGroup(True)
 
-    def _formatLine(self, line, se: sexpr.SexprBuilder):
+    def _formatLine(self, line, se):
         se.startGroup('fp_line', newline=True, indent=False)
 
         start = line['start']
@@ -1045,7 +1044,7 @@ class KicadMod(object):
         se.addItems(fp_line, newline=False)
         se.endGroup(newline=False)
 
-    def _formatRect(self, line, se: sexpr.SexprBuilder):
+    def _formatRect(self, line, se):
         se.startGroup('fp_rect', newline=True, indent=False)
 
         start = line['start']
@@ -1061,7 +1060,7 @@ class KicadMod(object):
         se.addItems(fp_line, newline=False)
         se.endGroup(newline=False)
 
-    def _formatCircle(self, circle, se: sexpr.SexprBuilder):
+    def _formatCircle(self, circle, se):
         se.startGroup('fp_circle', newline=True, indent=False)
 
         center = circle['center']
@@ -1077,7 +1076,7 @@ class KicadMod(object):
         se.addItems(fp_circle, newline=False)
         se.endGroup(newline=False)
 
-    def _formatPoly(self, poly, se: sexpr.SexprBuilder):
+    def _formatPoly(self, poly, se):
         se.startGroup('fp_poly', newline=True, indent=False)
 
         se.startGroup('pts', newline=False, indent=True)
@@ -1096,7 +1095,7 @@ class KicadMod(object):
         se.addItems(fp_poly, newline=False)
         se.endGroup(newline=False)
 
-    def _formatArc(self, arc, se: sexpr.SexprBuilder):
+    def _formatArc(self, arc, se):
         se.startGroup('fp_arc', newline=True, indent=False)
 
         start = arc['start']
@@ -1113,7 +1112,7 @@ class KicadMod(object):
         se.addItems(fp_arc, newline=False)
         se.endGroup(newline=False)
 
-    def _formatPad(self, pad, se: sexpr.SexprBuilder):
+    def _formatPad(self, pad, se):
         pos = pad['pos']
 
         se.startGroup('pad', newline=True, indent=False)
@@ -1199,7 +1198,7 @@ class KicadMod(object):
 
         se.endGroup(newline=False)
 
-    def _formatModel(self, model, se: sexpr.SexprBuilder):
+    def _formatModel(self, model, se):
         se.startGroup('model', newline=True, indent=False)
 
         se.addItems(model['file'],newline=False)
@@ -1220,7 +1219,7 @@ class KicadMod(object):
 
         se.endGroup(newline=True)
 
-    def save(self, filename: Optional[str] = None):
+    def save(self, filename=None):
         if not filename:
             filename = self.filename
 

@@ -2,43 +2,40 @@
 
 # -*- coding: utf-8 -*-
 
-import platform
-import sys
-from typing import Dict, List, Optional
+from __future__ import print_function
+import sys, platform
 
-
-class PrintColor():
+class PrintColor(object):
     """
     A class to print colorized text using ANSI escape sequences
     """
-
-    def __init__(self, tab_size: int = 4, use_color: bool = True, max_width: int = 0, indentation: int = 0, buffered: bool = False):
-        self._color: Dict[str, str] = {
-            'regular': '\033[0m',
-            'black': '\033[0;30m',
-            'red': '\033[0;31m',
-            'green': '\033[0;32m',
-            'brown': '\033[0;33m',
-            'blue': '\033[0;34m',
-            'purple' :'\033[0;35m',
-            'cyan': '\033[0;36m',
-            'gray': '\033[0;37m',
-            'dark_gray': '\033[1;30m',
-            'light_red': '\033[1;31m',
-            'light_green': '\033[1;32m',
-            'yellow': '\033[1;33m',
-            'light_blue': '\033[1;34m',
-            'light_purple': '\033[1;35m',
-            'light_cyan': '\033[1;36m',
-            'white': '\033[1;37m',
+    def __init__(self, tab_size=4, use_color=True, max_width=0, indentation=0, buffered=False):
+        self._color = {
+            'regular':'\033[0m',
+            'black':'\033[0;30m',
+            'red':'\033[0;31m',
+            'green':'\033[0;32m',
+            'brown':'\033[0;33m',
+            'blue':'\033[0;34m',
+            'purple':'\033[0;35m',
+            'cyan':'\033[0;36m',
+            'gray':'\033[0;37m',
+            'dark_gray':'\033[1;30m',
+            'light_red':'\033[1;31m',
+            'light_green':'\033[1;32m',
+            'yellow':'\033[1;33m',
+            'light_blue':'\033[1;34m',
+            'light_purple':'\033[1;35m',
+            'light_cyan':'\033[1;36m',
+            'white':'\033[1;37m',
             }
 
-        self._tab_size: int = tab_size
-        self._use_color: bool = use_color
-        self._max_width: int = max_width
-        self._indentation: int = indentation
-        self.buffer: List[str] = []
-        self.buffered: bool = buffered
+        self._tab_size = tab_size
+        self._use_color = use_color
+        self._max_width = max_width
+        self._indentation = indentation
+        self.buffer = []
+        self.buffered = buffered
 
         if platform.system() == 'Windows':
             try:
@@ -49,24 +46,21 @@ class PrintColor():
                 print('[Continuing using no color mode]\n')
                 self._use_color = False
 
-    def flush(self) -> None:
+    def flush(self):
         for l in self.buffer:
             print(l)
         self.buffer.clear()
 
-    def _replace_tabs(self, text: str) -> str:
+    def _replace_tabs(self, text):
         if self._tab_size == 0:
             return text
 
         return text.replace('\t', ' ' * self._tab_size)
 
-    def _do_print(self, color_name: str, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None) -> None:
+    def _do_print(self, color_name, text, max_width=None, indentation=None):
         # uses the global definition if there is no local definitions for max_width and indentation
-        if not max_width:
-            max_width = self._max_width
-
-        if not indentation:
-            indentation = self._indentation
+        if not max_width: max_width = self._max_width
+        if not indentation: indentation = self._indentation
 
         # break the text in lines with max_width
         if max_width > 0:
@@ -116,39 +110,39 @@ class PrintColor():
                 except:
                     print("ERROR printing output")
 
-    def regular(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def regular(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def black(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def black(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def red(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def red(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def green(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def green(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def brown(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def brown(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def blue(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def blue(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def purple(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def purple(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def cyan(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def cyan(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def gray(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def gray(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def dark_gray(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def dark_gray(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def light_red(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def light_red(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def light_green(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def light_green(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def yellow(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def yellow(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def light_blue(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def light_blue(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def light_purple(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def light_purple(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def light_cyan(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def light_cyan(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
-    def white(self, text: str, max_width: Optional[int] = None, indentation: Optional[int] = None):
+    def white(self, text, max_width=None, indentation=None):
         self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation)
 
 if __name__ == '__main__':

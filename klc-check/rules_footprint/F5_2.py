@@ -3,38 +3,32 @@
 # math and comments from Michal script
 # https://github.com/michal777/KiCad_Lib_Check
 
-from typing import Any, Dict, List, Optional
-
-from common.kicad_mod import KicadMod
 from rules_footprint.klc_constants import *
-from rules_footprint.rule import KLCRule, graphItemString
-
+from rules_footprint.rule import *
 
 class Rule(KLCRule):
-    """
-    Fabrication layer requirements
-    """
+    """Fabrication layer requirements"""
 
-    def __init__(self, component: KicadMod, args):
+    def __init__(self, component, args):
         super().__init__(component, args)
 
-        self.bad_fabrication_width: List[Dict[str, Any]] = []
-        self.non_nominal_width: List[Dict[str, Any]] = []
+        self.bad_fabrication_width = []
+        self.non_nominal_width = []
 
-        self.missing_value: bool = False
-        self.missing_lines: bool = False
-        self.incorrect_width: bool = False
-        self.multiple_second_ref: bool = False
-        self.missing_second_ref: bool = False
+        self.missing_value = False
+        self.missing_lines = False
+        self.incorrect_width = False
+        self.multiple_second_ref = False
+        self.missing_second_ref = False
 
-        self.f_fabrication_all: List[Dict[str, Any]] = []
-        self.b_fabrication_all: List[Dict[str, Any]] = []
+        self.f_fabrication_all = []
+        self.b_fabrication_all = []
 
-        self.f_fabrication_lines: List[Dict[str, Any]] = []
-        self.b_fabrication_lines: List[Dict[str, Any]] = []
+        self.f_fabrication_lines = []
+        self.b_fabrication_lines = []
 
     # Check for presence of component value
-    def checkMissingValue(self) -> bool:
+    def checkMissingValue(self):
         mod = self.module
 
         val = mod.value
@@ -79,7 +73,7 @@ class Rule(KLCRule):
 
         return len(errors) > 0
 
-    def checkMissingLines(self) -> bool:
+    def checkMissingLines(self):
         if len(self.f_fabrication_all) + len(self.b_fabrication_all) == 0:
             if self.module.attribute != 'virtual':
                 self.error("No drawings found on fabrication layer")
@@ -87,7 +81,7 @@ class Rule(KLCRule):
 
         return False
 
-    def getSecondRef(self) -> Optional[Dict[str, str]]:
+    def getSecondRef(self):
         texts = self.module.userText
 
         ref = None
@@ -104,7 +98,7 @@ class Rule(KLCRule):
         return ref
 
     # Check that there is a second ref '${REFERENCE}' on the fab layer
-    def checkSecondRef(self) -> bool:
+    def checkSecondRef(self):
 
         ref = self.getSecondRef()
 
@@ -164,16 +158,17 @@ class Rule(KLCRule):
         return len(errors) > 0
 
     # Check fab line widths
-    def checkIncorrectWidth(self) -> bool:
+    def checkIncorrectWidth(self):
         self.bad_fabrication_width = []
         self.non_nominal_width = []
-
         for graph in (self.f_fabrication_all + self.b_fabrication_all):
             if (graph['width'] < KLC_FAB_WIDTH_MIN
                     or graph['width'] > KLC_FAB_WIDTH_MAX):
                 self.bad_fabrication_width.append(graph)
             elif graph['width'] != KLC_FAB_WIDTH:
                 self.non_nominal_width.append(graph)
+
+        msg = False
 
         if self.bad_fabrication_width:
             self.error("Some fabrication layer lines have a width outside "
@@ -194,7 +189,7 @@ class Rule(KLCRule):
 
         return len(self.bad_fabrication_width) > 0
 
-    def check(self) -> bool:
+    def check(self):
         """
         Proceeds the checking of the rule.
         The following variables will be accessible after checking:
@@ -234,11 +229,10 @@ class Rule(KLCRule):
                     self.missing_second_ref,
                     ])
 
-    def fix(self) -> None:
+    def fix(self):
         """
         Proceeds the fixing of the rule, if possible.
         """
-
         module = self.module
         if self.incorrect_width:
             self.info("Setting F.Fab lines to correct width")
@@ -265,10 +259,10 @@ class Rule(KLCRule):
                 pos = bounds.center
 
                 # Ensure position is on grid
-                pos['x'] = round(mapToGrid(pos['x'], 0.001), 4)
-                pos['y'] = round(mapToGrid(pos['y'], 0.001), 4)
+                pos['x'] = round(mapToGrid(pos['x'],0.001),4)
+                pos['y'] = round(mapToGrid(pos['y'],0.001),4)
 
-                # these numbers were a little bit "trial and error"
+                # these numbers were a litle bit "trial and error"
                 text_size = 4.0
 
                 if bounds.width < text_size:
@@ -283,7 +277,8 @@ class Rule(KLCRule):
                 MIN = 0.5
 
                 # Limit to smallest KLC value
-                text_size = max(text_size, MIN)
+                if text_size < MIN:
+                    text_size = MIN
 
                 text_line = round(0.15 * text_size, 3)
             # Still can't get bounds? Use 0,0
@@ -302,4 +297,5 @@ class Rule(KLCRule):
                 {'pos': pos,
                  'font': font,
                  'layer': 'F.Fab'
+
                 })
