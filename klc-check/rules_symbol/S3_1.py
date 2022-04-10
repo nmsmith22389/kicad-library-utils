@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import math
-from rules_symbol.rule import *
+
 from kicad_sym import mm_to_mil
+from rules_symbol.rule import *
 
 
 class Rule(KLCRule):
@@ -29,8 +28,7 @@ class Rule(KLCRule):
             if center_pl != None:
                 (x, y) = center_pl.get_center_of_boundingbox()
             else:
-                pins = [pin for pin in self.component.pins
-                        if (pin.unit in [unit, 0])]
+                pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
 
                 # No pins? Ignore check.
                 # This can be improved to include graphical items too...
@@ -57,7 +55,9 @@ class Rule(KLCRule):
                 self.warning("Symbol unit {unit} slightly off-center".format(unit=unit))
                 self.warningExtra("  Center calculated @ ({x}, {y})".format(x=x, y=y))
             else:
-                self.error("Symbol unit {unit} not centered on origin".format(unit=unit))
+                self.error(
+                    "Symbol unit {unit} not centered on origin".format(unit=unit)
+                )
                 self.errorExtra("Center calculated @ ({x}, {y})".format(x=x, y=y))
 
         return False
