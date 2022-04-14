@@ -13,13 +13,13 @@ class Rule(KLCRule):
 
     def check(self) -> bool:
         # no need to check this for an alias
-        if self.component.extends != None:
+        if self.component.extends is not None:
             return False
 
         fail = False
         if self.component.is_graphic_symbol():
             # no pins in graphical symbol
-            if len(self.component.pins) != 0:
+            if self.component.pins:
                 self.error("Graphical symbols have no pins")
                 fail = True
                 self.fixTooManyPins = True
@@ -34,7 +34,7 @@ class Rule(KLCRule):
                 fail = True
                 self.fixNoFootprint = True
             # FPFilters must be empty
-            if len(self.component.get_fp_filters()) > 0:
+            if self.component.get_fp_filters():
                 self.error("Graphical symbols have no footprint filters")
                 fail = True
                 self.fixNoFootprint = True
@@ -46,7 +46,7 @@ class Rule(KLCRule):
                 if ref_prop.value != "#SYM":
                     self.error("Graphical symbols have Reference set to '#SYM' ")
                     fail = True
-                if ref_prop.effects.is_hidden != True:
+                if not ref_prop.effects.is_hidden:
                     self.error("Graphical symbols have a hidden Reference")
                     fail = True
             # Value is invisible
@@ -54,7 +54,7 @@ class Rule(KLCRule):
             if not value_prop:
                 self.error("Graphical symbols have a Value property")
             else:
-                if value_prop.effects.is_hidden != True:
+                if not value_prop.effects.is_hidden:
                     self.error("Graphical symbols have a hidden Value")
                     fail = True
 

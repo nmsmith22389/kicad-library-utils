@@ -1,7 +1,7 @@
 import math
 
 from kicad_sym import mm_to_mil
-from rules_symbol.rule import *
+from rules_symbol.rule import KLCRule
 
 
 class Rule(KLCRule):
@@ -18,21 +18,20 @@ class Rule(KLCRule):
             return False
 
         # Check units separately
-        unit_locked = self.component.is_locked()
         unit_count = self.component.unit_count
 
         for unit in range(1, unit_count + 1):
             # If there is only a single filled rectangle, we assume that it is the
             # main symbol outline.
             center_pl = self.component.get_center_rectangle([0, unit])
-            if center_pl != None:
+            if center_pl is not None:
                 (x, y) = center_pl.get_center_of_boundingbox()
             else:
                 pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
 
                 # No pins? Ignore check.
                 # This can be improved to include graphical items too...
-                if len(pins) == 0:
+                if not pins:
                     continue
                 x_pos = [pin.posx for pin in pins]
                 y_pos = [pin.posy for pin in pins]

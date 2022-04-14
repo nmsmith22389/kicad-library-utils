@@ -9,17 +9,17 @@ class Rule(KLCRule):
         for pin in self.component.pins:
             try:
                 int_pins.append(int(pin.number))
-            except:
+            except ValueError:
                 pass
 
-        if len(int_pins) == 0:
+        if not int_pins:
             return False
 
         missing_pins = []
         for i in range(1, max(int_pins) + 1):
             if i not in int_pins:
                 missing_pins.append(i)
-        if len(missing_pins) != 0:
+        if missing_pins:
             self.warning(
                 "Pin{s} {n} {v} missing.".format(
                     s="s" if len(missing_pins) > 1 else "",

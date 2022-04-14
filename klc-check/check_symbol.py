@@ -3,6 +3,7 @@
 import argparse
 import os
 import queue
+import re
 import sys
 import time
 import traceback
@@ -10,17 +11,16 @@ from glob import glob  # enable windows wildcards
 from multiprocessing import JoinableQueue, Lock, Process, Queue
 from typing import List, Optional, Tuple
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from typing import List, Optional
-
-from kicad_sym import *
-from print_color import *
-from rulebase import PrintColor, Verbosity
-from rules_symbol import *
-from rules_symbol import __all__ as all_rules
+from kicad_sym import KicadLibrary
+from print_color import PrintColor
+from rulebase import Verbosity, logError
+from rules_symbol import get_all_symbol_rules
 from rules_symbol.rule import KLCRule
 
 
@@ -49,13 +49,12 @@ class SymbolCheck:
         # build a list of rules to work with
         self.rules: List[KLCRule] = []
 
-        for r in all_rules:
-            r_name = r.replace("_", ".")
-            if selected_rules is None or r_name in selected_rules:
-                if excluded_rules is not None and r_name in excluded_rules:
+        for rule_name, rule in get_all_symbol_rules().items():
+            if selected_rules is None or rule_name in selected_rules:
+                if excluded_rules is not None and rule_name in excluded_rules:
                     pass
                 else:
-                    self.rules.append(globals()[r].Rule)
+                    self.rules.append(rule.Rule)
 
     def do_unittest(self, symbol) -> Tuple[int, int]:
         error_count = 0
@@ -65,7 +64,7 @@ class SymbolCheck:
             return (1, 0)
         unittest_result = m.group(1)
         unittest_rule = m.group(2)
-        unittest_descrp = m.group(3)
+        unittest_descrp = m.group(3)  # noqa: F841
         for rule in self.rules:
             rule.footprints_dir = self.footprints
             rule = rule(symbol)
@@ -122,7 +121,7 @@ class SymbolCheck:
 
             if rule.hasErrors():
                 if self.log:
-                    logError(self.log, rule.name, lib_name, symbol.name)
+                    logError(self.log, rule.name, symbol.libname, symbol.name)
 
             # increment the number of violations
             symbol_error_count += rule.errorCount
@@ -249,7 +248,10 @@ def worker(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Checks KiCad library files (.kicad_sym) against KiCad Library Convention (KLC) rules. You can find the KLC at https://kicad.org/libraries/klc/"
+        description=(
+            "Checks KiCad library files (.kicad_sym) against KiCad Library Convention"
+            " (KLC) rules. You can find the KLC at https://kicad.org/libraries/klc/"
+        )
     )
     parser.add_argument("kicad_sym_files", nargs="+")
     parser.add_argument(
@@ -264,21 +266,32 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r",
         "--rule",
-        help='Select a particular rule (or rules) to check against (default = all rules). Use comma separated values to select multiple rules. e.g. "-r S3.1,EC02"',
+        help=(
+            "Select a particular rule (or rules) to check against (default = all"
+            ' rules). Use comma separated values to select multiple rules. e.g. "-r'
+            ' S3.1,EC02"'
+        ),
     )
     parser.add_argument(
         "-e",
         "--exclude",
-        help='Exclude a particular rule (or rules) to check against. Use comma separated values to select multiple rules. e.g. "-e S3.1,EC02"',
+        help=(
+            "Exclude a particular rule (or rules) to check against. Use comma separated"
+            ' values to select multiple rules. e.g. "-e S3.1,EC02"'
+        ),
     )
-    # parser.add_argument('--fix', help='fix the violations if possible', action='store_true') # currently there is no write support for a kicad symbol
+    # currently there is no write support for a kicad symbol
+    #    parser.add_argument('--fix', help='fix the violations if possible', action='store_true')
     parser.add_argument(
         "--nocolor", help="does not use colors to show the output", action="store_true"
     )
     parser.add_argument(
         "-v",
         "--verbose",
-        help="Enable verbose output. -v shows brief information, -vv shows complete information",
+        help=(
+            "Enable verbose output. -v shows brief information, -vv shows complete"
+            " information"
+        ),
         action="count",
     )
     parser.add_argument(
@@ -308,7 +321,10 @@ if __name__ == "__main__":
     parser.add_argument("-j", "--multiprocess", help="use parallel processing")
     parser.add_argument(
         "--footprints",
-        help='Path to footprint libraries (.pretty dirs). Specify with e.g. "~/kicad/footprints/"',
+        help=(
+            "Path to footprint libraries (.pretty dirs). Specify with e.g."
+            ' "~/kicad/footprints/"'
+        ),
     )
     args = parser.parse_args()
 
@@ -337,7 +353,7 @@ if __name__ == "__main__":
     for f in args.kicad_sym_files:
         files += glob(f)
 
-    if len(files) == 0:
+    if not files:
         print("File argument invalid: {f}".format(f=args.kicad_sym_files))
         sys.exit(1)
 
@@ -346,7 +362,7 @@ if __name__ == "__main__":
         files[i] = (files[i], os.path.getsize(files[i]))
     # Sort list by file size, largest on top
     # the idea is to further speed up multiprocessing by working on the bigger items first
-    if args.unittest == False:
+    if not args.unittest:
         files.sort(key=lambda filename: filename[1], reverse=True)
 
     # Create queues for multiprocessing
@@ -385,8 +401,8 @@ if __name__ == "__main__":
         for p in jobs:
             while True:
                 try:
-                    id, line = out_queue.get(block=False).split(",")
-                    job_output[id].append(line)
+                    identifier, line = out_queue.get(block=False).split(",")
+                    job_output[identifier].append(line)
                 except queue.Empty:
                     break
             if not p.is_alive():

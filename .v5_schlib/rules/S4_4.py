@@ -1,6 +1,6 @@
 import re
 
-from rules.rule import *
+from rules.rule import KLCRule, pinElectricalTypeToStr, pinString
 
 
 class Rule(KLCRule):
@@ -68,13 +68,15 @@ class Rule(KLCRule):
                 and (not etype.lower() == "w")
                 and (not inSpecialStack)
             ):
-                if len(self.power_errors) == 0:
+                if not self.power_errors:
                     self.error(
                         "Power pins should be of type POWER INPUT or POWER OUTPUT"
                     )
                     if Rule43NotExecuted:
                         self.errorExtra(
-                            "NOTE: If power-pins have been stacked, you may ignore this error in some cases (Ensure to check rule S4.3 in addition to recognize such stacks)."
+                            "NOTE: If power-pins have been stacked, you may ignore this"
+                            " error in some cases (Ensure to check rule S4.3 in"
+                            " addition to recognize such stacks)."
                         )
                 self.power_errors.append(pin)
                 self.errorExtra(
@@ -102,7 +104,7 @@ class Rule(KLCRule):
                 if self.test(name, tests):
 
                     if not pin_type == etype:
-                        if len(self.suggestions) == 0:
+                        if not self.suggestions:
                             self.warning("Pin types should match pin function")
                         self.suggestions.append(pin)
                         self.warningExtra(
@@ -123,11 +125,12 @@ class Rule(KLCRule):
         self.inversion_errors = []
 
         for pin in pins:
-            m = re.search("(\~)(.+)", pin["name"])
+            m = re.search(r"(\~)(.+)", pin["name"])
             if m and pin["pin_type"] == "I":
-                if len(self.inversion_errors) == 0:
+                if not self.inversion_errors:
                     self.error(
-                        "Pins should not be inverted twice (with inversion-symbol on pin and overline on label)"
+                        "Pins should not be inverted twice (with inversion-symbol on"
+                        " pin and overline on label)"
                     )
                 self.inversion_errors.append(pin)
                 self.errorExtra(

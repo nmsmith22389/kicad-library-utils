@@ -15,9 +15,11 @@ import argparse
 import os
 import sys
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
 from lib_table import LibTable
 
@@ -57,7 +59,7 @@ def check_entries(lib_table, lib_names):
 
     # Check for libraries that are in the lib_table but should not be
     for name in lib_table_names:
-        if not name in lib_names:
+        if name not in lib_names:
             errors += 1
             print("- Extra library '{l}' found in library table".format(l=name))
 
@@ -67,7 +69,7 @@ def check_entries(lib_table, lib_names):
 
     # Check for libraries that are not in the lib_table but should be
     for name in lib_names:
-        if not name in lib_table_names:
+        if name not in lib_table_names:
             errors += 1
             print("- Library '{l}' missing from library table".format(l=name))
 

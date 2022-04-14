@@ -1,5 +1,5 @@
 from kicad_mod import KicadMod
-from rules_footprint.rule import *
+from rules_footprint.rule import KLCRule
 
 
 class Rule(KLCRule):
@@ -28,13 +28,15 @@ class Rule(KLCRule):
         if self.smd_count > 0 and module.attribute != "smd":
             if module.attribute == "virtual":
                 self.warning(
-                    "Footprint placement type set to 'virtual' - ensure this is correct!"
+                    "Footprint placement type set to 'virtual' - ensure this is"
+                    " correct!"
                 )
             # Only SMD pads?
             elif self.pth_count == 0:
                 self.error("Surface Mount attribute not set")
                 self.errorExtra(
-                    "For SMD footprints, 'Placement type' must be set to 'Surface mount'"
+                    "For SMD footprints, 'Placement type' must be set to 'Surface"
+                    " mount'"
                 )
                 error = True
             else:

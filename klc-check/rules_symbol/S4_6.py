@@ -9,7 +9,7 @@ class Rule(KLCRule):
     """Hidden pins"""
 
     # No-connect pins should be "N"
-    NC_PINS = ["^nc$", "^dnc$", "^n\.c\.$"]
+    NC_PINS = ["^nc$", "^dnc$", r"^n\.c\.$"]
 
     def __init__(self, component: KicadSymbol):
         super().__init__(component)
@@ -40,10 +40,10 @@ class Rule(KLCRule):
                     self.type_errors.append(pin)
 
                 # NC pins should be invisible
-                if pin.is_hidden == False:
+                if not pin.is_hidden:
                     self.invisible_errors.append(pin)
 
-        if len(self.type_errors) > 0:
+        if self.type_errors:
             self.error("NC pins are not correct pin-type:")
 
             for pin in self.type_errors:
@@ -53,7 +53,7 @@ class Rule(KLCRule):
                     )
                 )
 
-        if len(self.invisible_errors) > 0:
+        if self.invisible_errors:
             self.warning("NC pins are VISIBLE (should be INVISIBLE):")
 
             for pin in self.invisible_errors:
@@ -61,7 +61,7 @@ class Rule(KLCRule):
                     "{pin} should be INVISIBLE".format(pin=pinString(pin))
                 )
 
-        return len(self.invisible_errors) > 0 or len(self.type_errors) > 0
+        return self.invisible_errors or self.type_errors
 
     def check(self) -> bool:
         """
@@ -72,7 +72,7 @@ class Rule(KLCRule):
         """
 
         # no need to check this for an alias
-        if self.component.extends != None:
+        if self.component.extends is not None:
             return False
 
         fail = False
@@ -90,7 +90,7 @@ class Rule(KLCRule):
         self.info("Fixing...")
 
         for pin in self.invisible_errors:
-            if not pin.is_hidden == True:
+            if not pin.is_hidden:
                 pin.is_hidden = True
                 self.info("Setting pin {n} to INVISIBLE".format(n=pin.number))
 

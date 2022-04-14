@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 
@@ -9,17 +9,17 @@ This file looks for components that are duplicated within a library
 import argparse
 import os
 import sys
-
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-
-if not common in sys.path:
-    sys.path.append(common)
-
-# enable windows wildcards
 from glob import glob
 
-from print_color import *
-from schlib import *
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+
+if common not in sys.path:
+    sys.path.insert(0, common)
+
+from print_color import PrintColor
+from schlib import SchLib
 
 
 def ExitError(msg):
@@ -96,9 +96,8 @@ for libfile in libfiles:
 
                 if alias in aliases:
                     printer.yellow(
-                        "Component '{cmp}' ALIAS '{alias}' exists as an alias of '{key}'".format(
-                            cmp=cmp.name, alias=alias, key=key
-                        )
+                        "Component '{cmp}' ALIAS '{alias}' exists as an alias of"
+                        " '{key}'".format(cmp=cmp.name, alias=alias, key=key)
                     )
                     errors += 1
 

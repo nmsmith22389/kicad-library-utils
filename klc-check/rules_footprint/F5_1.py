@@ -3,8 +3,13 @@ from copy import deepcopy
 from typing import Any, Dict, List
 
 from kicad_mod import KicadMod
-from rules_footprint.klc_constants import *
-from rules_footprint.rule import *
+from rules_footprint.klc_constants import (
+    KLC_SILK_WIDTH,
+    KLC_SILK_WIDTH_ALLOWED,
+    KLC_TEXT_SIZE,
+    KLC_TEXT_THICKNESS,
+)
+from rules_footprint.rule import KLCRule, graphItemString
 
 
 class Rule(KLCRule):
@@ -78,7 +83,7 @@ class Rule(KLCRule):
 
         self.refDesError = len(errors) > 0
 
-        if len(errors) > 0:
+        if errors:
             self.error("Reference label errors:")
             for err in errors:
                 self.errorExtra(err)
@@ -278,7 +283,7 @@ class Rule(KLCRule):
                             )
                         try:
                             differentSign = padMax / padMin
-                        except:
+                        except ZeroDivisionError:
                             differentSign = padMin / padMax
                         if (
                             (differentSign < 0)
@@ -340,9 +345,7 @@ class Rule(KLCRule):
                     pad_nums.append(ints["pad"]["number"])
 
         # Return True if any of the checks returned an error
-        return any(
-            [len(self.bad_width) > 0, len(self.intersections) > 0, self.refDesError]
-        )
+        return bool(self.bad_width or self.intersections or self.refDesError)
 
     def fix(self) -> None:
         """
@@ -359,12 +362,8 @@ class Rule(KLCRule):
                 ):  # @todo checkReference() does not return anything
                     ref["value"] = "REF**"
                     ref["layer"] = "F.SilkS"
-                    ref["font"][
-                        "width"
-                    ] = KLC_TEXT_WIDTH  # @todo KLC_TEXT_WIDTH does not exist
-                    ref["font"][
-                        "height"
-                    ] = KLC_TEXT_HEIGHT  # @todo KLC_TEXT_HEIGHT does not exist
+                    ref["font"]["width"] = KLC_TEXT_SIZE
+                    ref["font"]["height"] = KLC_TEXT_SIZE
                     ref["font"]["thickness"] = KLC_TEXT_THICKNESS
             for graph in self.bad_width:
                 graph["width"] = KLC_SILK_WIDTH

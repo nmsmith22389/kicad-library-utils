@@ -43,21 +43,23 @@ class PrintColor:
         self.buffer: List[str] = []
         self.buffered: bool = buffered
 
+        # TODO: why is the usage of "colorama" limited to Windows?
         if platform.system() == "Windows":
             try:
                 import colorama
-
-                colorama.init()
-            except:
+            except ImportError:
                 print(
-                    'To print using colors you have to install colorama. Try to install it using: "pip install colorama"'
+                    "To print using colors you have to install colorama. Try to install"
+                    ' it using: "pip install colorama"'
                 )
                 print("[Continuing using no color mode]\n")
                 self._use_color = False
+            else:
+                colorama.init()
 
     def flush(self) -> None:
-        for l in self.buffer:
-            print(l)
+        for line in self.buffer:
+            print(line)
         self.buffer.clear()
 
     def _replace_tabs(self, text: str) -> str:
@@ -125,7 +127,7 @@ class PrintColor:
             else:
                 try:
                     print(line)
-                except:
+                except (IOError, ValueError):
                     print("ERROR printing output")
 
     def regular(
@@ -266,7 +268,19 @@ class PrintColor:
 
 
 if __name__ == "__main__":
-    msg = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ullamcorper lectus sed metus condimentum viverra. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce ipsum lectus, tristique at turpis id, sagittis egestas leo. Sed vel ex nec libero laoreet hendrerit sed quis sem. Quisque laoreet enim sapien, id placerat eros venenatis sit amet. Mauris faucibus condimentum interdum. Vivamus nec bibendum arcu, at convallis metus. Integer feugiat ante id orci placerat, ut laoreet purus dapibus. Ut facilisis volutpat urna, vel condimentum enim tincidunt non. Vestibulum tempor tristique aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Quisque tortor tortor, semper at justo ac, elementum posuere nulla."
+    msg = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ullamcorper"
+        " lectus sed metus condimentum viverra. Class aptent taciti sociosqu ad litora"
+        " torquent per conubia nostra, per inceptos himenaeos. Fusce ipsum lectus,"
+        " tristique at turpis id, sagittis egestas leo. Sed vel ex nec libero laoreet"
+        " hendrerit sed quis sem. Quisque laoreet enim sapien, id placerat eros"
+        " venenatis sit amet. Mauris faucibus condimentum interdum. Vivamus nec"
+        " bibendum arcu, at convallis metus. Integer feugiat ante id orci placerat, ut"
+        " laoreet purus dapibus. Ut facilisis volutpat urna, vel condimentum enim"
+        " tincidunt non. Vestibulum tempor tristique aliquet. Class aptent taciti"
+        " sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
+        " Quisque tortor tortor, semper at justo ac, elementum posuere nulla."
+    )
     printer = PrintColor(max_width=100, indentation=4)
     printer.red(msg)
     printer.blue(msg, 50, 2)

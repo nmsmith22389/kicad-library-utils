@@ -30,7 +30,7 @@ class Rule(KLCRule):
                     )
                     fail = True
                     self.makePinPowerInput = True
-                if self.component.pins[0].is_hidden != True:
+                if not self.component.pins[0].is_hidden:
                     self.error("The pin in power-flag symbols has to be INVISIBLE")
                     fail = True
                     self.makePinINVISIBLE = True
@@ -62,7 +62,7 @@ class Rule(KLCRule):
                     fail = True
                     self.fixWrongRef = True
                 # FPFilters must be empty
-                if len(self.component.get_fp_filters()) > 0:
+                if self.component.get_fp_filters():
                     self.error("Graphical symbols have no footprint filters")
                     fail = True
                     self.fixNoFootprint = True
@@ -85,7 +85,7 @@ class Rule(KLCRule):
         if self.fixPinSignalName:
             newname = self.component.name
             if self.component.name.startswith("~"):
-                newname = self.component.name[1 : len(self.component.name)]
+                newname = self.component.name[1:]
             self.info("FIX: change pin name to '" + newname + "'")
             self.component.pins[0].name = newname
         if self.fixNoFootprint:

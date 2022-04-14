@@ -51,7 +51,7 @@ class Point:
             self.y: int = int(coordinates.get("y", 0))
         else:
             TypeError(
-                "unsuported type, Must be dict, point or coordinates given as number"
+                "unsupported type, Must be dict, point or coordinates given as number"
             )
 
         self.grid = grid
@@ -111,6 +111,7 @@ class Point:
             point.roundToGrid()
         return point
 
+    @staticmethod
     def roundCoordinateToGrid(value: float, base: int, apply_on_copy: bool = False):
         if value >= 0:
             return math.floor(value / base) * base
@@ -144,8 +145,3 @@ class Point:
         if isinstance(self, other.__class__):
             return self.__dict__ == other.__dict__
         return False
-
-    def __ne__(self, other) -> bool:
-        """Overrides the default implementation (unnecessary in Python 3)"""
-
-        return not self.__eq__(other)

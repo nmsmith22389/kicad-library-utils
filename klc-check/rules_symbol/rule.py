@@ -1,4 +1,4 @@
-from kicad_sym import KicadSymbol, Pin, mil_to_mm, mm_to_mil
+from kicad_sym import KicadSymbol, Pin, mm_to_mil
 from rulebase import KLCRuleBase, Verbosity
 
 
@@ -14,13 +14,13 @@ def pinString(pin: Pin, loc: bool = True, unit=None, convert=None) -> str:
 
 
 def positionFormater(element) -> str:
-    if type(element) == type({}):
+    if isinstance(element, dict):
         if not {"posx", "posy"}.issubset(element.keys()):
             raise Exception("missing keys 'posx' and 'posy' in" + str(element))
         return "@ ({0}, {1})".format(
             mm_to_mil(element["posx"]), mm_to_mil(element["posy"])
         )
-    if "posx" in element.__dict__ and "posy" in element.__dict__:
+    if hasattr(element, "posx") and hasattr(element, "posy"):
         return "@ ({0}, {1})".format(mm_to_mil(element.posx), mm_to_mil(element.posy))
     raise Exception("input type: ", type(element), "not supported, ", element)
 

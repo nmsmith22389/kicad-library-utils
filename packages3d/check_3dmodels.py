@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This script checks validity of the packages3D paths,
@@ -41,11 +41,11 @@ for lib in args.models:
         name = os.path.basename(lib).replace(".3dshapes", "")
         models[name] = os.path.abspath(lib)
 
-if len(pretty) == 0:
+if not pretty:
     print("No .pretty directories supplied")
     sys.exit(1)
 
-if len(models) == 0:
+if not models:
     print("No .3dshapes directories supplied")
     sys.exit(1)
 
@@ -54,7 +54,7 @@ errors = 0
 for m in models:
     if args.verbose:
         print("Checking '{f}'".format(f=m))
-    if not m in pretty:
+    if m not in pretty:
         print("- Mislabeled 3D folder '{f}'".format(f=m))
         errors += 1
 
@@ -85,11 +85,11 @@ for m in models:
 
         # Remove file extension
         m_name = ".".join(f.split(".")[:-1])
-        if not m_name in model_files:
+        if m_name not in model_files:
             model_files.append(m_name)
 
     for mf in model_files:
-        if not mf in pretty_files:
+        if mf not in pretty_files:
             if args.verbose:
                 print("- Mislabeled 3D model '{m}'".format(m=mf))
             errors += 1

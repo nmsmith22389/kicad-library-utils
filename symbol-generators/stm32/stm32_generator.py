@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import math
 import multiprocessing
 import os
 import re
@@ -11,17 +10,21 @@ from itertools import repeat
 
 from lxml import etree
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
 import kicad_sym
-from DrawingElements import *
-from Point import *
+from DrawingElements import Drawing, DrawingPin, DrawingRectangle, ElementFill
+from Point import Point
 
 
 class DataPin:
@@ -247,11 +250,11 @@ class Device:
         name = self.root.get("RefName")
 
         # Get all the part names for this part
-        als = Device._name_search.search(name)
-        if als:
-            pre = als.group(1)
-            post = als.group(3)
-            s = als.group(2).split("-")
+        name_match = Device._name_search.search(name)
+        if name_match:
+            pre = name_match.group(1)
+            post = name_match.group(3)
+            s = name_match.group(2).split("-")
             self.name = pre + s[0] + post
             for a in s[1:]:
                 self.aliases.append(pre + a + post)
@@ -279,8 +282,8 @@ class Device:
                 self.package += "-7X7"
             else:
                 logging.warning(
-                    f"Unable to determine package variant for "
-                    f"device {self.name}, package {self.package}"
+                    f"Unable to determine package variant for"
+                    f" device {self.name}, package {self.package}"
                 )
 
         # Get the footprint for this package
@@ -288,7 +291,7 @@ class Device:
             self.footprint = Device._FOOTPRINT_MAPPING[self.package]
         except KeyError:
             logging.warning(
-                f"No footprint found for device {self.name}, " f"package {self.package}"
+                f"No footprint found for device {self.name}, package {self.package}"
             )
             self.footprint = ""
 
@@ -332,7 +335,8 @@ class Device:
             packPinCountR = Device._pincount_search.search(self.package)
             powerpinnumber = str(int(packPinCountR.group(1)) + 1)
             logging.info(
-                f"Device {name} with powerpad, package {self.package}, power pin: {powerpinnumber}"
+                f"Device {name} with powerpad, package {self.package}, power pin:"
+                f" {powerpinnumber}"
             )
             # Create power pad pin
             powerpadpin = DataPin(powerpinnumber, "VSS", "Power")
@@ -344,7 +348,7 @@ class Device:
         self.line = self.root.get("Line")
         try:
             self.freq = self.root.xpath("a:Frequency", namespaces=self.ns)[0].text
-        except:
+        except IndexError:
             # Not all chips have a frequency specification
             logging.info("Unknown frequency")
             self.freq = None
@@ -360,7 +364,7 @@ class Device:
                     "Max", default="--"
                 ),
             ]
-        except:
+        except IndexError:
             # Not all chips have a voltage specification
             logging.info("Unknown voltage")
             self.voltage = None
@@ -385,7 +389,7 @@ class Device:
         datasheet = (
             ""
             if self.pdf is None
-            else (f"https://www.st.com/" f"resource/en/datasheet/{self.pdf}")
+            else (f"https://www.st.com/resource/en/datasheet/{self.pdf}")
         )
 
         # Get footprint filters
@@ -394,8 +398,8 @@ class Device:
         except KeyError:
             footprint_filters = ""
             logging.warning(
-                f"No footprint filters found for device "
-                f"{self.name}, package {self.package}"
+                f"No footprint filters found for device"
+                f" {self.name}, package {self.package}"
             )
 
         libname = os.path.basename(lib.filename)
@@ -520,12 +524,11 @@ class Device:
         else:
             if winners:
                 logging.warning(
-                    f"Multiple datasheets determined for device "
-                    f"{self.name} ({winners})"
+                    f"Multiple datasheets determined for device {self.name} ({winners})"
                 )
             else:
                 logging.warning(
-                    f"Datasheet could not be determined for " f"device {self.name}"
+                    f"Datasheet could not be determined for device {self.name}"
                 )
             return None
 
@@ -553,8 +556,6 @@ class Device:
         otherPins = []
         ports = {}
 
-        leftPins = []
-        rightPins = []
         topPins = []
         bottomPins = []
 
@@ -649,22 +650,20 @@ class Device:
         rightSpace = 0
 
         # Special groups go to the left
-        if len(resetPins) > 0:
+        if resetPins:
             leftGroups.append(resetPins)
-        if len(bootPins) > 0:
+        if bootPins:
             leftGroups.append(bootPins)
-        if len(powerPins) > 0:
+        if powerPins:
             leftGroups.append(sorted(powerPins, key=lambda p: p.name))
-        if len(clockPins) > 0:
+        if clockPins:
             leftGroups.append(clockPins)
-        if len(otherPins) > 0:
+        if otherPins:
             leftGroups.append(otherPins)
 
         # Count the space needed for special groups
         for group in leftGroups:
             leftSpace += len(group) + 1
-
-        serviceSpace = leftSpace
 
         # Add ports to the right, counting the space needed
         for _, port in sorted(ports.items()):
@@ -697,13 +696,18 @@ class Device:
         box_height = max(leftSpace, rightSpace) * 100
 
         # Calculate the width of the symbol
-        round_up = lambda x, y: (x + y - 1) // y * y
-        pin_name_width = lambda p: len(p.name) * 47
-        pin_group_max_width = lambda g: max(map(pin_name_width, g))
+        def round_up(x, y):
+            return (x + y - 1) // y * y
+
+        def pin_group_max_width(group):
+            return max(len(p.name) * 47 for p in group)
+
         left_width = round_up(
-            max(map(pin_group_max_width, leftGroups + movedGroups)), 100
+            max(pin_group_max_width(group) for group in (leftGroups + movedGroups)), 100
         )
-        right_width = round_up(max(map(pin_group_max_width, rightGroups)), 100)
+        right_width = round_up(
+            max(pin_group_max_width(group) for group in rightGroups), 100
+        )
         top_width = len(topPins) * 100
         bottom_width = len(bottomPins) * 100
         middle_width = 100 + max(top_width, bottom_width)

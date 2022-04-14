@@ -24,7 +24,8 @@ class Rule(KLCRule):
         else:
             if not ref.effects.is_hidden:
                 self.error(
-                    "Reference field must be INVISIBLE in graphic symbols or power-symbols"
+                    "Reference field must be INVISIBLE in graphic symbols or"
+                    " power-symbols"
                 )
                 fail = True
 
@@ -162,8 +163,9 @@ class Rule(KLCRule):
                 return True
         else:
             # find special chars.
-            # a dot followed by a non-word char is also considered a violation. This allows 3.3V but prevents 'foobar. buzz'
-            forbidden_matches = re.findall("\.\W|\.$|[,:;?!<>]", dsc.value)
+            # A dot followed by a non-word char is also considered a violation.
+            # This allows 3.3V but prevents 'foobar. buzz'
+            forbidden_matches = re.findall(r"\.\W|\.$|[,:;?!<>]", dsc.value)
             if forbidden_matches:
                 self.error(
                     "Symbol keywords contain forbidden characters: {}".format(

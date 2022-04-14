@@ -22,8 +22,8 @@ def logError(
     if os.path.exists(log_file) and os.path.isfile(log_file):
         with open(log_file, "r") as json_file:
             try:
-                log_data = json.loads(json_file.read())
-            except:
+                log_data = json.load(json_file)
+            except ValueError:
                 print("Found bad JSON data - clearing")
                 log_data = {}
 
@@ -32,12 +32,12 @@ def logError(
 
     key = "warnings" if warning else "errors"
 
-    if not key in log_data:
+    if key not in log_data:
         log_data[key] = {}
 
     log_entry = {"library": lib_name, "item": item_name}
 
-    if not rule_name in log_data[key]:
+    if rule_name not in log_data[key]:
         log_data[key][rule_name] = []
 
     log_data[key][rule_name].append(log_entry)
@@ -65,10 +65,10 @@ def isValidName(
             continue
 
         # Alpha characters (simple set only)
-        if c >= "a" and c <= "z":
+        if "a" <= c <= "z":
             continue
 
-        if c in ["_", "-", ".", "+", ","]:
+        if c in "_-.+,":
             continue
 
         return False

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This script renames footprint files (.kicad_mod)
@@ -35,16 +35,21 @@ import re
 import sys
 import time
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
 
-if not common in sys.path:
-    sys.path.append(common)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
 # enable windows wildcards
 from glob import glob
 
 parser = argparse.ArgumentParser(
-    description="Rename footprint files according to supplied set or regex (regular expressions)"
+    description=(
+        "Rename footprint files according to supplied set or regex (regular"
+        " expressions)"
+    )
 )
 parser.add_argument(
     "footprints", nargs="+", help="Footprint files (.kicad_mod) to be renamed"
@@ -57,7 +62,10 @@ parser.add_argument("--remove", help="String to remove from the filename")
 parser.add_argument(
     "-r",
     "--real",
-    help="Perform renaming actions. By default, script performs a dry-run and will not rename any files",
+    help=(
+        "Perform renaming actions. By default, script performs a dry-run and will not"
+        " rename any files"
+    ),
     action="store_true",
 )
 parser.add_argument(
@@ -77,10 +85,10 @@ if not args.regex and not args.simple:
 
 if args.regex:
     with open(args.regex) as f:
-        json_data = json.loads(f.read())
+        json_data = json.load(f)
 elif args.simple:
     with open(args.simple) as f:
-        json_data = json.loads(f.read())
+        json_data = json.load(f)
 
 footprints = []
 
@@ -174,7 +182,7 @@ for f in footprints:
                 pd = match.groups()[0]
                 ki = "${KISYS3DMOD}"
 
-                if not ki in line:
+                if ki not in line:
                     line = line.replace(pd, ki + "/" + pd)
                     if args.verbose > 1:
                         print("Adding " + ki + " prefix")

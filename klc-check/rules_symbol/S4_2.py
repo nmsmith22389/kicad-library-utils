@@ -1,6 +1,5 @@
 import re
 
-from kicad_sym import KicadSymbol
 from rules_symbol.rule import KLCRule, pinString
 
 
@@ -23,7 +22,8 @@ class Rule(KLCRule):
                         if first:
                             first = False
                             self.warning(
-                                "Ground and negative power pins should be placed at bottom of symbol"
+                                "Ground and negative power pins should be placed at"
+                                " bottom of symbol"
                             )
                         self.warningExtra(pinString(pin))
 
@@ -49,7 +49,7 @@ class Rule(KLCRule):
 
     def check(self) -> bool:
         # no need to check pins on an alias
-        if self.component.extends != None:
+        if self.component.extends is not None:
             return False
 
         self.checkGroundPins()

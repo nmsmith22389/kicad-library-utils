@@ -4,8 +4,18 @@
 from typing import Any, Dict, List, Optional
 
 from kicad_mod import KicadMod
-from rules_footprint.klc_constants import *
-from rules_footprint.rule import *
+from rules_footprint.klc_constants import (
+    KLC_FAB_WIDTH,
+    KLC_FAB_WIDTH_MAX,
+    KLC_FAB_WIDTH_MIN,
+    KLC_TEXT_SIZE,
+    KLC_TEXT_SIZE_MAX,
+    KLC_TEXT_SIZE_MIN,
+    KLC_TEXT_THICKNESS,
+    KLC_TEXT_THICKNESS_MAX,
+    KLC_TEXT_THICKNESS_MIN,
+)
+from rules_footprint.rule import KLCRule, graphItemString, mapToGrid
 
 
 class Rule(KLCRule):
@@ -57,7 +67,7 @@ class Rule(KLCRule):
         f_min = min(fh, fw)
         f_max = max(fh, fw)
 
-        # Check for presense of 'value'
+        # Check for presence of 'value'
         if val["layer"] not in ["F.Fab", "B.Fab"]:
             errors.append(
                 "Component value is on layer {lyr} but should be on F.Fab or B.Fab".format(
@@ -81,12 +91,13 @@ class Rule(KLCRule):
             )
         if ft < KLC_TEXT_THICKNESS_MIN or ft > KLC_TEXT_THICKNESS_MAX:
             errors.append(
-                "Value label thickness ({t}mm) is outside allowed range of {a}mm - {b}mm".format(
+                "Value label thickness ({t}mm) is outside allowed range of {a}mm -"
+                " {b}mm".format(
                     t=ft, a=KLC_TEXT_THICKNESS_MIN, b=KLC_TEXT_THICKNESS_MAX
                 )
             )
 
-        if len(errors) > 0:
+        if errors:
             self.error("Value Label Errors")
             for err in errors:
                 self.errorExtra(err)
@@ -94,7 +105,7 @@ class Rule(KLCRule):
         return len(errors) > 0
 
     def checkMissingLines(self) -> bool:
-        if len(self.f_fabrication_all) + len(self.b_fabrication_all) == 0:
+        if not self.f_fabrication_all and not self.b_fabrication_all:
             if self.module.attribute != "virtual":
                 self.error("No drawings found on fabrication layer")
                 return True
@@ -169,12 +180,11 @@ class Rule(KLCRule):
             )
 
         # Check position / orientation
-        pos = ref["pos"]
-
+        # pos = ref["pos"]
         # if not pos['orientation'] == 0:
         #    errors.append("RefDes on F.Fab layer should be horizontal (no rotation)")
 
-        if len(errors) > 0:
+        if errors:
             self.error("RefDes errors")
             for err in errors:
                 self.errorExtra(err)
@@ -245,7 +255,7 @@ class Rule(KLCRule):
         self.missing_second_ref = self.checkSecondRef()
 
         if self.multiple_second_ref:
-            self.error("Mutliple RefDes markers found with text '${REFERENCE}'")
+            self.error("Multiple RefDes markers found with text '${REFERENCE}'")
 
         return any(
             [

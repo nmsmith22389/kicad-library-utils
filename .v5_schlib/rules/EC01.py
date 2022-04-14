@@ -1,6 +1,4 @@
-import re
-
-from rules.rule import *
+from rules.rule import KLCRule, pinString
 
 
 class Rule(KLCRule):
@@ -15,16 +13,15 @@ class Rule(KLCRule):
         self.wrong_pin_numbers = []
         for pin in self.component.pins:
             try:
-                num = int(pin["num"])
+                int(pin["num"])
             except ValueError:
-                nums = map(str, range(10))
+                nums = [str(i) for i in range(10)]
 
                 if not any([num in pin["num"] for num in nums]):
                     self.wrong_pin_numbers.append(pin)
                     self.error(
-                        "pin: {0} number {1} is not valid, should contain at least 1 number".format(
-                            pin["name"], pin["num"]
-                        )
+                        "pin: {0} number {1} is not valid, should contain at least 1"
+                        " number".format(pin["name"], pin["num"])
                     )
 
         return len(self.wrong_pin_numbers) > 0
@@ -81,7 +78,7 @@ class Rule(KLCRule):
         for pin in self.component.pins:
             try:
                 int_pins.append(int(pin["num"]))
-            except:
+            except ValueError:
                 pass
 
         for i in range(1, max(int_pins) + 1):

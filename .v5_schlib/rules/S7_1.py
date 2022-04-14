@@ -1,6 +1,4 @@
-import re
-
-from rules.rule import *
+from rules.rule import KLCRule
 
 
 class Rule(KLCRule):
@@ -65,7 +63,7 @@ class Rule(KLCRule):
                     fail = True
                     self.fixNoFootprint = True
                 # FPFilters must be empty
-                if len(self.component.fplist) > 0:
+                if self.component.fplist:
                     self.error("Graphical symbols have no footprint filters")
                     fail = True
                     self.fixNoFootprint = True
@@ -89,7 +87,7 @@ class Rule(KLCRule):
         if self.fixPinSignalName:
             newname = self.component.name
             if self.component.name.startswith("~"):
-                newname = self.component.name[1 : len(self.component.name)]
+                newname = self.component.name[1:]
             self.info("FIX: change pin name to '" + newname + "'")
             self.component.pins[0]["pin_type"] = (
                 "N" + self.component.pins[0]["pin_type"]

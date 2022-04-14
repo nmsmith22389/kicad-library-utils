@@ -1,4 +1,4 @@
-from rules.rule import *
+from rules.rule import KLCRule, pinString, positionFormater
 
 
 class Rule(KLCRule):
@@ -141,7 +141,7 @@ class Rule(KLCRule):
             ]
         )
 
-        return True if len(self.violating_pins) > 0 else False
+        return len(self.violating_pins) > 0
 
     def fix(self):
         """

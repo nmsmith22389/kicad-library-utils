@@ -1,4 +1,4 @@
-from rules.rule import *
+from rules.rule import KLCRule
 
 
 class Rule(KLCRule):
@@ -32,7 +32,6 @@ class Rule(KLCRule):
 
         # check all its aliases too
         if self.component.aliases:
-            invalid = []
             for alias in self.component.aliases.keys():
                 if self.checkDocumentation(
                     alias,
@@ -69,7 +68,8 @@ class Rule(KLCRule):
                 )
             if (not isGraphicOrPowerSymbol) and (not documentation["datasheet"]):
                 errors.append(
-                    "Missing DOCUMENTATION FILE NAME field on 'Properties > Description' tab"
+                    "Missing DOCUMENTATION FILE NAME field on 'Properties >"
+                    " Description' tab"
                 )
 
                 if documentation["description"] and documentation["keywords"]:
@@ -96,11 +96,11 @@ class Rule(KLCRule):
                     "Datasheet entry '{ds}' does not look like a URL".format(ds=ds)
                 )
 
-        if len(errors) > 0 or len(warnings) > 0:
+        if errors or warnings:
             msg = "{cmp} {name} has metadata errors:".format(
                 cmp="ALIAS" if alias else "Component", name=name
             )
-            if len(errors) == 0:
+            if not errors:
                 self.warning(msg)
             else:
                 self.error(msg)

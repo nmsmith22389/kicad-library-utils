@@ -14,7 +14,7 @@ from boundingbox import BoundingBox
 # Rotate a point by given angle (in degrees)
 def _rotatePoint(point: Dict[str, float], degrees: float) -> Dict[str, float]:
 
-    # @todo Does not copy! Only reference objects are compied but not the real object!
+    # @todo Does not copy! Only reference objects are compiled but not the real object!
     # Create a new point (copy)
     p = {}
     for key in point:
@@ -37,7 +37,7 @@ def _rotatePoint(point: Dict[str, float], degrees: float) -> Dict[str, float]:
 # Move point by certain offset
 def _movePoint(point: Dict[str, float], offset: Dict[str, float]) -> Dict[str, float]:
 
-    # @todo Does not copy! Only reference objects are compied but not the real object!
+    # @todo Does not copy! Only reference objects are compiled but not the real object!
     # Copy all points
 
     p = {}
@@ -50,7 +50,7 @@ def _movePoint(point: Dict[str, float], offset: Dict[str, float]) -> Dict[str, f
     return p
 
 
-class KicadMod(object):
+class KicadMod:
     """
     A class to parse KiCad footprint files (.kicad_mod format)
     """
@@ -135,7 +135,7 @@ class KicadMod(object):
     # check if value exists in any element of data
     def _hasValue(self, data: Iterable[Any], value: str) -> bool:
         for i in data:
-            if type(i) in [list, tuple]:
+            if isinstance(i, (list, tuple)):
                 if self._hasValue(i, value):
                     return True
             elif str(i) == value:
@@ -160,7 +160,7 @@ class KicadMod(object):
         level += 1
 
         for i in data:
-            if type(i) == type([]):
+            if isinstance(i, list):
                 self._getArray(i, value, result, level, max_level)
             else:
                 if i == value:
@@ -272,13 +272,13 @@ class KicadMod(object):
                 try:
                     a = self._getArray(line, "layer")[0]
                     line_dict["layer"] = a[1]
-                except:
+                except IndexError:
                     line_dict["layer"] = ""
 
                 try:
                     a = self._getArray(line, "width")[0]
                     line_dict["width"] = a[1]
-                except:
+                except IndexError:
                     line_dict["width"] = 0
 
                 lines.append(line_dict)
@@ -289,7 +289,7 @@ class KicadMod(object):
         rects = []
         for rect in self._getArray(self.sexpr_data, "fp_rect"):
             rect_dict = {}
-            if self._hasValue(rect, layer) or layer == None:
+            if self._hasValue(rect, layer) or layer is None:
                 a = self._getArray(rect, "start")[0]
                 rect_dict["start"] = {"x": a[1], "y": a[2]}
 
@@ -299,13 +299,13 @@ class KicadMod(object):
                 try:
                     a = self._getArray(rect, "layer")[0]
                     rect_dict["layer"] = a[1]
-                except:
+                except IndexError:
                     rect_dict["layer"] = ""
 
                 try:
                     a = self._getArray(rect, "width")[0]
                     rect_dict["width"] = a[1]
-                except:
+                except IndexError:
                     rect_dict["width"] = 0
 
                 rects.append(rect_dict)
@@ -327,13 +327,13 @@ class KicadMod(object):
                 try:
                     a = self._getArray(circle, "layer")[0]
                     circle_dict["layer"] = a[1]
-                except:
+                except IndexError:
                     circle_dict["layer"] = ""
 
                 try:
                     a = self._getArray(circle, "width")[0]
                     circle_dict["width"] = a[1]
-                except:
+                except IndexError:
                     circle_dict["width"] = 0
 
                 circles.append(circle_dict)
@@ -358,13 +358,13 @@ class KicadMod(object):
                 try:
                     a = self._getArray(poly, "layer")[0]
                     poly_dict["layer"] = a[1]
-                except:
+                except IndexError:
                     poly_dict["layer"] = ""
 
                 try:
                     a = self._getArray(poly, "width")[0]
                     poly_dict["width"] = a[1]
-                except:
+                except IndexError:
                     poly_dict["width"] = ""
 
                 polys.append(poly_dict)
@@ -420,7 +420,7 @@ class KicadMod(object):
                 Diff = math.atan2(p3y - ry, p3x - rx) - math.atan2(p1y - ry, p1x - rx)
                 # print ("\nangle =" , math.degrees( Diff ))
 
-                #  Diff is allways the shorter angle , ignoring Mid. Need to adjust
+                #  Diff is always the shorter angle, ignoring Mid. Need to adjust
                 if Diff < 0.0:
                     Diff = 2 * math.pi + Diff
 
@@ -430,13 +430,13 @@ class KicadMod(object):
                 try:
                     a = self._getArray(arc, "layer")[0]
                     arc_dict["layer"] = a[1]
-                except:
+                except IndexError:
                     arc_dict["layer"] = ""
 
                 try:
                     a = self._getArray(arc, "width")[0]
                     arc_dict["width"] = a[1]
-                except:
+                except IndexError:
                     arc_dict["width"] = 0
 
                 arcs.append(arc_dict)
@@ -504,7 +504,7 @@ class KicadMod(object):
             if a:
                 pad_dict["die_length"] = a[0][1]
 
-            ## clearances zones settings
+            # clearances zones settings
             # clearance
             pad_dict["clearance"] = {}
             a = self._getArray(pad, "clearance")
@@ -526,7 +526,7 @@ class KicadMod(object):
             if a:
                 pad_dict["solder_paste_margin_ratio"] = a[0][1]
 
-            ## copper zones settings
+            # copper zones settings
             # zone connect
             pad_dict["zone_connect"] = {}
             a = self._getArray(pad, "zone_connect")
@@ -864,9 +864,9 @@ class KicadMod(object):
 
         # Add all lines
         lines = self.filterLines(layer)
-        for l in lines:
-            bb.addPoint(l["start"]["x"], l["start"]["y"])
-            bb.addPoint(l["end"]["x"], l["end"]["y"])
+        for line in lines:
+            bb.addPoint(line["start"]["x"], line["start"]["y"])
+            bb.addPoint(line["end"]["x"], line["end"]["y"])
 
         # Add all rects
         rects = self.filterRects(layer)
@@ -1073,7 +1073,7 @@ class KicadMod(object):
         tp = text["pos"]
         pos = [tp["x"], tp["y"]]
         rot = tp.get("orientation", 0)
-        if not rot in [0, None]:
+        if rot not in [0, None]:
             pos.append(rot)
 
         se.addItems(
@@ -1236,7 +1236,7 @@ class KicadMod(object):
         if pad["rect_delta"]:
             extras.append({"rect_delta": pad["rect_delta"]})
 
-        ## clearances zones settings
+        # clearances zones settings
         # clearance
         if pad["clearance"]:
             extras.append({"clearance": pad["clearance"]})
@@ -1252,7 +1252,7 @@ class KicadMod(object):
                 {"solder_paste_margin_ratio": pad["solder_paste_margin_ratio"]}
             )
 
-        ## copper zones settings
+        # copper zones settings
         # zone connect
         if pad["zone_connect"]:
             extras.append({"zone_connect": pad["zone_connect"]})
@@ -1265,7 +1265,7 @@ class KicadMod(object):
 
         # TODO: properly format custom pad shapes
 
-        if len(extras) > 0:
+        if extras:
             se.addItems(extras, newline=True, indent=True)
             se.unIndent()
 

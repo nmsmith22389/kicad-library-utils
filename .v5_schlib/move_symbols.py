@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This script can be used to reorganize symbol libraries
@@ -33,7 +33,6 @@ import fnmatch
 import glob
 import json
 import os
-import shutil
 import sys
 
 
@@ -69,8 +68,7 @@ def get_entire_lib_match(lib_name):
     patterns = get_lib_patterns(lib_name)
 
     # Remap to single lib
-    if type(patterns) in [str, unicode]:
-
+    if isinstance(patterns, str):
         # Return original lib name
         if patterns in [""]:
             return lib_name
@@ -147,7 +145,7 @@ if args.real and args.clean:
 
 if args.patterns:
     with open(args.patterns) as f:
-        PATTERNS = json.loads(f.read())
+        PATTERNS = json.load(f)
 else:
     PATTERNS = {}
 
@@ -212,7 +210,7 @@ for src_lib in src_libs:
                     src=lib_name, dst=copy_lib
                 )
             )
-        if not copy_lib in output_libs:
+        if copy_lib not in output_libs:
             output_libs[copy_lib] = schlib.SchLib(
                 os.path.join(dst_dir, copy_lib + ".lib"), create=real_mode
             )
@@ -234,7 +232,7 @@ for src_lib in src_libs:
         matches = get_matches(lib_name, cmp.name)
 
         # No matches found
-        if len(matches) == 0:
+        if not matches:
 
             if args.leave:
                 # Leave the item in the same library it already existed in
@@ -276,12 +274,12 @@ for key in output_libs:
     if real_mode:
         lib.save()
 
-if len(unallocated_symbols) > 0:
+if unallocated_symbols:
     print("\nUnallocated Symbols:")
     for s in unallocated_symbols:
         print(s)
 
-if len(overallocated_symbols) > 0:
+if overallocated_symbols:
     print("\nOverallocated Symbols:")
     for s in overallocated_symbols:
         print(s)

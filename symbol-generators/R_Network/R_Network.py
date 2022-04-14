@@ -4,11 +4,22 @@ import math
 import os
 import sys
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from kicad_sym import *
+from kicad_sym import (
+    Circle,
+    KicadLibrary,
+    KicadSymbol,
+    Pin,
+    Point,
+    Polyline,
+    Rectangle,
+    mil_to_mm,
+)
 
 
 def roundToGrid(x, g):

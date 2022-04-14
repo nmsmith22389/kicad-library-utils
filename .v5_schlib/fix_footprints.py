@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This script fixes footprint errors where symbols are pointing to footprints
@@ -42,7 +42,6 @@ import argparse
 import json
 import os
 import re
-import sys
 
 parser = argparse.ArgumentParser(description="Check symbols for footprint errors")
 
@@ -79,7 +78,7 @@ verbose = args.verbose
 
 if args.replace:
     with open(args.replace) as json_file:
-        replacements = json.loads(json_file.read())
+        replacements = json.load(json_file)
 
 else:
     replacements = {}
@@ -88,7 +87,7 @@ KEYS = ["library", "footprint", "prefix", "replace"]
 
 # Ensure correct keys
 for key in KEYS:
-    if not key in replacements:
+    if key not in replacements:
         replacements[key] = {}
 
 symbol_libs = []
@@ -171,10 +170,9 @@ try:
                                     )
                                 )
                             if args.interactive:
-                                newlib = raw_input(
-                                    "Enter library for footprint '{fp}' (leave blank to skip): ".format(
-                                        fp=footprint
-                                    )
+                                newlib = input(
+                                    "Enter library for footprint '{fp}' (leave blank to"
+                                    " skip): ".format(fp=footprint)
                                 )
 
                                 # Keep track of this for next time
@@ -200,7 +198,7 @@ try:
                 skip_replace = False
 
                 # If the footprint lib is not found
-                if fplib and not fplib in footprint_libs:
+                if fplib and fplib not in footprint_libs:
                     # Try to find a replacement name for the footprint lib
                     if fplib in replacements["library"]:
                         newlib = replacements["library"][fplib]
@@ -215,10 +213,9 @@ try:
                                 "No match found for library '{lib}'".format(lib=fplib)
                             )
                         if args.interactive:
-                            newlib = raw_input(
-                                "Enter new name for library '{lib}' (leave blank to skip): ".format(
-                                    lib=fplib
-                                )
+                            newlib = input(
+                                "Enter new name for library '{lib}' (leave blank to"
+                                " skip): ".format(lib=fplib)
                             )
 
                             replacements["library"][fplib] = newlib
@@ -233,7 +230,7 @@ try:
                     footprint_lib = footprint_libs[fplib]
 
                     # Footprint name does not exist in the library
-                    if not fpname in footprint_lib:
+                    if fpname not in footprint_lib:
 
                         # Try to replace the fpname
                         if fpname in replacements["footprint"]:
@@ -244,13 +241,13 @@ try:
                                 fpname = newname
 
                         # Still nothing? Try to augment the name
-                        if not fpname in footprint_lib:
+                        if fpname not in footprint_lib:
                             for a in replacements["replace"]:
                                 b = replacements["replace"][a]
                                 fpname = fpname.replace(a, b)
 
                         # Has the footprint still not been found?
-                        if not fpname in footprint_lib:
+                        if fpname not in footprint_lib:
                             if args.verbose:
                                 print(
                                     "Footprint '{f}' not found in library '{l}'".format(
@@ -259,10 +256,9 @@ try:
                                 )
 
                             if args.interactive:
-                                newname = raw_input(
-                                    "Enter new name for footprint '{fp}' (leave blank to skip): ".format(
-                                        fp=fpname
-                                    )
+                                newname = input(
+                                    "Enter new name for footprint '{fp}' (leave blank"
+                                    " to skip): ".format(fp=fpname)
                                 )
 
                                 replacements["footprint"][fpname] = newname

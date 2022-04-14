@@ -38,8 +38,9 @@ class Rule(KLCRule):
 
         # reference checking
 
-        # if there is no pins in the top, the recommended position to ref is at top-center, horizontally centered
-        if len(self.component.filter_pins(direction="D")) == 0:
+        # If there is no pin in the top, the recommended position to ref is at top-center,
+        # horizontally centered.
+        if not self.component.filter_pins(direction="D"):
             self.recommended_ref_pos = {"posx": 0, "posy": (top + mil_to_mm(125))}
             self.recommended_ref_alignment = "center"
 
@@ -52,7 +53,6 @@ class Rule(KLCRule):
             self.recommended_ref_alignment = "right"
 
         # get the current reference infos and compare them to recommended ones
-        ref_need_fix = False
         ref = self.component.get_property("Reference")
         if ref:
             if not ref.compare_pos(
@@ -64,21 +64,20 @@ class Rule(KLCRule):
                         positionFormater(self.recommended_ref_pos),
                     )
                 )
-                ref_need_fix = True
             if ref.effects.h_justify != self.recommended_ref_alignment:
                 self.warning(
                     "field: reference, justification {0}, recommended {1}".format(
                         ref.effects.h_justify, self.recommended_ref_alignment
                     )
                 )
-                ref_need_fix = True
             # Does vertical alignment matter too?
             # What about orientation checking?
 
         # name checking
 
-        # if there is no pins in the top, the recommended position to name is at top-center, horizontally centered
-        if len(self.component.filter_pins(direction="D")) == 0:
+        # If there is no pin in the top, the recommended position to name is at top-center,
+        # horizontally centered.
+        if not self.component.filter_pins(direction="D"):
             self.recommended_name_pos = {"posx": 0, "posy": (top + mil_to_mm(50))}
             self.recommended_name_alignment = "center"
 
@@ -92,7 +91,6 @@ class Rule(KLCRule):
 
         # get the current name infos and compare them to recommended ones
         name = self.component.get_property("Value")
-        name_need_fix = False
         if name:
             if not name.compare_pos(
                 self.recommended_name_pos["posx"], self.recommended_name_pos["posy"]
@@ -103,19 +101,18 @@ class Rule(KLCRule):
                         positionFormater(self.recommended_name_pos),
                     )
                 )
-                name_need_fix = True
             if name.effects.h_justify != self.recommended_name_alignment:
                 self.warning(
                     "field: name, justification {0}, recommended {1}".format(
                         name.effects.h_justify, self.recommended_name_alignment
                     )
                 )
-                name_need_fix = True
 
         # footprint checking
 
-        # if there is no pins in the bottom, the recommended position to footprint is at bottom-center, horizontally centered
-        if len(self.component.filter_pins(direction="U")) == 0:
+        # If there is no pin in the bottom, the recommended position to footprint is at
+        # bottom-center, horizontally centered.
+        if not self.component.filter_pins(direction="U"):
             self.recommended_fp_pos = {"posx": 0, "posy": (bottom - mil_to_mm(50))}
             self.recommended_fp_alignment = "center"
 
@@ -128,7 +125,6 @@ class Rule(KLCRule):
             self.recommended_fp_alignment = "left"
 
         # get the current footprint infos and compare them to recommended ones
-        fp_need_fix = False
         fp = self.component.get_property("Footprint")
         if fp:
             if not fp.compare_pos(
@@ -139,17 +135,15 @@ class Rule(KLCRule):
                         positionFormater(fp), positionFormater(self.recommended_fp_pos)
                     )
                 )
-                fp_need_fix = True
             if fp.effects.h_justify != self.recommended_fp_alignment:
                 self.warning(
                     "field: footprint, justification {0}, recommended {1}".format(
                         fp.effects.h_justify, self.recommended_fp_alignment
                     )
                 )
-                fp_need_fix = True
-            fp_need_fix = True
 
-        # This entire rule only generates a WARNING (won't fail a component, only display a message)
+        # This entire rule only generates a WARNING (won't fail a component, only display a
+        # message).
         return False
 
     def fix(self) -> None:

@@ -1,7 +1,7 @@
 import os
 
 from rulebase import isValidName
-from rules_footprint.rule import *
+from rules_footprint.rule import KLCRule
 
 
 class Rule(KLCRule):
@@ -43,7 +43,8 @@ class Rule(KLCRule):
         module = self.module
         if os.path.splitext(os.path.basename(module.filename))[0] != module.name:
             self.error(
-                "footprint name (in file) was '{0}', but expected (from filename) '{1}'.\n".format(
+                "footprint name (in file) was '{0}', but expected (from filename)"
+                " '{1}'.\n".format(
                     module.name, os.path.splitext(os.path.basename(module.filename))[0]
                 )
             )

@@ -6,12 +6,14 @@ import os
 import sys
 from glob import glob  # enable windows wildcards
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from kicad_mod import *
-from print_color import *
+from kicad_mod import KicadMod
+from print_color import PrintColor
 
 
 class Config:
@@ -109,18 +111,24 @@ class Config:
 
     def parse_arguments(self):
         parser = argparse.ArgumentParser(
-            description="Checks that KiCad footprint files (.kicad_mod) reference 3D model files that exist in the KiCad library."
+            description=(
+                "Checks that KiCad footprint files (.kicad_mod) reference 3D model"
+                " files that exist in the KiCad library."
+            )
         )
         parser.add_argument(
             "library",
-            help="name of footprint library to check (e.g. Housings_SOIC) (default is all libraries)",
+            help=(
+                "name of footprint library to check (e.g. Housings_SOIC) (default is"
+                " all libraries)"
+            ),
             type=str,
             nargs="*",
         )
         parser.add_argument(
             "-r",
             "--root",
-            help="path to root KiCad folder (defalt is ../../)",
+            help="path to root KiCad folder (default is ../../)",
             type=str,
         )
         parser.add_argument(
@@ -215,8 +223,9 @@ class LibraryChecker:
             # Accept both forward and backward slash characters in path
             long_reference = "/".join(long_reference.split("\\"))
             return os.path.basename(long_reference)
-        except:
-            logger.warning("- Invalid model reference {f:s}".format(f=full))
+        # TODO: determine, which specific problem could happen above ("ValueError" is just a guess)
+        except ValueError:
+            logger.warning("- Invalid model reference {f:s}".format(f=long_reference))
             self.invalid_model_path += 1
             return None
 
@@ -231,10 +240,7 @@ class LibraryChecker:
             return False
 
     def check_footprint_library(self, library_name):
-
-        references = []
         logger.reset()
-
         logger.status(
             "\r\nChecking {p:s} (contains {n:d} footprints)".format(
                 p=library_name, n=len(config.valid_footprints(library_name))
@@ -287,9 +293,9 @@ class LibraryChecker:
             self.unused_wrl += len(unused_models)
             for model in unused_models:
                 logger.warning(
-                    "- Unused "
-                    ".wrl"
-                    " model {lib:s}.3dshapes/{m:s}".format(lib=library_name, m=model)
+                    "- Unused .wrl model {lib:s}.3dshapes/{m:s}".format(
+                        lib=library_name, m=model
+                    )
                 )
 
         if logger.warning_count > 0:
@@ -298,7 +304,7 @@ class LibraryChecker:
         if logger.error_count > 0:
             logger.status("- {n:d} footprint errors".format(n=logger.error_count))
 
-        if len(unused_models) > 0:
+        if unused_models:
             logger.status("- {n:d} unused model warnings".format(n=len(unused_models)))
 
     def check_libraries(self):

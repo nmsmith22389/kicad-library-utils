@@ -1,19 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 
-from schlib import *
+from schlib import SchLib
 
 # cases covered by this script:
 #  (1) resize pins with posx wrong if component has pins with L direction but not R direction
 #  (2) resize pins with posx wrong if component has pins with R direction but not L direction
 #  (3) resize pins with posy wrong if component has pins with U direction but not D direction
 #  (4) resize pins with posy wrong if component has pins with D direction but not U direction
-#  (5) resize pins with posx wrong if component has at least one pin wrong in each of the following direction: L, R
-#  (6) resize pins with posy wrong if component has at least one pin wrong in each of the following direction: U, D
+#  (5) resize pins with posx wrong if component has at least one pin wrong in each of the following
+#      directions: L, R
+#  (6) resize pins with posy wrong if component has at least one pin wrong in each of the following
+#      directions: U, D
 
 
-class CheckComponent(object):
+class CheckComponent:
     def __init__(self, component):
         self.component = component
         self.prerequisites_ok = False
@@ -33,7 +35,7 @@ class CheckComponent(object):
         self.need_fix_U = False
         self.need_fix_D = False
 
-        ## check the prerequisites
+        # check the prerequisites
 
         # component has only one rectangle
         # assuming it as the body of the component

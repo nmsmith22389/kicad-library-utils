@@ -45,10 +45,10 @@ class Rule(KLCRule):
         # Looks for the string:
         # '-xEP' where x is any number between 0 and 9 and designates number of exposed pads.
         # EP is NOT case sensitive and registers 'ep' just as well as 'EP'
-        exposed_pad_search = re.search("\-\d+[EP]{2}", fpName, re.IGNORECASE)
+        exposed_pad_search = re.search(r"-\d+[EP]{2}", fpName, re.IGNORECASE)
 
         if exposed_pad_search:
-            noExposedPads = int(re.findall("\d", exposed_pad_search.group(0))[0])
+            noExposedPads = int(re.findall(r"\d", exposed_pad_search.group(0))[0])
 
             # Finds the maximum pad number
             for pad in pads:
@@ -57,7 +57,7 @@ class Rule(KLCRule):
                     try:
                         if int(pad["number"]) > padNoMax:
                             padNoMax = int(pad["number"])
-                    except:
+                    except ValueError:
                         break
 
             # Gets the (x,y) coordinates and x-width and y-width for the exposed pads
@@ -76,7 +76,7 @@ class Rule(KLCRule):
                                     pad_size["y"],
                                 )  # x-width and y-width
                                 EParray.append([p_x, p_y, size_x, size_y])
-                        except:
+                        except ValueError:
                             break
             # print("Exposed pad array: ", EParray) # Debug
 
@@ -109,7 +109,8 @@ class Rule(KLCRule):
                         and (EP_x - EP_size_x - p_x) < 0
                         and (EP_y - EP_size_y - p_y) < 0
                     ):
-                        # print("Number: ", pad['number'], "Pad:", p_x, p_y, "Size:", pad['size']['x'], pad['size']['y'], "Layers:", pad['layers']) # debug
+                        # print("Number: ", pad['number'], "Pad:", p_x, p_y, "Size:",
+                        #     pad['size']['x'], pad['size']['y'], "Layers:", pad['layers']) # debug
                         # testvar = testvar + 1 # debug
                         skip = True
 
@@ -140,7 +141,7 @@ class Rule(KLCRule):
 
         # print(testvar) # Debug
 
-        if len(errors) > 0:
+        if errors:
             self.error("Some THT pads have incorrect layer settings")
             for msg in errors:
                 self.errorExtra(msg)

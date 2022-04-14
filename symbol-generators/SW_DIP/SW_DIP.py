@@ -4,17 +4,28 @@ import math
 import os
 import sys
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
 import kicad_sym
-from DrawingElements import *
-from Point import *
+from DrawingElements import (
+    Drawing,
+    DrawingCircle,
+    DrawingPin,
+    DrawingPolyline,
+    DrawingRectangle,
+    ElementFill,
+)
+from Point import Point
 
 libname = "SW_DIP"
 library = kicad_sym.KicadLibrary(libname + ".kicad_sym")
@@ -23,7 +34,6 @@ library = kicad_sym.KicadLibrary(libname + ".kicad_sym")
 def generateDIPSwitch(count):
     name = "SW_DIP_x{:02d}".format(count)
     refdes = "SW"
-    footprint = ""
     footprintFilter = "SW?DIP?x{0}*".format(count)
     description = (
         "{0}x DIP Switch, Single Pole Single Throw (SPST) switch, small symbol".format(

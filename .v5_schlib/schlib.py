@@ -5,7 +5,7 @@ import sys
 from collections import OrderedDict
 
 
-class Documentation(object):
+class Documentation:
     """
     A class to parse documentation files (dcm) of Schematic Libraries Files Format of the KiCad
     """
@@ -53,7 +53,7 @@ class Documentation(object):
         f = open(self.filename, "r")
         self.header = [f.readline()]
 
-        if self.header and not self.line_keys["header"] in self.header[0]:
+        if self.header and self.line_keys["header"] not in self.header[0]:
             self.header = None
             sys.stderr.write(
                 "'{fn}' is not a KiCad Documentation Library File\n".format(
@@ -119,7 +119,7 @@ class Documentation(object):
             )  # just spacer (no even in dcm format specification, but used everywhere)
             to_write.append(self.line_keys["start"] + name + "\n")
             for key in doc.keys():
-                if doc[key] != None:
+                if doc[key] is not None:
                     to_write.append(self.line_keys[key] + doc[key] + "\n")
             to_write.append(self.line_keys["end"] + "\n")
         to_write.append("#\n")  # again, spacer^^
@@ -138,7 +138,7 @@ class Documentation(object):
             self.components[name] = doc
 
 
-class Component(object):
+class Component:
     """
     A class to parse components of Schematic Libraries Files Format of the KiCad
     """
@@ -239,7 +239,17 @@ class Component(object):
         "T": _TEXT_KEYS,
         "X": _PIN_KEYS,
     }
-    # _DRAW_ELEMS = {'arcs':'A', 'circles':'C', 'polylines':'P', 'rectangles':'S', 'texts':'T', 'pins':'X'}
+
+    """
+    _DRAW_ELEMS = {
+        "arcs": "A",
+        "circles": "C",
+        "polylines": "P",
+        "rectangles": "S",
+        "texts": "T",
+        "pins": "X",
+    }
+    """
 
     _KEYS = {
         "DEF": _DEF_KEYS,
@@ -276,7 +286,7 @@ class Component(object):
             s.quotes = '"'
             line = list(s)
 
-            if len(line) == 0:
+            if not line:
                 continue
 
             if line[0] in self._KEYS:
@@ -385,7 +395,7 @@ class Component(object):
     def getDocumentation(self, documentation, name):
         try:
             if name.startswith("~"):
-                return documentation.components[name[1 : (len(name))]]
+                return documentation.components[name[1:]]
             else:
                 return documentation.components[name]
         except KeyError:
@@ -429,9 +439,10 @@ class Component(object):
         return self.reference == "#PWR"
 
     def isGraphicSymbol(self):
-        return self.isNonBOMSymbol() and len(self.pins) == 0
+        return self.isNonBOMSymbol() and not self.pins
 
-    # heuristics, which tries to determine whether this is a "small" component (resistor, capacitor, LED, diode, transistor, ...)
+    # Heuristics, which tries to determine whether this is a "small" component (resistor,
+    # capacitor, LED, diode, transistor, ...).
     def isSmallComponentHeuristics(self):
         if len(self.pins) <= 2:
             return True
@@ -443,13 +454,13 @@ class Component(object):
 
         # if there is no filled rectangle as symbol outline and we have 3 or 4 pins, we assume this
         # is a small symbol
-        if len(self.pins) >= 3 and len(self.pins) <= 4 and len(filled_rects) == 0:
+        if (3 <= len(self.pins) <= 4) and (not filled_rects):
             return True
 
         return False
 
 
-class SchLib(object):
+class SchLib:
     """
     A class to parse Schematic Libraries Files Format of the KiCad
     """
@@ -502,7 +513,7 @@ class SchLib(object):
 
         checksum_data += self.header[0]
 
-        if self.header and not SchLib.line_keys["header"] in self.header[0]:
+        if self.header and SchLib.line_keys["header"] not in self.header[0]:
             sys.stderr.write(
                 "'{fn}' is not a KiCad Schematic Library File\n".format(
                     fn=self.filename
@@ -548,9 +559,9 @@ class SchLib(object):
         return True
 
     def validChecksum(self):
-        if len(self.checksum) == 0:
+        if not self.checksum:
             return False
-        if len(self.documentation.checksum) == 0:
+        if not self.documentation.checksum:
             return False
 
         return True
@@ -594,7 +605,7 @@ class SchLib(object):
         return component
 
     def addComponent(self, component):
-        if not component in self.components:
+        if component not in self.components:
             self.components.append(component)
             self.documentation.add(component.name, component.documentation)
             for alias in component.aliases.keys():
@@ -650,7 +661,7 @@ class SchLib(object):
                 to_write.append(line)
 
             # ALIAS
-            if len(component.aliases) > 0:
+            if component.aliases:
                 line = "ALIAS "
                 for alias in component.aliases.keys():
                     line += alias + " "
@@ -659,7 +670,7 @@ class SchLib(object):
                 to_write.append(line)
 
             # $FPLIST
-            if len(component.fplist) > 0:
+            if component.fplist:
                 to_write.append("$FPLIST\n")
                 for fp in component.fplist:
                     to_write.append(" " + fp + "\n")

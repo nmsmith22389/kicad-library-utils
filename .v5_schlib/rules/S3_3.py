@@ -1,4 +1,4 @@
-from rules.rule import *
+from rules.rule import KLCRule, backgroundFillToStr
 
 
 class Rule(KLCRule):
@@ -29,12 +29,14 @@ class Rule(KLCRule):
         if self.component.isSmallComponentHeuristics():
             if self.component.draw["rectangles"][0]["thickness"] != "10":
                 self.warning(
-                    "Component outline is thickness {0}mil, recommended is {1}mil for standard symbol".format(
+                    "Component outline is thickness {0}mil, recommended is {1}mil for"
+                    " standard symbol".format(
                         self.component.draw["rectangles"][0]["thickness"], 10
                     )
                 )
                 self.warningExtra(
-                    "exceptions are allowed for small symbols like resistor, transistor, ..."
+                    "exceptions are allowed for small symbols like resistor,"
+                    " transistor, ..."
                 )
                 rectangle_need_fix = False
         else:
@@ -48,18 +50,20 @@ class Rule(KLCRule):
 
         if self.component.draw["rectangles"][0]["fill"] != "f":
             self.warning(
-                "Component background is filled with {0} color, recommended is filling with {1} color".format(
+                "Component background is filled with {0} color, recommended is filling"
+                " with {1} color".format(
                     backgroundFillToStr(self.component.draw["rectangles"][0]["fill"]),
                     backgroundFillToStr("f"),
                 )
             )
             if self.component.isSmallComponentHeuristics():
                 self.warningExtra(
-                    "exceptions are allowed for small symbols like resistor, transistor, ..."
+                    "exceptions are allowed for small symbols like resistor,"
+                    " transistor, ..."
                 )
             rectangle_need_fix = True
 
-        return True if rectangle_need_fix else False
+        return rectangle_need_fix
 
     def fix(self):
         """

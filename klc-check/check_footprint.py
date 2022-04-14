@@ -8,15 +8,16 @@ import traceback
 from glob import glob
 from typing import List, Tuple
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from kicad_mod import *
-from print_color import *
-from rulebase import PrintColor, Verbosity, logError
-from rules_footprint import *
-from rules_footprint import __all__ as all_rules
+from kicad_mod import KicadMod
+from print_color import PrintColor
+from rulebase import Verbosity, logError
+from rules_footprint import get_all_footprint_rules
 from rules_footprint.rule import KLCRule
 
 
@@ -32,8 +33,6 @@ def check_library(filename: str, rules, metrics: List[str], args) -> Tuple[int, 
     if not filename.endswith(".kicad_mod"):
         printer.red("File is not a .kicad_mod : %s" % filename)
         return (1, 0)
-
-    lib_name = os.path.dirname(filename).split(os.path.sep)[-1].replace(".pretty", "")
 
     if args.errors:
         module = KicadMod(filename)
@@ -71,7 +70,7 @@ def do_unittest(footprint, rules, metrics) -> Tuple[int, int]:
         return (1, 0)
     unittest_result = m.group(1)
     unittest_rule = m.group(2)
-    unittest_descrp = m.group(3)
+    unittest_descrp = m.group(3)  # noqa: F841
     for rule in rules:
         rule = rule(footprint, args)
         if unittest_rule == rule.name:
@@ -127,6 +126,9 @@ def do_rulecheck(module, rules, metrics) -> Tuple[int, int]:
 
         elif rule.hasErrors():
             if args.log:
+                lib_name = os.path.basename(os.path.dirname(module.filename)).replace(
+                    ".pretty", ""
+                )
                 logError(args.log, rule.name, lib_name, module.name)
 
             if args.fix:
@@ -150,13 +152,19 @@ def do_rulecheck(module, rules, metrics) -> Tuple[int, int]:
 
 
 parser = argparse.ArgumentParser(
-    description="Checks KiCad footprint files (.kicad_mod) against KiCad Library Convention (KLC) rules. You can find the KLC at http://kicad.org/libraries/klc/"
+    description=(
+        "Checks KiCad footprint files (.kicad_mod) against KiCad Library Convention"
+        " (KLC) rules. You can find the KLC at http://kicad.org/libraries/klc/"
+    )
 )
 parser.add_argument("kicad_mod_files", nargs="+")
 parser.add_argument("--fix", help="fix the violations if possible", action="store_true")
 parser.add_argument(
     "--fixmore",
-    help="fix additional violations, not covered by --fix (e.g. rectangular courtyards), implies --fix!",
+    help=(
+        "fix additional violations, not covered by --fix (e.g. rectangular courtyards),"
+        " implies --fix!"
+    ),
     action="store_true",
 )
 parser.add_argument(
@@ -177,7 +185,10 @@ parser.add_argument(
 parser.add_argument(
     "-v",
     "--verbose",
-    help="Enable verbose output. -v shows brief information, -vv shows complete information",
+    help=(
+        "Enable verbose output. -v shows brief information, -vv shows complete"
+        " information"
+    ),
     action="count",
 )
 parser.add_argument(
@@ -222,17 +233,16 @@ else:
     selected_rules = None
 
 rules = []
-for r in all_rules:
-    r_name = r.replace("_", ".")
-    if selected_rules == None or r_name in selected_rules:
-        rules.append(globals()[r].Rule)
+for rule_name, rule in get_all_footprint_rules().items():
+    if selected_rules is None or rule_name in selected_rules:
+        rules.append(rule.Rule)
 
 # figure out which files should be checked
 files = []
 for f in args.kicad_mod_files:
     files += glob(f)
 
-if len(files) == 0:
+if not files:
     printer.red("File argument invalid: {f}".format(f=args.kicad_mod_files))
     sys.exit(1)
 

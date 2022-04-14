@@ -3,10 +3,12 @@ import os
 import sys
 from typing import Any, Dict
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
 
 if common not in sys.path:
-    sys.path.append(common)
+    sys.path.insert(0, common)
 
 from kicad_mod import KicadMod
 from rulebase import KLCRuleBase
@@ -74,7 +76,7 @@ def graphItemString(
 
         if width:
             widthText = " has width '{width}'".format(width=graph["width"])
-    except:
+    except KeyError:
         pass
 
     # Line or Arc
@@ -98,7 +100,7 @@ def graphItemString(
             x=graph["center"]["x"], y=graph["center"]["y"]
         )
 
-    # Unkown shape
+    # Unknown shape
     else:
         shapeText = "Graphical item"
 

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
-# File intented to demo some functions available in the Symbol Generator module.
+# File intended to demo some functions available in the Symbol Generator module.
 
 # add directory (common) that contains the kicad_sym lib to the path
 # you can also use a relative module path instead
 import os
 import sys
 
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
-if not common in sys.path:
-    sys.path.append(common)
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from kicad_sym import *
+from kicad_sym import Circle, KicadLibrary, KicadSymbol, Pin, Rectangle
 
 # the libname of the file and the symbol needs to be the same
 libname = "demo"

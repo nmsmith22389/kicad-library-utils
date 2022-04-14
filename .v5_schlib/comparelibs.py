@@ -3,7 +3,8 @@
 """
 
 This file compares two .lib files and generates a list of deleted / added / updated components.
-This is to be used to compare an updated library file with a previous version to determine which components have been changed.
+This is to be used to compare an updated library file with a previous version to determine which
+components have been changed.
 
 """
 
@@ -14,13 +15,15 @@ import sys
 from glob import glob
 
 # Path to common directory
-common = os.path.abspath(os.path.join(sys.path[0], "..", "common"))
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
 
-if not common in sys.path:
-    sys.path.append(common)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from print_color import *
-from schlib import *
+from print_color import PrintColor
+from schlib import SchLib
 
 
 def ExitError(msg):
@@ -51,7 +54,10 @@ parser.add_argument(
 )
 parser.add_argument(
     "--design-breaking-changes",
-    help="Checks if there have been changes made that would break existing designs using a particular symbol.",
+    help=(
+        "Checks if there have been changes made that would break existing designs using"
+        " a particular symbol."
+    ),
     action="store_true",
 )
 parser.add_argument(
@@ -86,7 +92,7 @@ def KLCCheck(lib, component):
     )
 
     # Pass extra arguments to checklib script
-    if len(extra) > 0:
+    if extra:
         call += " ".join([str(e) for e in extra])
 
     return os.system(call)
@@ -100,30 +106,30 @@ old_libs = {}
 for lib in args.new:
     libs = glob(lib)
 
-    for l in libs:
-        if os.path.isdir(l):
-            for root, dirnames, filenames in os.walk(l):
+    for lib_path in libs:
+        if os.path.isdir(lib_path):
+            for root, dirnames, filenames in os.walk(lib_path):
                 for filename in fnmatch.filter(filenames, "*.lib"):
                     new_libs[os.path.basename(filename)] = os.path.abspath(
                         os.path.join(root, filename)
                     )
 
-        elif l.endswith(".lib") and os.path.exists(l):
-            new_libs[os.path.basename(l)] = os.path.abspath(l)
+        elif lib_path.endswith(".lib") and os.path.exists(lib_path):
+            new_libs[os.path.basename(lib_path)] = os.path.abspath(lib_path)
 
 for lib in args.old:
     libs = glob(lib)
 
-    for l in libs:
-        if os.path.isdir(l):
-            for root, dirnames, filenames in os.walk(l):
+    for lib_path in libs:
+        if os.path.isdir(lib_path):
+            for root, dirnames, filenames in os.walk(lib_path):
                 for filename in fnmatch.filter(filenames, "*.lib"):
                     old_libs[os.path.basename(filename)] = os.path.abspath(
                         os.path.join(root, filename)
                     )
 
-        elif l.endswith(".lib") and os.path.exists(l):
-            old_libs[os.path.basename(l)] = os.path.abspath(l)
+        elif lib_path.endswith(".lib") and os.path.exists(lib_path):
+            old_libs[os.path.basename(lib_path)] = os.path.abspath(lib_path)
 
 errors = 0
 design_breaking_changes = 0
@@ -134,7 +140,7 @@ for lib_name in new_libs:
     new_lib = SchLib(lib_path)
 
     # New library has been created!
-    if not lib_name in old_libs:
+    if lib_name not in old_libs:
 
         if args.verbose:
             printer.light_green("Created library '{lib}'".format(lib=lib_name))
@@ -179,7 +185,7 @@ for lib_name in new_libs:
         if new_cmp[cmp]["alias_of"]:
             alias_info = " alias of {}".format(new_cmp[cmp]["alias_of"])
 
-        if not cmp in old_cmp:
+        if cmp not in old_cmp:
 
             if args.verbose:
                 printer.light_green(
@@ -238,14 +244,16 @@ for lib_name in new_libs:
                 if pins_moved > 0 or pins_missing > 0:
                     design_breaking_changes += 1
                     printer.light_purple(
-                        "Pins have been moved, renumbered or removed in symbol '{lib}:{name}'{alias_info}".format(
+                        "Pins have been moved, renumbered or removed in symbol"
+                        " '{lib}:{name}'{alias_info}".format(
                             lib=lib_name, name=cmp, alias_info=alias_info
                         )
                     )
                 elif nc_pins_moved > 0 or nc_pins_missing > 0:
                     design_breaking_changes += 1
                     printer.purple(
-                        "Normal pins ok but NC pins have been moved, renumbered or removed in symbol '{lib}:{name}'{alias_info}".format(
+                        "Normal pins ok but NC pins have been moved, renumbered or"
+                        " removed in symbol '{lib}:{name}'{alias_info}".format(
                             lib=lib_name, name=cmp, alias_info=alias_info
                         )
                     )
@@ -256,7 +264,7 @@ for lib_name in new_libs:
 
     for cmp in old_cmp:
         # Component has been deleted from library
-        if not cmp in new_cmp:
+        if cmp not in new_cmp:
             alias_info = ""
             if old_cmp[cmp]["alias_of"]:
                 alias_info = " was an alias of {}".format(old_cmp[cmp]["alias_of"])
@@ -272,7 +280,7 @@ for lib_name in new_libs:
 
 # Entire lib has been deleted?
 for lib_name in old_libs:
-    if not lib_name in new_libs:
+    if lib_name not in new_libs:
         if args.verbose:
             printer.red("Removed library '{lib}'".format(lib=lib_name))
         if args.design_breaking_changes:

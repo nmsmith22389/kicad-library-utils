@@ -58,18 +58,20 @@ class Rule(KLCRule):
             else:
                 if name_text_size != 50:
                     self.warning(
-                        "Pin {0} ({1}) name text size should be 50mils (or 20...50mils if required by the symbol geometry)".format(
+                        "Pin {0} ({1}) name text size should be 50mils (or 20...50mils"
+                        " if required by the symbol geometry)".format(
                             pin.name, pin.number
                         )
                     )
                 if num_text_size != 50:
                     self.warning(
-                        "Pin {0} ({1}) number text size should be 50mils (or 20...50mils if required by the symbol geometry)".format(
+                        "Pin {0} ({1}) number text size should be 50mils (or"
+                        " 20...50mils if required by the symbol geometry)".format(
                             pin.name, pin.number
                         )
                     )
 
-        if len(self.violating_properties) > 0 or len(self.violating_pins) > 0:
+        if self.violating_properties or self.violating_pins:
             return True
 
         return False
@@ -78,14 +80,13 @@ class Rule(KLCRule):
         """
         Proceeds the fixing of the rule, if possible.
         """
-
-        if len(self.violating_properties) > 0:
+        if self.violating_properties:
             self.info("Fixing field text size")
         for prop in self.violating_properties:
             prop.effects.sizex = mil_to_mm(50)
             prop.effects.sizey = mil_to_mm(50)
 
-        if len(self.violating_pins) > 0:
+        if self.violating_pins:
             self.info("Fixing pin text size")
         for pin in self.violating_pins:
             pin.name_effect.sizex = mil_to_mm(50)

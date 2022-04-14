@@ -5,8 +5,7 @@ import math
 from typing import Any, Dict, List
 
 from kicad_mod import KicadMod
-from rules_footprint.klc_constants import *
-from rules_footprint.rule import *
+from rules_footprint.rule import KLCRule, getEndPoint, getStartPoint, graphItemString
 
 
 class Rule(KLCRule):
@@ -30,13 +29,13 @@ class Rule(KLCRule):
                 if c is c2:
                     continue
                 if is_same(c, c2):
-                    if not c in overlap:
+                    if c not in overlap:
                         overlap.append(c)
 
         return overlap
 
     def getLinesOverlap(self, lines: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        # from https://stackoverflow.com/questions/328107/how-can-you-determine-a-point-is-between-two-other-points-on-a-line-segment
+        # from https://stackoverflow.com/questions/328107/
         def distance(a: Dict[str, Any], b: Dict[str, Any]) -> float:
             return math.sqrt((a["x"] - b["x"]) ** 2 + (a["y"] - b["y"]) ** 2)
 
@@ -124,11 +123,12 @@ class Rule(KLCRule):
             )
 
             # Display message if silkscreen has overlapping lines
-            if len(self.overlaps[layer]) > 0:
+            if self.overlaps[layer]:
                 self.errcnt += 1
                 self.error("%s graphic elements should not overlap." % layer)
                 self.errorExtra(
-                    "The following elements do overlap at least one other graphic element on the same layer"
+                    "The following elements do overlap at least one other graphic"
+                    " element on the same layer"
                 )
                 for bad in self.overlaps[layer]:
                     self.errorExtra(graphItemString(bad, layer=True, width=False))
