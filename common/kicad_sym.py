@@ -170,8 +170,6 @@ class KicadSymbolBase:
         if d == "D":
             return 270
 
-        raise NotImplemented()
-
 
 @dataclass
 class Color(KicadSymbolBase):
@@ -346,8 +344,6 @@ class Pin(KicadSymbolBase):
             return "L"
         elif self.rotation == 270:
             return "D"
-
-        raise NotImplemented
 
     def is_duplicate(self, p: "Pin") -> bool:
         if (
