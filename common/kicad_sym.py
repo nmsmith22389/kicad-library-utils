@@ -13,6 +13,14 @@ from typing import Any, Dict, List, Optional, Tuple
 import sexpr
 
 
+class KicadFileFormatError(ValueError):
+    """any kind of problem discovered while parsing a KiCad file"""
+
+
+# KiCad can only handle multiples of 90 degrees
+VALID_ROTATIONS = frozenset({0, 90, 180, 270})
+
+
 def mil_to_mm(mil: float) -> float:
     return round(mil * 0.0254, 6)
 
@@ -163,14 +171,16 @@ class KicadSymbolBase:
     def dir_to_rotation(cls, d: str) -> int:
         if d == "R":
             return 0
-        if d == "U":
+        elif d == "U":
             return 90
-        if d == "L":
+        elif d == "L":
             return 180
-        if d == "D":
+        elif d == "D":
             return 270
-
-        raise NotImplemented()
+        else:
+            raise ValueError(
+                f"Invalid direction requested: {d} (should be one of: R / U / L /D"
+            )
 
 
 @dataclass
@@ -346,8 +356,8 @@ class Pin(KicadSymbolBase):
             return "L"
         elif self.rotation == 270:
             return "D"
-
-        raise NotImplemented
+        else:
+            raise NotImplementedError(f"Invalid 'rotation' of Pin: {self.rotation}")
 
     def is_duplicate(self, p: "Pin") -> bool:
         if (
@@ -377,6 +387,11 @@ class Pin(KicadSymbolBase):
         (name, name_effect) = cls._parse_name_or_number(sexpr)
         (number, number_effect) = cls._parse_name_or_number(sexpr, typ="number")
 
+        if rotation not in VALID_ROTATIONS:
+            raise ValueError(
+                f"Invalid 'rotation' attribute value for pin: {rotation}"
+                f" (must be one of {set(VALID_ROTATIONS)})"
+            )
         altfuncs = []
         alt_n = _get_array(sexpr, "alternate")
         for alt_sexpr in alt_n:
@@ -750,7 +765,8 @@ class Property(KicadSymbolBase):
     def set_pos_mil(self, x: float, y: float, rot: int = 0) -> None:
         self.posx = mil_to_mm(x)
         self.posy = mil_to_mm(y)
-        if rot in [0, 90, 180, 270]:
+        # TODO: verify whether we should really (silently) restrict the rotation of all properties
+        if rot in VALID_ROTATIONS:
             self.rotation = rot
 
     @classmethod
@@ -1026,6 +1042,11 @@ class KicadLibrary(KicadSymbolBase):
 
     @classmethod
     def from_file(cls, filename: str) -> "KicadLibrary":
+        """
+        Parse a symbol library from a file.
+
+        raises KicadFileFormatError in case of problems
+        """
         library = KicadLibrary(filename)
 
         # read the s-expression data
@@ -1042,13 +1063,14 @@ class KicadLibrary(KicadSymbolBase):
         # not work as expected. So just don't load them at all.
         version = _get_value_of(sexpr_data, "version")
         if str(version) != "20211014":
-            raise ValueError('Version of symbol file is not "20211014"')
+            raise KicadFileFormatError('Version of symbol file is not "20211014"')
 
         # itertate over symbol
         for item in sym_list:
-            if item.pop(0) != "symbol":
-                raise ValueError("unexpected token in file")
-            # retrieving only the `partname` if formatted as `libname:partname` (legacy format)
+            item_type = item.pop(0)
+            if item_type != "symbol":
+                raise KicadFileFormatError(f"Unexpected token found: {item_type}")
+            # retrieving the `partname`, even if formatted as `libname:partname` (legacy format)
             partname = item.pop(0).split(":")[-1]
 
             # we found a new part, extract the symbol name
@@ -1061,7 +1083,13 @@ class KicadLibrary(KicadSymbolBase):
 
             # extract properties
             for prop in _get_array(item, "property"):
-                symbol.properties.append(Property.from_sexpr(prop))
+                try:
+                    # TODO: do not append the new property, if it is None
+                    symbol.properties.append(Property.from_sexpr(prop))
+                except ValueError as exc:
+                    raise KicadFileFormatError(
+                        f"Failed to import '{partname}': {exc}"
+                    ) from exc
 
             # get flags
             if _has_value(item, "in_bom"):
@@ -1092,14 +1120,19 @@ class KicadLibrary(KicadSymbolBase):
             subsymbols = _get_array2(item, "symbol")
             for unit_data in subsymbols:
                 # we found a new 'subpart' (no clue how to call it properly)
-                if unit_data.pop(0) != "symbol":
-                    raise ValueError("unexpected token in file")
+                subpart_type = unit_data.pop(0)
+                if subpart_type != "symbol":
+                    raise KicadFileFormatError(
+                        f"Unexpected token found as 'subsymbol' of {item_type}: {subpart_type}"
+                    )
                 name = unit_data.pop(0)
 
                 # split the name
                 m1 = re.match(r"^" + re.escape(partname) + r"_(\d+?)_(\d+?)$", name)
                 if not m1:
-                    raise ValueError("failed to parse subsymbol")
+                    raise KicadFileFormatError(
+                        "Failed to parse subsymbol due to invalid name: {name}"
+                    )
 
                 (unit_idx, demorgan_idx) = (m1.group(1), m1.group(2))
                 unit_idx = int(unit_idx)
