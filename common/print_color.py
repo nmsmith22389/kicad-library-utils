@@ -129,7 +129,7 @@ class PrintColor:
                 self.buffer.append(line)
             else:
 
-                if eol == True:
+                if eol is True:
                     try:
                         print(line, end=" ")
                     except (IOError, ValueError):
