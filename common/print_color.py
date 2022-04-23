@@ -7,6 +7,7 @@ class PrintColor:
     """
     A class to print colorized text using ANSI escape sequences
     """
+
     def __init__(
         self,
         tab_size: int = 4,
@@ -128,12 +129,12 @@ class PrintColor:
                 self.buffer.append(line)
             else:
 
-                if eol==True:
+                if eol == True:
                     try:
-                        print(line, end = ' ')
+                        print(line, end=" ")
                     except (IOError, ValueError):
                         print("ERROR printing output")
-                else :
+                else:
                     try:
                         print(line)
                     except (IOError, ValueError):
@@ -162,7 +163,9 @@ class PrintColor:
         indentation: Optional[int] = None,
         eol=False,
     ):
-        self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation, eol)
+        self._do_print(
+            sys._getframe().f_code.co_name, text, max_width, indentation, eol
+        )
 
     def green(
         self,
@@ -171,7 +174,9 @@ class PrintColor:
         indentation: Optional[int] = None,
         eol=False,
     ):
-        self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation, eol)
+        self._do_print(
+            sys._getframe().f_code.co_name, text, max_width, indentation, eol
+        )
 
     def brown(
         self,
@@ -180,7 +185,9 @@ class PrintColor:
         indentation: Optional[int] = None,
         eol=False,
     ):
-        self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation, eol)
+        self._do_print(
+            sys._getframe().f_code.co_name, text, max_width, indentation, eol
+        )
 
     def blue(
         self,
@@ -205,7 +212,9 @@ class PrintColor:
         indentation: Optional[int] = None,
         eol=False,
     ):
-        self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation, eol)
+        self._do_print(
+            sys._getframe().f_code.co_name, text, max_width, indentation, eol
+        )
 
     def gray(
         self,
@@ -246,7 +255,9 @@ class PrintColor:
         indentation: Optional[int] = None,
         eol=False,
     ):
-        self._do_print(sys._getframe().f_code.co_name, text, max_width, indentation, eol)
+        self._do_print(
+            sys._getframe().f_code.co_name, text, max_width, indentation, eol
+        )
 
     def light_blue(
         self,
