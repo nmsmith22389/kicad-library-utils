@@ -1,20 +1,23 @@
-#! /usr/bin/python3.9
+#! /usr/bin/env python3
 
-# -*- coding: utf-8 -*-
+import fnmatch
+import os
+import sys
+import platform
 
-from __future__ import print_function
-
-import fnmatch, os, sys, platform
-
-os_var = "Windows"
-
+special_host_platform_name = "Windows"
+special_host_platform_name = "Windows" #Windoze needs special treatment for paths and dirs
 if (len(sys.argv)>1):
     fp_lib_path = str(sys.argv[1])
 else:
     #Set the path to the directory that git clone creates.
     fp_lib_path = input("Enter footprint library directory path to search in: ")
 
-common = os.path.abspath(os.path.join(sys.path[0], '..','common'))
+script_dir = os.path.dirname(__file__) #Absolute directory current script is in
+common = os.path.abspath(
+    os.path.join(script_dir, os.path.pardir, "common")
+)
+
 
 if not common in sys.path:
     sys.path.append(common)
@@ -30,37 +33,35 @@ else:
     printer.yellow(fp_lib_path, None, None, True)
     printer.red("hasn't found.")
     printer.red("Wrong source.")
-    exit(0)
+    exit()
 
 fp_dir_type_ending = '.pretty'
 fp_file_type_ending = '.kicad_mod'
 
-script_dir = os.path.dirname(__file__) #Absolute directory current script is in
-
 #Output file prefixes
-fp_out_rel_path = r"output/branch_name__"
-fp_out_rel_path_no_git = r"output/dir_name__"
+fp_out_rel_path = os.path.join("output", "branch_name__")
+fp_out_rel_path_no_git = os.path.join("output", "dir_name__")
 
 fp_out_abs_path = os.path.join(script_dir, fp_out_rel_path)
 fp_out_abs_path_no_git = os.path.join(script_dir, fp_out_rel_path_no_git)
 path,folder_name = os.path.split(fp_lib_path)
+folder_name = folder_name.replace(".pretty", "")
 
 try:
     import git
     from git import Repo
 except ImportError:
    printer.yellow("If missing try: pip install gitpython")
-   exit(0)
+   exit()
 
 try:
     fp_search_repo = Repo(fp_lib_path)
-    found_repo = "yes"
+    found_repo = True
 except git.exc.GitError:
    printer.yellow("Missing repo.")
-   #exit(0)
-   found_repo = "no"
+   found_repo = False
 
-if (platform.system() == os_var):
+if (platform.system() == special_host_platform_name):
     try:
         os.mkdir(r"output")
         printer.yellow("output", None, None, True)
@@ -70,10 +71,10 @@ if (platform.system() == os_var):
         printer.cyan("directory exists.")
         pass
 
-if (platform.system() == os_var):
-    if found_repo == "yes":
+if (platform.system() == special_host_platform_name):
+    if found_repo:
         f = open(fp_out_abs_path + fp_search_repo.active_branch.name + ".txt", 'w+')
-    elif found_repo == "no":
+    else:
         f = open(fp_out_abs_path_no_git + folder_name + ".txt", 'w+')
 
 totalFiles = 0
@@ -82,7 +83,7 @@ totalTotalFiles = 0
 for base, dirs, files in os.walk(fp_lib_path):
     fps_in_lib = 0
     if base.endswith(fp_dir_type_ending):
-        #for directories in dirs:
+        #Check for directories in dirs variable. ln83 above
         totalDir += 1
         str_list = base.replace(fp_lib_path, "")
 
@@ -93,7 +94,7 @@ for base, dirs, files in os.walk(fp_lib_path):
                 #print(os.path.join(r'Footprint: ', file))
                 totalFiles += 1
                 fps_in_lib += 1
-        if (platform.system() == os_var):
+        if (platform.system() == special_host_platform_name):
             f.write("Library: " + str(str_list) + " Hosts: " + str(fps_in_lib) + " footprints." + "\n")
         print("\n")
         printer.green("Library:", None, None, True)
@@ -109,10 +110,10 @@ for base, dirs, files in os.walk(fp_lib_path):
             #print(bcolors.WARNING + os.path.join(r'Footprint: ' + bcolors.OKBLUE, file))
             totalTotalFiles += 1
 
-if (platform.system() == os_var):
-    if found_repo == "yes":
+if (platform.system() == special_host_platform_name):
+    if found_repo:
         f.write('\n' + "Current active branch: " + fp_search_repo.active_branch.name)
-    elif found_repo == "no":
+    else:
         f.write('\n' + "Current directory: " + fp_lib_path)
 
     f.write("\n" + "Total Number of footprint libraries: " + str(totalDir))
@@ -125,14 +126,14 @@ print("\n")
 printer.cyan("Footprint search directory:", None, None, True)
 printer.yellow(fp_lib_path)
 
-if found_repo == "yes":
+if found_repo:
     printer.cyan("Current active branch:", None, None, True)
     printer.yellow(fp_search_repo.active_branch.name)
-    if (platform.system() == os_var):
+    if (platform.system() == special_host_platform_name):
         printer.cyan("Output file directory:", None, None, True)
         printer.yellow(fp_out_abs_path + fp_search_repo.active_branch.name + ".txt")
-elif found_repo == "no":
-    if (platform.system() == os_var):
+else:
+    if (platform.system() == special_host_platform_name):
         printer.cyan("Output file directory:", None, None, True)
         printer.yellow(fp_out_abs_path_no_git +  folder_name + ".txt")
         
