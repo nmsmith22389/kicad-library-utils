@@ -116,7 +116,7 @@ for base, dirs, files in os.walk(fp_lib_path):
         if file_inside_nonpretty.endswith(fp_file_type_ending):
             # print path name of selected files, uncomment next line to verbose ALL footprints.
             # TODO add verbose argument to enable those hidden prints
-            # print(bcolors.WARNING + os.path.join(r'Footprint: ' + bcolors.OKBLUE, file_inside_nonpretty))
+            # print(os.path.join(r'Footprint: ' + file_inside_nonpretty))
             totalTotalFiles += 1
 
 if platform.system() == special_host_platform_name:
