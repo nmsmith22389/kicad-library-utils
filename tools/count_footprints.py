@@ -232,4 +232,5 @@ if verbose_level >= 1:
     printer.yellow(str(totalTotalFiles))
     exit(0)
 else:
-    exit(totalTotalFiles)
+    print(totalTotalFiles)
+    exit(0)
