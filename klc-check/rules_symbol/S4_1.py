@@ -1,12 +1,18 @@
-# -*- coding: utf-8 -*-
+from typing import List
 
-from rules_symbol.rule import *
+from kicad_sym import KicadSymbol, Pin, mm_to_mil
+from rules_symbol.rule import KLCRule, pinString
 
 
 class Rule(KLCRule):
     """General pin requirements"""
 
-    def checkPinOrigin(self, gridspacing=100):
+    def __init__(self, component: KicadSymbol):
+        super().__init__(component)
+
+        self.violating_pins: List[Pin] = []
+
+    def checkPinOrigin(self, gridspacing: int = 100) -> bool:
         self.violating_pins = []
         err = False
         for pin in self.component.pins:
@@ -15,28 +21,33 @@ class Rule(KLCRule):
             if (posx % gridspacing) != 0 or (posy % gridspacing) != 0:
                 self.violating_pins.append(pin)
                 if not err:
-                    self.error("Pins not located on {0}mil (={1:.3}mm) grid:".format(gridspacing, gridspacing*0.0254))
-                self.error(' - {0} '.format(pinString(pin, loc = True)))
+                    self.error(
+                        "Pins not located on {0}mil (={1:.3}mm) grid:".format(
+                            gridspacing, gridspacing * 0.0254
+                        )
+                    )
+                self.error(" - {0} ".format(pinString(pin, loc=True)))
                 err = True
 
         return len(self.violating_pins) > 0
 
-    def checkDuplicatePins(self):
+    def checkDuplicatePins(self) -> bool:
         # look for duplicate pin numbers
         duplicate = False
         test_pins = list(self.component.pins)
-        for pin0 in test_pins:
-            for pin1 in test_pins:
+        for pin0 in test_pins[:]:
+            for pin1 in test_pins[:]:
                 if pin0 != pin1 and pin0.is_duplicate(pin1):
                     duplicate = True
                     self.error("Pin {n} is duplicated:".format(n=pin0.number))
                     self.errorExtra(pinString(pin0))
-                    test_pins.remove(pin0)
-                    test_pins.remove(pin1)
+                    break
 
         return duplicate
 
-    def checkPinLength(self, errorPinLength=49, warningPinLength=99):
+    def checkPinLength(
+        self, errorPinLength: int = 49, warningPinLength: int = 99
+    ) -> bool:
         self.violating_pins = []
 
         for pin in self.component.pins:
@@ -49,28 +60,42 @@ class Rule(KLCRule):
                 continue
 
             if length <= errorPinLength:
-                self.error("{pin} length ({len}mils) is below {pl}mils".format(pin=pinString(pin), len=length, pl=errorPinLength+1))
+                self.error(
+                    "{pin} length ({len}mils) is below {pl}mils".format(
+                        pin=pinString(pin), len=length, pl=errorPinLength + 1
+                    )
+                )
             elif length <= warningPinLength:
-                self.warning("{pin} length ({len}mils) is below {pl}mils".format(pin=pinString(pin), len=length, pl=warningPinLength+1))
+                self.warning(
+                    "{pin} length ({len}mils) is below {pl}mils".format(
+                        pin=pinString(pin), len=length, pl=warningPinLength + 1
+                    )
+                )
 
             if length % 50 != 0:
-                self.warning("{pin} length ({len}mils) is not a multiple of 50mils".format(pin=pinString(pin), len=length))
+                self.warning(
+                    "{pin} length ({len}mils) is not a multiple of 50mils".format(
+                        pin=pinString(pin), len=length
+                    )
+                )
 
             # length too long flags a warning
             if length > 300:
                 err = True
-                self.error("{pin} length ({length}mils) is longer than maximum (300mils)".format(
-                    pin=pinString(pin),
-                    length=length))
+                self.error(
+                    "{pin} length ({length}mils) is longer than maximum (300mils)".format(
+                        pin=pinString(pin), length=length
+                    )
+                )
 
             if err:
                 self.violating_pins.append(pin)
 
         return len(self.violating_pins) > 0
 
-    def check(self):
-        # no need to check pins on an alias
-        if self.component.extends != None:
+    def check(self) -> bool:
+        # no need to check pins on a derived symbols
+        if self.component.extends is not None:
             return False
 
         # determine pin-grid:
@@ -84,13 +109,15 @@ class Rule(KLCRule):
             errorPinLength = 24
             warningPinLength = 49
 
-        return any([
-            self.checkPinOrigin(pingrid),
-            self.checkPinLength(errorPinLength, warningPinLength),
-            self.checkDuplicatePins()
-            ])
+        return any(
+            [
+                self.checkPinOrigin(pingrid),
+                self.checkPinLength(errorPinLength, warningPinLength),
+                self.checkDuplicatePins(),
+            ]
+        )
 
-    def fix(self):
+    def fix(self) -> None:
         """
         Proceeds the fixing of the rule, if possible.
         """

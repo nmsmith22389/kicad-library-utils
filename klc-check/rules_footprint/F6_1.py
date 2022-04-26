@@ -1,34 +1,43 @@
-# -*- coding: utf-8 -*-
+from kicad_mod import KicadMod
+from rules_footprint.rule import KLCRule
 
-from __future__ import division
-
-from rules_footprint.rule import *
 
 class Rule(KLCRule):
     """For surface-mount devices, placement type must be set to "Surface Mount" """
 
-    def check(self):
+    def __init__(self, component: KicadMod, args):
+        super().__init__(component, args)
+
+        self.pth_count: int = 0
+        self.smd_count: int = 0
+
+    def check(self) -> bool:
         """
         Proceeds the checking of the rule.
         The following variables will be accessible after checking:
-            * pads_bounds
-            * pads_distance
-            * right_anchor
+            * pth_count
+            * smd_count
         """
         module = self.module
 
-        self.pth_count = len(module.filterPads('thru_hole'))
-        self.smd_count = len(module.filterPads('smd'))
+        self.pth_count = len(module.filterPads("thru_hole"))
+        self.smd_count = len(module.filterPads("smd"))
 
         error = False
 
-        if self.smd_count > 0 and module.attribute != 'smd':
-            if module.attribute == 'virtual':
-                self.warning("Footprint placement type set to 'virtual' - ensure this is correct!")
+        if self.smd_count > 0 and module.attribute != "smd":
+            if module.attribute == "virtual":
+                self.warning(
+                    "Footprint placement type set to 'virtual' - ensure this is"
+                    " correct!"
+                )
             # Only SMD pads?
             elif self.pth_count == 0:
                 self.error("Surface Mount attribute not set")
-                self.errorExtra("For SMD footprints, 'Placement type' must be set to 'Surface mount'")
+                self.errorExtra(
+                    "For SMD footprints, 'Placement type' must be set to 'Surface"
+                    " mount'"
+                )
                 error = True
             else:
                 self.warning("Surface Mount attribute not set")
@@ -37,12 +46,11 @@ class Rule(KLCRule):
 
         return error
 
-
-    def fix(self):
+    def fix(self) -> None:
         """
         Proceeds the fixing of the rule, if possible.
         """
         module = self.module
         if self.check():
             self.info("Set 'surface mount' attribute")
-            module.attribute = 'smd'
+            module.attribute = "smd"

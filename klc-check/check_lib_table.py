@@ -14,15 +14,20 @@ It is important that the official libraries match the entries in these tables.
 import argparse
 import os
 import sys
-common = os.path.abspath(os.path.join(sys.path[0], '..','common'))
-if not common in sys.path:
-    sys.path.append(common)
+
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
 from lib_table import LibTable
 
-parser = argparse.ArgumentParser(description='Compare a sym-lib-table file against a list of .lib library files')
-parser.add_argument('libs', nargs='+', help='.lib files')
-parser.add_argument('-t', '--table', help='sym-lib-table file', action='store')
+parser = argparse.ArgumentParser(
+    description="Compare a sym-lib-table file against a list of .lib library files"
+)
+parser.add_argument("libs", nargs="+", help=".lib files")
+parser.add_argument("-t", "--table", help="sym-lib-table file", action="store")
 
 args = parser.parse_args()
 
@@ -33,24 +38,28 @@ def check_entries(lib_table, lib_names):
 
     # Check for entries that are incorrectly formatted
     for entry in lib_table.entries:
-        nickname = entry['name']
-        uri = entry['uri']
+        nickname = entry["name"]
+        uri = entry["uri"]
 
-        if '\\' in uri:
-            print("Found '\\' character in entry '{nick}' - Path separators must be '/'".format(nick=nickname))
+        if "\\" in uri:
+            print(
+                "Found '\\' character in entry '{nick}' - Path separators must be '/'".format(
+                    nick=nickname
+                )
+            )
             errors += 1
 
-        uri_last = '.'.join(uri.split('/')[-1].split('.')[:-1])
+        uri_last = ".".join(uri.split("/")[-1].split(".")[:-1])
 
         if not uri_last == nickname:
             print("Nickname '{n}' does not match path '{p}'".format(n=nickname, p=uri))
             errors += 1
 
-    lib_table_names = [entry['name'] for entry in lib_table.entries]
+    lib_table_names = [entry["name"] for entry in lib_table.entries]
 
     # Check for libraries that are in the lib_table but should not be
     for name in lib_table_names:
-        if not name in lib_names:
+        if name not in lib_names:
             errors += 1
             print("- Extra library '{l}' found in library table".format(l=name))
 
@@ -60,7 +69,7 @@ def check_entries(lib_table, lib_names):
 
     # Check for libraries that are not in the lib_table but should be
     for name in lib_names:
-        if not name in lib_table_names:
+        if name not in lib_table_names:
             errors += 1
             print("- Library '{l}' missing from library table".format(l=name))
 
@@ -76,7 +85,7 @@ def check_entries(lib_table, lib_names):
 lib_names = []
 
 for lib in args.libs:
-    lib_name = '.'.join(os.path.basename(lib).split('.')[:-1])
+    lib_name = ".".join(os.path.basename(lib).split(".")[:-1])
     lib_names.append(lib_name)
 
 print("Checking library table - '{table}'".format(table=os.path.basename(args.table)))

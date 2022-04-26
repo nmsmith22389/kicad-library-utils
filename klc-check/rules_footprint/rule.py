@@ -1,36 +1,39 @@
-# -*- coding: utf-8 -*-
-
 import math
-import string
-import sys, os
-import math
-import re
+import os
+import sys
+from typing import Any, Dict
 
-common = os.path.abspath(os.path.join(sys.path[0], '..','common'))
+common = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, "common")
+)
 
-if not common in sys.path:
-    sys.path.append(common)
+if common not in sys.path:
+    sys.path.insert(0, common)
 
-from rulebase import *
+from kicad_mod import KicadMod
+from rulebase import KLCRuleBase
 
-def mapToGrid(dimension, grid):
+
+def mapToGrid(dimension: float, grid: float) -> float:
     return round(dimension / grid) * grid
 
-# Convert mm to microns
-def mmToNanoMeter(mm):
-    return round(mm * 1E6)
 
-def getStartPoint(graph):
-    if 'center' in graph:
-        return graph['end']
-    elif 'angle' in graph:
-        # dosome magic to find the actual start point
+# Convert mm to microns
+def mmToNanoMeter(mm: float) -> float:
+    return round(mm * 1e6)
+
+
+def getStartPoint(graph: Dict[str, Any]):
+    if "center" in graph:
+        return graph["end"]
+    elif "angle" in graph:
+        # do some magic to find the actual start point
         # fetch values
-        x_c = graph['start']['x']
-        y_c = graph['start']['y']
-        x_e = graph['end']['x']
-        y_e = graph['end']['y']
-        a_arc = graph['angle']
+        x_c = graph["start"]["x"]
+        y_c = graph["start"]["y"]
+        x_e = graph["end"]["x"]
+        y_e = graph["end"]["y"]
+        a_arc = graph["angle"]
         # calculate radius
         dx = x_c - x_e
         dy = y_c - y_e
@@ -43,21 +46,25 @@ def getStartPoint(graph):
         a_s = math.radians(a + a_arc)
         x_s = x_c - math.cos(a_s) * r
         y_s = y_c - math.sin(a_s) * r
-        return {'x': x_s, 'y': y_s}
-    elif 'start' in graph:
-        return graph['start']
+        return {"x": x_s, "y": y_s}
+    elif "start" in graph:
+        return graph["start"]
     else:
         return None
 
-def getEndPoint(graph):
-    if 'end' in graph:
-        return graph['end']
+
+def getEndPoint(graph: Dict[str, Any]):
+    if "end" in graph:
+        return graph["end"]
     else:
         return None
+
 
 # Display string for a graph item
 # Line / Arc / Circle
-def graphItemString(graph, layer=False, width=False):
+def graphItemString(
+    graph: Dict[str, Any], layer: bool = False, width: bool = False
+) -> str:
 
     layerText = ""
     shapeText = ""
@@ -65,57 +72,60 @@ def graphItemString(graph, layer=False, width=False):
 
     try:
         if layer:
-            layerText = " on layer '{layer}'".format(layer=graph['layer'])
+            layerText = " on layer '{layer}'".format(layer=graph["layer"])
 
         if width:
-            widthText = " has width '{width}'".format(width=graph['width'])
-    except:
+            widthText = " has width '{width}'".format(width=graph["width"])
+    except KeyError:
         pass
 
     # Line or Arc
-    if 'start' in graph and 'end' in graph:
+    if "start" in graph and "end" in graph:
         # Arc item
-        if 'angle' in graph:
-            shape = 'Arc'
+        if "angle" in graph:
+            shape = "Arc"
         else:
-            shape = 'Line'
+            shape = "Line"
         shapeText = "{shape} ({x1},{y1}) -> ({x2},{y2})".format(
-            shape = shape,
-            x1 = graph['start']['x'],
-            y1 = graph['start']['y'],
-            x2 = graph['end']['x'],
-            y2 = graph['end']['y'])
+            shape=shape,
+            x1=graph["start"]["x"],
+            y1=graph["start"]["y"],
+            x2=graph["end"]["x"],
+            y2=graph["end"]["y"],
+        )
 
     # Circle
-    elif 'center' in graph and 'end' in graph:
-        shapeText = "Circle @ ({x},{y})".format(x=graph['center']['x'],y=graph['center']['y'])
+    elif "center" in graph and "end" in graph:
+        shapeText = "Circle @ ({x},{y})".format(
+            x=graph["center"]["x"], y=graph["center"]["y"]
+        )
 
-    # Unkown shape
+    # Unknown shape
     else:
         shapeText = "Graphical item"
 
     return shapeText + layerText + widthText
 
+
 class KLCRule(KLCRuleBase):
     """
     A base class to represent a KLC rule
     """
-    def __init__(self, module, args):
 
-        KLCRuleBase.__init__(self)
-    
-        self.module = module
+    def __init__(self, module: KicadMod, args):
+
+        super().__init__()
+
+        self.module: KicadMod = module
         self.args = args
-        self.needsFixMore=False
+        self.needsFixMore: bool = False
 
         # Illegal chars
-        self.illegal_chars = ['*', '?', ':', '/', '\\', '[', ']', ';', '|', '=', ',']
+        self.illegal_chars = ["*", "?", ":", "/", "\\", "[", "]", ";", "|", "=", ","]
 
-    def fix(self):
+    def fix(self) -> None:
         self.info("fix not supported")
-        return
-        
-    def fixmore(self):
+
+    def fixmore(self) -> None:
         if self.needsFixMore:
             self.info("fixmore not supported")
-        return

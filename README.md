@@ -1,5 +1,22 @@
-kicad-library-utils
-===============
+# KiCad Library Utils
+
+This repository contains a variety of tools related to the libraries used in [KiCad](https://kicad.org/):
+
+* symbols
+* footprints
+* 3D models
+
+These tools can be used for the development of the [official KiCad libraries](https://gitlab.com/kicad/libraries) as well as for custom (internal) libraries.
+
+The tools are currently mainly concerned with quality and style checks (e.g. for CI tests) according to the [KLC rules](https://klc.kicad.org/).
+
+Adding custom (internal) rules for your own libraries is a bit cumbersome at the moment (you need to maintain your private fork of this repository), but their usage is within the targeted scope of these tools.
+Your contribution for improving this situation is welcome.
+
+Other tools (beside style and quality checks) are welcome to this repository, too.
+
+
+# Repository content
 
 ## klc-check directory
 
@@ -11,7 +28,7 @@ kicad-library-utils
 
 **comparelibs.py**: Script to compare two versions of the same library. Used as part of the `kicad-symbols` CI.
 
-[KLC]: http://kicad-pcb.org/libraries/klc/
+[KLC]: http://kicad.org/libraries/klc/
 
 ### gitlabci directory
 
@@ -29,7 +46,7 @@ Contains various python libraries used by the check scripts and the generators.
 
 **example-generator.py**: An example on how to create symbols using python
 
-## tools directoy
+## tools directory
 
 **compare_sexpr_files.sh**: Normalizes and compares two sexpr files. Those can be `kicad_sym` or `kicad_mod` files.
 
@@ -63,15 +80,15 @@ How to use
 
     # run the script passing the files to be checked
     ./check_footprint.py path_to_fp1.kicad_mod path_to_fp2.kicad_mod
-    
-    # Add `-v`, `-vv`, or `-vvv` for extra verbose output. The most useful is `-vv`, which explains in details the violations. Ex: 
+
+    # Add `-v`, `-vv`, or `-vvv` for extra verbose output. The most useful is `-vv`, which explains in details the violations. Ex:
     ./check_footprint.py path_to_fp1.kicad_mod path_to_fp2.kicad_mod -vv
 
     # run the following 'h'elp command to see other options
     ./check_footprint.py -h
 
 
-## 3D Coverage Checker (not yet ported to v6!)
+## 3D Coverage Checker
 
     # first get into klc-check directory
     cd kicad-library-utils/klc-check
@@ -80,7 +97,7 @@ How to use
     ./check_3d_coverage.py
 
     # run the script to check only the specified .pretty folder
-    ./check_3d_coverage.py --pretty Housings_SOIC
+    ./check_3d_coverage.py --pretty Package_SO
 
     # run the following 'h'elp command to see other options
     ./check_3d_coverage.py -h
@@ -98,6 +115,59 @@ How to use
 
     # run the following 'h'elp command to see other options
     ./comparelibs.py -h
+
+# Contributing
+
+Please keep in mind, that this repository is mainly targeted at the [official KiCad libraries](gitlab.com/kicad/libraries/).
+Thus you should manage your custom rules outside of this repository.
+Re-usable infrastructure (e.g. for supporting custom rules) is welcome, of course.
+
+## Python code style
+
+The tools [black](https://black.readthedocs.io/) and [isort](https://pycqa.github.io/isort/) are used for formatting the code.
+You should apply this format before committing code:
+```shell
+make style
+```
+
+All python code should follow [PEP8](https://www.python.org/dev/peps/pep-0008/).
+This style and many other issues can be tested via [flake8](https://flake8.pycqa.org/en/latest/) (also executed as part of the CI tests):
+```shell
+make lint
+```
+
+Please refrain from using recently introduced features of the Python language, which are not yet supported by the most recent stable release of major distributions (e.g. Debian).
+
+
+## Check before committing
+
+Usually, you commit the footprint (or symbol) and let CI check your job.
+You can let git pass the check before actually committing. If it's red,
+fix your footprint (or symbol) !
+
+To automate the call, place a hook file in the footprint git's hooks directory,
+**/somewhere/kicad/kicad-footprints/.git/hooks** named **pre-commit**
+with the following content:
+```
+#!/bin/bash
+
+ERR=0
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+for F in $STAGED_FILES; do
+  if [[ "${F: -10}"  == ".kicad_mod" ]] ; then
+    x=$(python3  /somewhere/kicad-library-utils/klc-check/check_footprint.py  -vv "$F")
+    echo "$x"
+    echo "$x" | grep -q "Violating" &&  ERR=1
+  fi
+done
+exit $ERR
+```
+diff-filter=ACM stands for Added, Copied, Modified
+
+The script skips non footprint-files. Use **git commit --no-verify** to bypass the hook.
+
+Place the script in the footprint (or symbol) directory, not in the library-utils' git !
+
 
 Notice
 ======

@@ -1,18 +1,17 @@
-# -*- coding: utf-8 -*-
-
-from rules_symbol.rule import *
+from kicad_sym import mil_to_mm, mm_to_mil
+from rules_symbol.rule import KLCRule
 
 
 class Rule(KLCRule):
     """Pin name position offset"""
 
-    def check(self):
-        # no need to check this for an alias
-        if self.component.extends != None:
+    def check(self) -> bool:
+        # no need to check this for a derived symbols
+        if self.component.extends is not None:
             return False
 
         offset = mm_to_mil(self.component.pin_names_offset)
-        if self.component.hide_pin_names == True:
+        if self.component.hide_pin_names:
             # If the pin names aren't drawn, the offset doesn't matter.
             return False
         elif offset == 0:
@@ -22,23 +21,26 @@ class Rule(KLCRule):
             return False
         elif offset > 50:
             self.error("Pin offset outside allowed range")
-            self.errorExtra("Pin offset ({o}) must not be above 50mils".format(o=offset))
+            self.errorExtra(f"Pin offset ({offset}) must not be above 50mils")
             return True
         elif offset < 20:
             self.warning("Pin offset outside allowed range")
-            self.warningExtra("Pin offset ({o}) should not be below 20mils".format(o=offset))
+            self.warningExtra(f"Pin offset ({offset}) should not be below 20mils")
             return True
         elif offset > 20:
             self.warning("Pin offset not preferred value")
-            self.warningExtra("Pin offset ({o}) should be 20mils unless"
-                    " required by symbol geometry".format(o=offset))
+            self.warningExtra(
+                f"Pin offset ({offset}) should be 20mils unless"
+                " required by symbol geometry"
+            )
 
         return False
 
-    def fix(self):
+    def fix(self) -> None:
         """
         Proceeds the fixing of the rule, if possible.
         """
+
         self.info("Fixing, assuming typical symbol geometry...")
         self.component.pin_names_offset = mil_to_mm(20)
 

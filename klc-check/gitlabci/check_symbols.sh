@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # print python version
-python -V
+python3 -V
 
 # clone required repos
 git clone --depth 1 https://gitlab.com/kicad/libraries/kicad-footprints.git $CI_BUILDS_DIR/kicad-footprints
@@ -9,8 +9,8 @@ git clone --depth 1 https://gitlab.com/kicad/libraries/kicad-footprints.git $CI_
 # extract the bash SHA hash from the gitlab API
 # unfortunately it is not available via the environment variables
 API_RESPONSE=$(curl -s -H "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_MERGE_REQUEST_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID")
-BASE_SHA=$( echo $API_RESPONSE | python -c "import sys, json; print (json.load(sys.stdin)['diff_refs']['base_sha'])")
-TARGET_SHA=$( echo $API_RESPONSE | python -c "import sys, json; print (json.load(sys.stdin)['diff_refs']['head_sha'])")
+BASE_SHA=$( echo $API_RESPONSE | python3 -c "import sys, json; print (json.load(sys.stdin)['diff_refs']['base_sha'])")
+TARGET_SHA=$( echo $API_RESPONSE | python3 -c "import sys, json; print (json.load(sys.stdin)['diff_refs']['head_sha'])")
 
 # get the list of files we want to compare
 echo "Comparing range $BASE_SHA to $TARGET_SHA"
@@ -28,7 +28,7 @@ for LIBNAME in $LIBS_OLD; do
 done
 
 # now run comparelibs
-$CI_BUILDS_DIR/kicad-library-utils/klc-check/comparelibs.py -v --old $CI_BUILDS_DIR/kicad-symbols-prev/* --new $LIBS_NEW --check --check-aliases --footprints $CI_BUILDS_DIR/kicad-footprints -m
+$CI_BUILDS_DIR/kicad-library-utils/klc-check/comparelibs.py -v --old $CI_BUILDS_DIR/kicad-symbols-prev/* --new $LIBS_NEW --check --check-derived --footprints $CI_BUILDS_DIR/kicad-footprints -m
 SYM_ERROR_CNT=$?
 echo "SymbolErrorCount $SYM_ERROR_CNT" >> metrics.txt
 
