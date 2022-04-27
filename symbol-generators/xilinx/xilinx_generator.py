@@ -29,9 +29,10 @@ class Device:
         "Zynq7000":             re.compile("(x[cq]7z(\d+)s?)([a-zA-Z]+\d+)pkg"),
         "ZynqUltrascaleP":      re.compile("(x[cq]zu(\d+)[ce][gv])([a-zA-Z]+\d+)pkg"),
         "ZynqUltrascalePRFSoC": re.compile("(x[cq]zu(\d+)dr)([a-zA-Z]+\d+)pkg"),
+        "ArtixUltrascaleP":     re.compile("(x[cq]au(\d+)p)([a-zA-Z]+\d+)pkg"),
         "KintexUltrascaleP":    re.compile("(x[cq]ku(\d+)p)([a-zA-Z]+\d+)pkg"),
         "VirtexUltrascaleP":    re.compile("(x[cq]vu(\d+)p)([a-zA-Z]+\d+)pkg"),
-        "KintexUltrascale":     re.compile("(x[cq]ku(\d+))([a-zA-Z]+\d+)pkg"),
+        "KintexUltrascale":     re.compile("(x[cq]r?ku(\d+))([a-zA-Z]+\d+)pkg"),
         "VirtexUltrascale":     re.compile("(x[cq]vu(\d+))([a-zA-Z]+\d+)pkg")
     }
     _FAMILY_NAMES = {
@@ -42,6 +43,7 @@ class Device:
         "Zynq7000":             "Zynq-7000",
         "ZynqUltrascaleP":      "Zynq Ultrascale+",
         "ZynqUltrascalePRFSoC": "Zynq Ultrascale+ RFSoC",
+        "ArtixUltrascaleP":     "Artix Ultrascale+",
         "KintexUltrascaleP":    "Kintex Ultrascale+",
         "VirtexUltrascaleP":    "Virtex Ultrascale+",
         "KintexUltrascale":     "Kintex Ultrascale",
@@ -55,6 +57,7 @@ class Device:
         "Zynq7000": "https://www.xilinx.com/support/documentation/data_sheets/ds190-Zynq-7000-Overview.pdf",
         "ZynqUltrascaleP": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf",
         "ZynqUltrascalePRFSoC": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf",
+        "ArtixUltrascaleP": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf",
         "KintexUltrascaleP": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf",
         "VirtexUltrascaleP": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf",
         "KintexUltrascale": "https://www.xilinx.com/support/documentation/data_sheets/ds890-ultrascale-overview.pdf",
@@ -107,24 +110,38 @@ class Device:
             PS_VCCPLL = 39      # VCCPLL - PLL power for Zynq CPU (PS)
             PS_MIO_VREF = 40    # PS_MIO_VREF - reference voltage for Zynq CPU (PS)
             AUX_IO_POWER = 41   # Aux IO Power
+            MGT_SENSE = 42      # MGT*_SENSE* - Power sense for MGT
+            MGT_THERM = 43      # MGT*_THERM* - Thermal diode for MGT
+            MGT_GND = 44        # MGT*AGND - Analog ground for MGT
+            BOOT_SPI = 45       # SPI interface in US(+) devices
+            BANK_VREF = 46      # VREF_* - Bank voltage reference in US(+) devices
+            HBM_POWER = 47      # VCC_HBM_* - HBM power in Virtex US(+) devices
+            HBM_IO_POWER = 48   # VCC_IO_HBM_* - HBM IO power in Virtex US(+) devices
+            HBM_AUX_POWER = 49  # VCCAUX_HBM_* - HBM AUX power in Virtex US(+) devices
 
         # Pin type filters
         _TYPE_REGEXPS = {
-            re.compile("^((PROGRAM)|(INIT)|(DONE))|(CFGBVS)|(CCLK)")
+            re.compile("^((PROGRAM)|(INIT)|(DONE))|(CFGBVS)|(CCLK)|(PUDC_B)|(POR_OVERRIDE)")
                                                     : PinType.CONFIG,
             re.compile("^M(\d+)")                   : PinType.BOOT,
+            re.compile("^D(\d+)")                   : PinType.BOOT_SPI,
+            re.compile("^RDWR_FCS_B")               : PinType.BOOT_SPI,
             re.compile("^T((DI)|(DO)|(MS)|(CK))")   : PinType.JTAG,
             re.compile("^VREF([PN])")               : PinType.ADC_REF,
             re.compile("^V([PN])")                  : PinType.ADC,
             re.compile("^DX([PN])")                 : PinType.ADC_DIODE,
             re.compile("^VCCO_(?:DDR_)?(?:MIO\d*_)?(\d+)")
                                                     : PinType.BANK_POWER,
+            re.compile("^VREF")                     : PinType.BANK_VREF,
             re.compile("^VCCINT")                   : PinType.CORE_POWER,
             re.compile("^VCCBRAM")                  : PinType.BRAM_POWER,
             re.compile("^VCCAUX_IO")                : PinType.AUX_IO_POWER,
+            re.compile("^VCCAUX_HBM")               : PinType.HBM_AUX_POWER,
             re.compile("^VCCAUX")                   : PinType.AUX_POWER,
             re.compile("^VCCADC")                   : PinType.ADC_POWER,
-            re.compile("^VCCBATT")                  : PinType.BATT_POWER,
+            re.compile("^(VCCBATT)|(VBATT)")        : PinType.BATT_POWER,
+            re.compile("^VCC_HBM")                  : PinType.HBM_POWER,
+            re.compile("^VCC_IO_HBM")               : PinType.HBM_IO_POWER,
             re.compile("^GNDADC")                   : PinType.ADC_GND,
             re.compile("^GND")                      : PinType.GND,
             re.compile("^PS_((CLK)|(POR_B)|(SRST_B))")
@@ -144,17 +161,22 @@ class Device:
             re.compile("^VCCPINT")                  : PinType.PS_VCCPINT,
             re.compile("^VCCPAUX")                  : PinType.PS_VCCPAUX,
             re.compile("^VCCPLL")                   : PinType.PS_VCCPLL,
-            re.compile("^IO_(L?)(\d+)([PN]?)")      : PinType.GENERAL,
+            re.compile("^IO_([LT]?)(\d+)([PN]?)")   : PinType.GENERAL,
             re.compile("^PS_MIO(\d+)")              : PinType.PS_GENERAL,
             re.compile("^MGTRREF")                  : PinType.MGT_RREF,
             re.compile("^MGT\w+RCAL")               : PinType.MGT_RCAL,
-            re.compile("^MGTREFCLK(\d+)([PN])")     : PinType.MGT_REFCLK,
-            re.compile("^MGT[PXH]RX([PN])(\d+)")    : PinType.MGT_RX,
-            re.compile("^MGT[PXH]TX([PN])(\d+)")    : PinType.MGT_TX,
-            re.compile("^MGTAVCC")                  : PinType.MGT_POWER,
-            re.compile("^MGTAVTT")                  : PinType.MGT_VTT,
+            re.compile("^MGTZ?REFCLK(\d+)?([PN])")  : PinType.MGT_REFCLK,
+            re.compile("^MGT[PXHYZM]RX([PN])(\d+)") : PinType.MGT_RX,
+            re.compile("^MGT[PXHYZM]TX([PN])(\d+)") : PinType.MGT_TX,
+            re.compile("^MGTZ?AVCC")                : PinType.MGT_POWER,
+            re.compile("^MGTZVCCL")                 : PinType.MGT_POWER,
+            re.compile("^MGTZ?AVTT")                : PinType.MGT_VTT,
             re.compile("^MGTVCCAUX")                : PinType.MGT_AUX_POWER,
-            re.compile("^(NC)|(RSVDGND)")           : PinType.NC
+            re.compile("^MGTZVCCH")                 : PinType.MGT_AUX_POWER,
+            re.compile("^MGTZ?_SENSE")              : PinType.MGT_SENSE,
+            re.compile("^MGTZ?_THERM")              : PinType.MGT_THERM,
+            re.compile("^MGTZ?AGND")                : PinType.MGT_GND,
+            re.compile("^(NC)|(RSVD)|(MGTZ_OBS)")   : PinType.NC
         }
 
         # Default KiCAD electrical type for pin types
@@ -163,6 +185,7 @@ class Device:
             PinType.PS_GENERAL:     "bidirectional",
             PinType.CONFIG:         "input",
             PinType.BOOT:           "input",
+            PinType.BOOT_SPI:       "bidirectional",
             PinType.JTAG:           "input",
             PinType.ADC_REF:        "passive",
             PinType.ADC:            "input",
@@ -173,6 +196,10 @@ class Device:
             PinType.ADC_POWER:      "power_in",
             PinType.BATT_POWER:     "power_in",
             PinType.BANK_POWER:     "power_in",
+            PinType.BANK_VREF:      "power_in",
+            PinType.HBM_POWER:      "power_in",
+            PinType.HBM_IO_POWER:   "power_in",
+            PinType.HBM_AUX_POWER:  "power_in",
             PinType.GND:            "power_in",
             PinType.ADC_GND:        "power_in",
             PinType.NC:             "unconnected",
@@ -199,7 +226,10 @@ class Device:
             PinType.PS_VCCPAUX:     "power_in",
             PinType.PS_VCCPLL:      "power_in",
             PinType.PS_MIO_VREF:    "passive",
-            PinType.AUX_IO_POWER:   "power_in"
+            PinType.AUX_IO_POWER:   "power_in",
+            PinType.MGT_SENSE:      "passive",
+            PinType.MGT_THERM:      "passive",
+            PinType.MGT_GND:        "power_in"
         }
 
         # Some dedicated pins has different electrical type...
@@ -208,29 +238,36 @@ class Device:
             re.compile("^DONE"):    "bidirectional",
             re.compile("^INIT"):    "open_collector",
             re.compile("^TDO"):     "output",
+            re.compile("^RDWR_FCS_B"): "output",
         }
         
-        _POWER_BANK_TYPES = [
-            PinType.CORE_POWER,
-            PinType.BRAM_POWER,
-            PinType.AUX_POWER,
-            PinType.ADC_POWER,
-            PinType.BATT_POWER,
-            PinType.MGT_POWER,
-            PinType.MGT_AUX_POWER,
-            PinType.MGT_VTT,
-            PinType.GND,
-            PinType.ADC_GND,
-            PinType.PS_VCCPINT,
-            PinType.PS_VCCPAUX,
-            PinType.PS_VCCPLL,
-            PinType.AUX_IO_POWER
-        ]
+        _BANK_REMAP = {
+            PinType.CORE_POWER:     -1,
+            PinType.BRAM_POWER:     -1,
+            PinType.AUX_POWER:      -1,
+            PinType.ADC_POWER:      -1,
+            PinType.BATT_POWER:     -1,
+            PinType.HBM_POWER:      -1,
+            PinType.HBM_IO_POWER:   -1,
+            PinType.HBM_AUX_POWER:  -1,
+            PinType.MGT_POWER:      -1,
+            PinType.MGT_AUX_POWER:  -1,
+            PinType.MGT_VTT:        -1,
+            PinType.GND:            -1,
+            PinType.ADC_GND:        -1,
+            PinType.MGT_GND:        -1,
+            PinType.PS_VCCPINT:     -1,
+            PinType.PS_VCCPAUX:     -1,
+            PinType.PS_VCCPLL:      -1,
+            PinType.AUX_IO_POWER:   -1,
+            PinType.NC:             0,
+        }
         
         _GPIO_BANK_TYPES = [
             PinType.GENERAL,
             PinType.PS_GENERAL,
             PinType.BANK_POWER,
+            PinType.BANK_VREF,
             PinType.PS_CTL,
             PinType.PS_MIO_VREF
         ]
@@ -264,14 +301,6 @@ class Device:
                     logging.info(f"Renaming {self.name} -> {n}")
                     self.name = n
 
-            # Check bank name
-            m = self._BANK_REGEXP.match(self.name)
-            if m:
-                newBank = int(m.group(1));
-                if self.bank != newBank:
-                    logging.warning(f"Wrong bank for {self.name}, was {self.bank} should be {newBank}")
-                    self.bank = newBank
-
             # Detect pin type
             for r,t in self._TYPE_REGEXPS.items():
                 m = r.match(self.name)
@@ -283,9 +312,6 @@ class Device:
 
             if self.type == self.PinType.UNKNOWN:
                 logging.warning(f"Unknown pin type for pin {self.name}")
-                
-            if self.type in self._POWER_BANK_TYPES:
-                self.bank = -1;                
 
             if self.type == self.PinType.GENERAL:
                 # General I/O pins has number and can be in pair
@@ -303,7 +329,7 @@ class Device:
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
             elif self.type == self.PinType.MGT_REFCLK:
-                self.number = int(m.group(1))
+                self.number = 0 if m.group(1) is None else int(m.group(1))
                 self.pair = True
                 self.pairNeg = m.group(2) == "N"
             elif self.type == self.PinType.MGT_RX or self.type == self.PinType.MGT_TX \
@@ -311,6 +337,21 @@ class Device:
                 self.number = int(m.group(2))
                 self.pair = True
                 self.pairNeg = m.group(1) == "N"
+            elif self.type == self.PinType.BOOT_SPI:
+                if self.name[0:10] == "RDWR_FCS_B":
+                    self.number = 0
+                else:
+                    self.number = int(m.group(1)) + 1
+
+            # Check bank name
+            m = self._BANK_REGEXP.match(self.name)
+            if self.type in self._BANK_REMAP:
+                self.bank = self._BANK_REMAP[self.type]
+            elif m:
+                newBank = int(m.group(1))
+                if self.bank != newBank:
+                    logging.warning(f"Wrong bank for {self.name}, was {self.bank} should be {newBank}")
+                    self.bank = newBank
 
         # Sort pins by bank->type->number->P/N->name
         def __lt__(self, other):
@@ -346,7 +387,7 @@ class Device:
             return pin
 
     def __init__(self, file):
-        self.csvFile = file;
+        self.csvFile = file
         self.banks = {}
         self.pinCount = 0
         self.footprint = ""
@@ -364,6 +405,12 @@ class Device:
         paramMapping = {"pin": 0, "name": 1, "bank": 3, "type": 6}
 
         for line in f:
+            if (line[0:2] == "\"#") or (line[0] == "#"):
+                continue
+
+            if line.strip().replace(',', '') == "":
+                continue
+
             params = line.strip().split(",")
 
             if params[0].lower() == "pin":
@@ -436,7 +483,7 @@ class Device:
             if m is not None:
                 self.family = f
                 values = m.groups()
-                break;
+                break
 
         if self.family == "" or len(values) == 0:
             return
@@ -538,13 +585,15 @@ class Device:
                       self.Pin.PinType.PS_DDR_DQS, self.Pin.PinType.PS_DDR_DM,
                       self.Pin.PinType.PS_VCCPINT, self.Pin.PinType.PS_VCCPAUX,
                       self.Pin.PinType.PS_VCCPLL, self.Pin.PinType.CORE_POWER, self.Pin.PinType.BRAM_POWER, 
-                      self.Pin.PinType.AUX_POWER, self.Pin.PinType.AUX_IO_POWER,
+                      self.Pin.PinType.AUX_POWER, self.Pin.PinType.AUX_IO_POWER, self.Pin.PinType.HBM_POWER,
+                      self.Pin.PinType.HBM_IO_POWER, self.Pin.PinType.HBM_AUX_POWER, self.Pin.PinType.BANK_VREF,
                       self.Pin.PinType.GND],
-                "r": [self.Pin.PinType.JTAG, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_TX, self.Pin.PinType.PS_DDR_VREF, 
+                "r": [self.Pin.PinType.JTAG, self.Pin.PinType.BOOT_SPI, self.Pin.PinType.ADC_DIODE, self.Pin.PinType.MGT_TX, self.Pin.PinType.PS_DDR_VREF,
                       self.Pin.PinType.PS_DDR_CLK, self.Pin.PinType.PS_DDR_CTL, self.Pin.PinType.PS_DDR_A, self.Pin.PinType.PS_DDR_BA,
                       self.Pin.PinType.PS_DDR_DCI_REF, self.Pin.PinType.PS_DDR_ODT, self.Pin.PinType.ADC_POWER,
                       self.Pin.PinType.BATT_POWER, self.Pin.PinType.MGT_POWER, self.Pin.PinType.MGT_AUX_POWER,
-                      self.Pin.PinType.MGT_VTT, self.Pin.PinType.ADC_GND],
+                      self.Pin.PinType.MGT_VTT, self.Pin.PinType.ADC_GND, self.Pin.PinType.MGT_SENSE, self.Pin.PinType.MGT_THERM,
+                      self.Pin.PinType.MGT_GND],
                 "t": [self.Pin.PinType.BANK_POWER],
                 "b": []
             }
@@ -558,13 +607,17 @@ class Device:
                 self.Pin.PinType.PS_VCCPLL: 4,
                 self.Pin.PinType.CORE_POWER: 4,
                 self.Pin.PinType.BRAM_POWER: 4,
+                self.Pin.PinType.HBM_POWER: 4,
+                self.Pin.PinType.HBM_IO_POWER: 4,
+                self.Pin.PinType.HBM_AUX_POWER: 4,
                 self.Pin.PinType.AUX_POWER: 4,
                 self.Pin.PinType.AUX_IO_POWER: 4,
                 self.Pin.PinType.ADC_POWER: 4,
                 self.Pin.PinType.BATT_POWER: 4,
                 self.Pin.PinType.MGT_POWER: 4,
                 self.Pin.PinType.MGT_AUX_POWER: 4,
-                self.Pin.PinType.MGT_VTT: 4
+                self.Pin.PinType.MGT_VTT: 4,
+                self.Pin.PinType.MGT_GND: 2
             }
 
             # Draw all non-I/O pin groups
@@ -595,11 +648,11 @@ class Device:
                             else:
                                 dp.posx = pinoffsets[s] * 100
                             mergedPins[p.name] = dp
-                            pinoffsets[s] = pinoffsets[s] + 1;
+                            pinoffsets[s] = pinoffsets[s] + 1
                         pinsides[s].append(dp)
                         pinList.remove(p)
                             
-                    pinoffsets[s] = pinoffsets[s] + 1 * sparse;
+                    pinoffsets[s] = pinoffsets[s] + 1 * sparse
 
             # Draw general IO, starting from left side
             genSide = "l"
@@ -731,7 +784,7 @@ class Device:
             return
 
         # Make the symbol
-        self.symbol = KicadSymbol(self.libraryName, f"FPGA_Xilinx_{self.family}")
+        self.symbol = KicadSymbol(self.libraryName, f"FPGA_Xilinx_{self.family}", library.filename)
         self.symbol.add_default_properties()
         self.symbol.get_property('Datasheet').value = self._FAMILY_DATASHEETS[self.family]
         self.symbol.get_property('ki_keywords').value = f"Xilinx FPGA {self.familyName}"
