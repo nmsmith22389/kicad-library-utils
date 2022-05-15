@@ -278,7 +278,7 @@ if args.scan_missing:
         printer.red(str(int(upstream_errors[0])), None, None, True)
         printer.yellow("3D packages do not have a footprint file.")
 
-        # Check our calculated missings with upstream's file named error_missing_fp.
+        # Check our calculated missing with upstream's file named error_missing_fp.
         # If our changes are more, we should fix that, or wait.
         # If our changes are less, we should change our local counter file
         # in order to update upstream error_missing_fp counter file.
