@@ -12,7 +12,8 @@ import argparse
 import os
 import sys
 
-def check_model_file_ending( directory, _verbose_level):
+
+def check_model_file_ending(directory, _verbose_level):
     model = []
     model_l = []
     pckg3d_cnt = 0
@@ -20,20 +21,25 @@ def check_model_file_ending( directory, _verbose_level):
     step_cnt = 0
     wrl_cnt = 0
     yes_cnt = 0
-    file_count = sum(sys.getsizeof(f for f in fs if f.lower().endswith('.step')) for fs in os.walk(directory))
-#****************************************************************
-# Scan 3D library directory
-    exclude_directories = set(['.git'])
+    # ****************************************************************
+    # Scan 3D library directory
+    exclude_directories = set([".git"])
     for root_pckg3d, pckg3d_dirs, pckg3d_files in os.walk(directory):
-        pckg3d_dirs[:] = [d for d in pckg3d_dirs if d not in exclude_directories] # exclude directory if in exclude list
+        pckg3d_dirs[:] = [
+            d for d in pckg3d_dirs if d not in exclude_directories
+        ]  # exclude directory if in exclude list
         for pckg3d_file in pckg3d_files:
-#****************************************************************
-# Check for correct file ending
-            if pckg3d_file.endswith(".step") or pckg3d_file.endswith(".stp") or pckg3d_file.endswith(".wrl"):
+            # ****************************************************************
+            # Check for correct file ending
+            if (
+                pckg3d_file.endswith(".step")
+                or pckg3d_file.endswith(".stp")
+                or pckg3d_file.endswith(".wrl")
+            ):
                 pckg3d_cnt += 1
-#****************************************************************
-# Check for *.wrl, *.stp and *.step filenames
-# Normalize ending and count
+                # ****************************************************************
+                # Check for *.wrl, *.stp and *.step filenames
+                # Normalize ending and count
                 if pckg3d_file.endswith(".step"):
                     model = pckg3d_file.replace(".step", "")
                     step_cnt += 1
@@ -51,13 +57,13 @@ def check_model_file_ending( directory, _verbose_level):
                         print(model)
                 for i in footprint:
                     if model == footprint[i]:
-                        #if _verbose_level >= 7:
-                            #print("YESSSSSSSS")
+                        # if _verbose_level >= 7:
+                        # print("YESSSSSSSS")
                         yes_cnt += 1
                 model_l.append(model)
-    return model_l, step_cnt, stp_cnt, wrl_cnt, yes_cnt, pckg3d_cnt, file_count
+    return model_l, step_cnt, stp_cnt, wrl_cnt, yes_cnt, pckg3d_cnt
 
-    
+
 parser = argparse.ArgumentParser(
     description=(
         "Check 3D model file type against KLC."
@@ -88,9 +94,14 @@ parser.add_argument(
     ),
     action="count",
 )
+parser.add_argument(
+    "--current-missing-fp",
+    help=(
+        "Path to the error_missing_fp file from 3D packages repository"
+    ),
+)
 args = parser.parse_args()
-
-#****************************************************************
+# ****************************************************************
 # Check for footprint and 3d library directory
 # Set the path to the directory that git clone creates.
 if args.footprint_directory:
@@ -154,75 +165,105 @@ fp_cnt = 0
 errors = 0
 
 
-#****************************************************************
+# ****************************************************************
 # Scan footprint dir
-exclude_directories = set(['.git'])
+exclude_directories = set([".git"])
 for root_fp, fp_dirs, fp_files in os.walk(fp_lib_path):
-#****************************************************************
-# Count fp names remove .kicad_mod ending and keep
-    fp_dirs[:] = [d for d in fp_dirs if d not in exclude_directories] # exclude directory if in exclude list 
+    # ****************************************************************
+    # Count fp names remove .kicad_mod ending and keep
+    fp_dirs[:] = [
+        d for d in fp_dirs if d not in exclude_directories
+    ]  # exclude directory if in exclude list
     for fp_file in fp_files:
         if fp_file.endswith(".kicad_mod"):
             footprint[fp_file] = fp_file.replace(".kicad_mod", "")
             fp_cnt += 1
-            if verbose_level >= 2:
+            if verbose_level >= 4:
                 print(footprint[fp_file])
 
-if verbose_level >= 2:
+if verbose_level >= 4:
     for i in footprint:
         print(footprint[i])
 if verbose_level >= 1:
     print("Footprints counted:", fp_cnt)
 model_list = []
-model_list, steps, stps, wrls, positive, full_3d_pckg_cnt, test_file_count = check_model_file_ending(pckg3d_lib_path, verbose_level)
+(
+    model_list,
+    steps,
+    stps,
+    wrls,
+    positive,
+    full_3d_pckg_cnt,
+) = check_model_file_ending(pckg3d_lib_path, verbose_level)
 
+if stps + steps != wrls:
+    print("*.stp + *.step = *.wrl condition is not met!!")
+    errors = 1
+    if stps + steps > wrls:
+        print("Missing *.wrl file.")
+    else:
+        print("Missing *.stp or *.step file.")
+        if int(stps) == 0:
+            print("Probably *.step is the missing.")
+    sys.exit(errors)
+# ****************************************************************
+# Remove duplicates and keep
 
-#****************************************************************
-#Remove duplicates and keep
-        
 model2 = list(dict.fromkeys(model_list))
-#****************************************************************
-#Check 3D stored name values against the footprint name values
-#****************************************************************
-#Report findings as per verbosity
 
-print("All 3D package files mixed:", full_3d_pckg_cnt)
-print("*.stp files:", stps)
-print("*.step files:",steps)
-print("*.wrl files:",wrls)
-print("3D packages with matching footprints:", positive/2, "From the function.")
-#print(model2)
+# print(model2)
 no_link_cnt = 0
 
-test_cnt = 0
 if verbose_level == 3:
     # printing the list using loop
-    for x in range(len(model_list)):
-        print(model_list[x])
-    
-    
-if verbose_level >= 2:
+    for x in range(len(model2)):
+        print(model2[x])
+
+
+if verbose_level >= 1:
     cnt_dummy = 1
     for i in range(len(model2)):
         condition = 0
-        #print(model_list[i])
         for b in footprint:
             if model2[i] == footprint[b]:
-                    test_cnt +=1
-                    condition = 1
-                    #print("HOOOOOOOOOOOOOOOOOOOOOOOP")
-                    break
+                condition = 1
+                break
         if condition == 0:
-            print(cnt_dummy, ":", model2[i])
+            if verbose_level >= 2:
+                print(cnt_dummy, ":", model2[i])
             no_link_cnt += 1
             cnt_dummy += 1
-#print(test_cnt)
+            
+import urllib.request
+try:
+    f = urllib.request.urlopen("https://gitlab.com/kicad/libraries/kicad-packages3D/-/raw/master/error_missing_fp")
+except:
+  print("An exception occurred")
+print(f.read())
+if args.current_missing_fp:
+    f = open(str(args.current_missing_fp), "r")
+    current_missing = int(f.read())
+    f.close()
+if no_link_cnt > current_missing:
+    print("Biger")
+elif no_link_cnt < current_missing:
+    print("Smaller")
+if no_link_cnt == current_missing:
+    print("Same")
+    
+# ****************************************************************
+# Check 3D stored name values against the footprint name values
+# ****************************************************************
+# Report findings as per verbosity
+print(current_missing)
+print(os.linesep)
+print("All 3D package files mixed:", full_3d_pckg_cnt)
+print("*.stp files:", stps)
+print("*.step files:", steps)
+print("*.wrl files:", wrls)
+print("3D packages with matching footprints:", positive / 2, "From the function.")
 print("3D packages with no footprint link:", no_link_cnt)
-#print(no_link_cnt+test_cnt)
-#print("Yeses:", positive)
-#print(model2)
-#print(model_list)
-#print(sys.getsizeof(model_list))
-#print(sys.getsizeof(model2))
-#print(test_file_count)
+
+print(sys.getsizeof(model_list))
+print(sys.getsizeof(model2))
 sys.exit(errors)

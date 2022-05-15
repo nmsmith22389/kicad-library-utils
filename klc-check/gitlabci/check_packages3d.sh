@@ -19,12 +19,15 @@ PCKG_FILE_ERROR_CNT=0
 
 echo "Comparing range $BASE_SHA to $TARGET_SHA"
 for change in $(git diff-tree --diff-filter=AMR --no-commit-id --name-only -r "$BASE_SHA" "$TARGET_SHA"); do
-    if [[ $change =~ .*\.step || $change =~ .*\.wrl ]]; then
+    if [[ $change =~ .*\.stp || $change =~ .*\.step || $change =~ .*\.wrl ]]; then
         echo "Checking: $change"
-        python3 "$SCRIPT" "/$CI_PROJECT_DIR/$change" -vv
+        python3 "$SCRIPT" "/$CI_PROJECT_DIR/$change" "--footprint-directory" "$CI_BUILDS_DIR/kicad-footprints"
         PCKG_FILE_ERROR_CNT="$(($PCKG_FILE_ERROR_CNT + $?))"
 	else
 		echo "Both *.step and *.wrl files required."
     fi
 done
 echo "ErrorCount $PCKG_FILE_ERROR_CNT" > metrics.txt
+
+
+$SCRIPT --footprint-directory $CI_BUILDS_DIR/kicad-footprints --current-missing-fp $CI_PROJECT_DIR/error_missing_fp
