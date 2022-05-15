@@ -7,7 +7,7 @@ in case of an addition and also that they have a
 footprint file association in the official libraries.
 
 example usage:
-check_package3d.py --footprint-directory <path_to_fp_dir> --packages3d-directory <path_to_3D_packages_dir> -mm -vv
+check_package3d.py --footprint-directory <path> --packages3d-directory <path> -mm -vv
 
 """
 
@@ -264,7 +264,8 @@ if args.scan_missing:
                 "https://gitlab.com/aris-kimi/kicad-packages3D/-/raw/ci_cd/error_missing_fp"
             )
             upstream_errors = f.read().decode("utf-8").split()
-        except:
+        except urllib.error.URLError as e:
+            print(e.reason)
             printer.red(
                 "An exception occurred with upstream URL. Check internet connection,"
                 " firewall settings, DNS etc."
@@ -279,8 +280,10 @@ if args.scan_missing:
 
         # Check our calculated missings with upstream's file named error_missing_fp.
         # If our changes are more, we should fix that, or wait.
-        # If our changes are less, we should change our local counter file in order to update upstream error_missing_fp counter file.
-        # If our changes are the same, we shouldn't change our local counter file and the script should check for that.
+        # If our changes are less, we should change our local counter file
+        # in order to update upstream error_missing_fp counter file.
+        # If our changes are the same, we shouldn't change our local counter file
+        # and the script should check for that.
         if no_link_cnt > int(upstream_errors[0]):
             printer.red(
                 "Looks like this MR introduces more errors than the current ones."
