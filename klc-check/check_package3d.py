@@ -2,9 +2,12 @@
 
 """
 This script checks validity of the packages3D files,
-to ensure that both *.step and *.wrl files are included
+to ensure that *.stp, *.step and *.wrl files are included
 in case of an addition and also that they have a
-footprint file in the official libraries.
+footprint file association in the official libraries.
+
+example usage:
+check_package3d.py --footprint-directory <path_to_fp_dir> --packages3d-directory <path_to_3D_packages_dir> -mm -vv
 
 """
 
@@ -43,22 +46,14 @@ def check_model_file_ending(directory, _verbose_level):
                 if pckg3d_file.endswith(".step"):
                     model = pckg3d_file.replace(".step", "")
                     step_cnt += 1
-                    if _verbose_level >= 6:
-                        print(model)
                 elif pckg3d_file.endswith(".wrl"):
                     model = pckg3d_file.replace(".wrl", "")
                     wrl_cnt += 1
-                    if _verbose_level >= 6:
-                        print(model)
                 elif pckg3d_file.endswith(".stp"):
                     model = pckg3d_file.replace(".stp", "")
                     stp_cnt += 1
-                    if _verbose_level >= 6:
-                        print(model)
                 for i in footprint:
                     if model == footprint[i]:
-                        # if _verbose_level >= 7:
-                        # print("YESSSSSSSS")
                         yes_cnt += 1
                 model_l.append(model)
     return model_l, step_cnt, stp_cnt, wrl_cnt, yes_cnt, pckg3d_cnt
@@ -90,15 +85,20 @@ parser.add_argument(
     "-v",
     "--verbose",
     help=(
-        "Screen verbose. -v Shows basic results (footprint number, 3D packages stats, 3D packages with no footprint) -vv List some of them (3d packages with no footprint) -vvv List some other of them (all 3d packages)"
+        "Screen verbose. -v Shows basic results (footprint number, 3D packages stats,"
+        " 3D packages with no footprint) -vv List some of them (3d packages with no"
+        " footprint) -vvv List some other of them (all 3d packages)"
     ),
     action="count",
 )
 parser.add_argument(
-    "--current-missing-fp",
+    "-m",
+    "--scan-missing",
     help=(
-        "Path to the error_missing_fp file from 3D packages repository"
+        "Flag to scan error_missing_fp file from 3D packages repository."
+        " -m to scan local and upstream file and compare"
     ),
+    action="count",
 )
 args = parser.parse_args()
 # ****************************************************************
@@ -185,7 +185,8 @@ if verbose_level >= 4:
     for i in footprint:
         print(footprint[i])
 if verbose_level >= 1:
-    print("Footprints counted:", fp_cnt)
+    printer.green("Footprints counted:", None, None, True)
+    printer.yellow(str(fp_cnt))
 model_list = []
 (
     model_list,
@@ -197,24 +198,25 @@ model_list = []
 ) = check_model_file_ending(pckg3d_lib_path, verbose_level)
 
 if stps + steps != wrls:
-    print("*.stp + *.step = *.wrl condition is not met!!")
+    printer.red("Condition:", None, None, True)
+    printer.yellow("*.stp + *.step = *.wrl", None, None, True)
+    printer.red("is not met!!")
     errors = 1
     if stps + steps > wrls:
-        print("Missing *.wrl file.")
+        printer.red("Missing *.wrl file.")
     else:
-        print("Missing *.stp or *.step file.")
+        printer.red("Missing *.stp or *.step file.")
         if int(stps) == 0:
-            print("Probably *.step is the missing.")
+            printer.cyan("Probably *.step is the missing.")
     sys.exit(errors)
 # ****************************************************************
 # Remove duplicates and keep
 
 model2 = list(dict.fromkeys(model_list))
 
-# print(model2)
 no_link_cnt = 0
 
-if verbose_level == 3:
+if verbose_level == 6:
     # printing the list using loop
     for x in range(len(model2)):
         print(model2[x])
@@ -233,37 +235,125 @@ if verbose_level >= 1:
                 print(cnt_dummy, ":", model2[i])
             no_link_cnt += 1
             cnt_dummy += 1
-            
-import urllib.request
-try:
-    f = urllib.request.urlopen("https://gitlab.com/kicad/libraries/kicad-packages3D/-/raw/master/error_missing_fp")
-except:
-  print("An exception occurred")
-print(f.read())
-if args.current_missing_fp:
-    f = open(str(args.current_missing_fp), "r")
-    current_missing = int(f.read())
-    f.close()
-if no_link_cnt > current_missing:
-    print("Biger")
-elif no_link_cnt < current_missing:
-    print("Smaller")
-if no_link_cnt == current_missing:
-    print("Same")
-    
+
+if args.scan_missing:
+    local_file = open(os.path.join(pckg3d_lib_path, "error_missing_fp"), "r")
+    current_missing = int(local_file.read())
+    local_file.close()
+    if args.scan_missing == 1:
+        if no_link_cnt > current_missing:
+            printer.red(
+                "3D packages with no footprint are now more than they used to be."
+            )
+            printer.yellow("A footprint should get merged first.")
+            errors = 1
+        elif no_link_cnt < current_missing:
+            printer.yellow(
+                "3D packages with no footprint are now less than they used to be."
+            )
+            printer.cyan("Thank you human!")
+        elif no_link_cnt == current_missing:
+            printer.yellow("3D packages with no footprint were not affected.")
+            printer.green("Looks like a MR can be opened now.")
+            printer.cyan("Thank you human!")
+    if args.scan_missing >= 2:
+        import urllib.request
+
+        try:
+            f = urllib.request.urlopen(
+                "https://gitlab.com/aris-kimi/kicad-packages3D/-/raw/ci_cd/error_missing_fp"
+            )
+            upstream_errors = f.read().decode("utf-8").split()
+        except:
+            printer.red(
+                "An exception occurred with upstream URL. Check internet connection,"
+                " firewall settings, DNS etc."
+            )
+            exit(1)
+        printer.yellow("Upstream errors counted from file:", None, None, True)
+        printer.red(str(int(upstream_errors[0])))
+
+        printer.yellow("Currently", None, None, True)
+        printer.red(str(int(upstream_errors[0])), None, None, True)
+        printer.yellow("3D packages do not have a footprint file.")
+
+        # Check our calculated missings with upstream's file named error_missing_fp.
+        # If our changes are more, we should fix that, or wait.
+        # If our changes are less, we should change our local counter file in order to update upstream error_missing_fp counter file.
+        # If our changes are the same, we shouldn't change our local counter file and the script should check for that.
+        if no_link_cnt > int(upstream_errors[0]):
+            printer.red(
+                "Looks like this MR introduces more errors than the current ones."
+            )
+            printer.yellow(
+                "Make sure a MR is open for a review in the footprint repository and"
+                " re-run this pipeline when related footprint gets merged."
+            )
+            errors = 1
+        elif no_link_cnt < int(upstream_errors[0]):
+            printer.green(
+                "Looks like this MR reduced the number of errors related with missing"
+                " footprints."
+            )
+            if no_link_cnt != current_missing:
+                printer.yellow(
+                    "error_missing_fp file should be edited and replace current value"
+                    " with:",
+                    None,
+                    None,
+                    True,
+                )
+                printer.red(str(int(upstream_errors[0])), None, None, True)
+                printer.yellow("to update upstream missing footprint counter.")
+                errors = 1
+            else:
+                printer.cyan("Thank you human.")
+        elif no_link_cnt == int(upstream_errors[0]):
+            if no_link_cnt != current_missing:
+                printer.yellow(
+                    "Looks like local error_missing_fp file's value:", None, None, True
+                )
+                printer.cyan(str(current_missing), None, None, True)
+                printer.red("doesn't match.")
+                printer.cyan(
+                    "Do not worry human, but please edit the file and replace value"
+                    " with:",
+                    None,
+                    None,
+                    True,
+                )
+                printer.yellow(str(int(upstream_errors[0])), None, None, True)
+                printer.cyan(
+                    "to match with current upstream missing footprint counter."
+                )
+                errors = 1
+            else:
+                printer.green(
+                    "This MR seems ready for dimensional check and further review."
+                )
+                printer.cyan("Thank you human.")
+
 # ****************************************************************
 # Check 3D stored name values against the footprint name values
 # ****************************************************************
 # Report findings as per verbosity
-print(current_missing)
+
+if verbose_level >= 1:
+    printer.green("Footprints counted:", None, None, True)
+    printer.yellow(str(fp_cnt))
+if args.scan_missing:
+    printer.yellow(
+        "Local errors counted from file: error_missing_fp value:", None, None, True
+    )
+    printer.red(str(current_missing))
 print(os.linesep)
-print("All 3D package files mixed:", full_3d_pckg_cnt)
-print("*.stp files:", stps)
+printer.green("All 3D package files mixed:", None, None, True)
+printer.yellow(str(full_3d_pckg_cnt))
+printer.green("*.stp files:", None, None, True)
+printer.yellow(str(stps))
 print("*.step files:", steps)
 print("*.wrl files:", wrls)
 print("3D packages with matching footprints:", positive / 2, "From the function.")
 print("3D packages with no footprint link:", no_link_cnt)
 
-print(sys.getsizeof(model_list))
-print(sys.getsizeof(model2))
 sys.exit(errors)
