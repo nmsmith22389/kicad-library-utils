@@ -340,20 +340,25 @@ if args.scan_missing:
 
 if verbose_level >= 1:
     printer.green("Footprints counted:", None, None, True)
-    printer.yellow(str(fp_cnt))
+    printer.yellow(str(fp_cnt), None, None, True)
 if args.scan_missing:
-    printer.yellow(
-        "Local errors counted from file: error_missing_fp value:", None, None, True
+    printer.green(
+        "Local errors counted from file:", None, None, True
     )
+    printer.yellow("error_missing_fp :", None, None, True)
     printer.red(str(current_missing))
 print(os.linesep)
 printer.green("All 3D package files mixed:", None, None, True)
 printer.yellow(str(full_3d_pckg_cnt))
 printer.green("*.stp files:", None, None, True)
 printer.yellow(str(stps))
-print("*.step files:", steps)
-print("*.wrl files:", wrls)
-print("3D packages with matching footprints:", positive / 2, "From the function.")
-print("3D packages with no footprint link:", no_link_cnt)
+printer.green("*.step files:", None, None, True)
+printer.yellow(str(steps))
+printer.green("*.wrl files:", None, None, True)
+printer.yellow(str(wrls))
+printer.green("3D packages with matching footprints:", None, None, True)
+printer.yellow(str(positive / 2))
+printer.red("3D packages with no footprint link:", None, None, True)
+printer.yellow(str(no_link_cnt))
 
 sys.exit(errors)
