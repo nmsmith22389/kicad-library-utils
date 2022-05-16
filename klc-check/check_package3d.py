@@ -254,7 +254,7 @@ if args.scan_missing:
             printer.cyan("Thank you human!")
         elif no_link_cnt == current_missing:
             printer.yellow("3D packages with no footprint were not affected.")
-            printer.green("Looks like a MR can be opened now.")
+            #printer.green("Looks like a MR can be opened now.")
             printer.cyan("Thank you human!")
     if args.scan_missing >= 2:
         import urllib.request
