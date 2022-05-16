@@ -339,7 +339,6 @@ if args.scan_missing:
 # ****************************************************************
 # Check 3D stored name values against the footprint name values
 # ****************************************************************
-# Report findings as per verbosity
 
 if verbose_level >= 1:
     printer.green("Footprints counted:", None, None, True)
@@ -350,6 +349,7 @@ if args.scan_missing:
     )
     printer.yellow("error_missing_fp :", None, None, True)
     printer.red(str(current_missing))
+# Report findings as per verbosity
 print(os.linesep)
 printer.green("All 3D package files mixed:", None, None, True)
 printer.yellow(str(full_3d_pckg_cnt))
