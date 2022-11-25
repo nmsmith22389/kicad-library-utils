@@ -747,11 +747,15 @@ class Drawing:
         Convert the drawing elements to equivalent objects and append them to a KicadSymbol object
         """
 
+        # Keep track of how many units are used so that we can set this accordingly
+        max_unit = 0;
+
         for r in self.rectangle:
             rect = kicad_sym.Rectangle.new_mil(r.start.x, r.start.y, r.end.x, r.end.y)
             rect.stroke_width = kicad_sym.mil_to_mm(r.line_width)
             rect.fill_type = r.fill
             rect.unit = r.unit_idx
+            max_unit = max(rect.unit, max_unit)
             rect.demorgan = r.deMorgan_idx
             symbol.rectangles.append(rect)
 
@@ -773,6 +777,7 @@ class Drawing:
             pin.number_effect.sizey = pin.number_effect.sizex
             pin.altfuncs = p.altfuncs
             pin.unit = p.unit_idx
+            max_unit = max(pin.unit, max_unit)
             pin.demorgan = p.deMorgan_idx
             symbol.pins.append(pin)
 
@@ -795,6 +800,7 @@ class Drawing:
             arc.stroke_width = kicad_sym.mil_to_mm(a.line_width)
             arc.fill_type = a.fill
             arc.unit = a.unit_idx
+            max_unit = max(arc.unit, max_unit)
             arc.demorgan = a.deMorgan_idx
             symbol.arcs.append(arc)
 
@@ -807,6 +813,7 @@ class Drawing:
             )
             circle.fill_type = c.fill
             circle.unit = c.unit_idx
+            max_unit = max(circle.unit, max_unit)
             circle.demorgan = c.deMorgan_idx
             symbol.circles.append(circle)
 
@@ -836,6 +843,7 @@ class Drawing:
             elif t.valign == DrawingText.VerticalAlignment.BOTTOM:
                 text.effects.v_justify = "bottom"
             text.unit = t.unit_idx
+            max_unit = max(text.unit, max_unit)
             text.demorgan = t.deMorgan_idx
             symbol.texts.append(text)
 
@@ -846,12 +854,13 @@ class Drawing:
 
             poly = kicad_sym.Polyline(pts)
             poly.unit = p.unit_idx
+            max_unit = max(poly.unit, max_unit)
             poly.demorgan = p.deMorgan_idx
             poly.stroke_width = kicad_sym.mil_to_mm(p.line_width)
             poly.fill_type = p.fill
             symbol.polylines.append(poly)
 
-        symbol.unit_count = 1
+        symbol.unit_count = max_unit
         symbol.demorgan_count = 1
 
 
