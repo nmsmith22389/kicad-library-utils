@@ -1,6 +1,7 @@
 import re
 from typing import List
 
+import boundingbox
 from kicad_sym import KicadSymbol, Pin
 from rules_symbol.rule import KLCRule, pinString
 
@@ -17,6 +18,7 @@ class Rule(KLCRule):
         self.invisible_errors: List[Pin] = []
         self.power_invisible_errors: List[Pin] = []
         self.type_errors: List[Pin] = []
+        self.nc_outside_outline_errors: List[Pin] = []
 
     # check if a pin name fits within a list of possible pins (using regex testing)
     def test(self, pinName: str, nameList: List[str]) -> bool:
@@ -49,6 +51,8 @@ class Rule(KLCRule):
             if not is_power and etype == "power_in" and pin.is_hidden:
                 self.power_invisible_errors.append(pin)
 
+        self.checkPinPositions()
+
         if self.type_errors:
             self.error("NC pins are not correct pin-type:")
 
@@ -68,14 +72,69 @@ class Rule(KLCRule):
                 )
 
         if self.power_invisible_errors:
-            self.error("Power input pins must not be invisible unless used in power symbols.")
+            self.error(
+                "Power input pins must not be invisible unless used in power symbols."
+            )
 
             for pin in self.power_invisible_errors:
                 self.errorExtra(
                     "{pin} is of type power_in and invisible".format(pin=pinString(pin))
                 )
 
-        return self.invisible_errors or self.type_errors or self.power_invisible_errors
+        if self.nc_outside_outline_errors:
+            self.error(
+                "Hidden NC pins should lie on or within the symbol's outline to prevent unwanted connections."
+            )
+
+            for pin in self.nc_outside_outline_errors:
+                self.errorExtra(
+                    "{pin} is outside of symbol outline".format(pin=pinString(pin))
+                )
+
+        return (
+            self.invisible_errors
+            or self.type_errors
+            or self.power_invisible_errors
+            or self.nc_outside_outline_errors
+        )
+
+    def checkPinPositions(self):
+        """
+        NC pins should lie within or on the symbol border,
+        report the ones that lie outside and could be accidentally connected
+        """
+        self.nc_outside_outline_errors: List[Pin] = []
+
+        outline_box: boundingbox.BoundingBox
+
+        for unit in range(1, self.component.unit_count + 1):
+            # If there is only a single filled rectangle, we assume that it is the
+            # main symbol outline.
+            ctr = self.component.get_center_rectangle([0, unit])
+            unit_pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
+
+            if ctr is not None:
+                (x_max, y_max, x_min, y_min) = ctr.get_boundingbox()
+                outline_box = boundingbox.BoundingBox(x_min, y_min, x_max, y_max)
+            else:
+                # No pins? Ignore check.
+                # This can be improved to include graphical items too...
+                if not self.component.pins:
+                    continue
+                x_pos = [pin.posx for pin in unit_pins]
+                y_pos = [pin.posy for pin in unit_pins]
+                x_min = min(x_pos)
+                x_max = max(x_pos)
+                y_min = min(y_pos)
+                y_max = max(y_pos)
+
+                outline_box = boundingbox.BoundingBox(x_min, y_min, x_max, y_max)
+
+            if outline_box is not None:
+                for pin in unit_pins:
+                    if pin.etype == "no_connect" and pin.is_hidden:
+                        if not outline_box.containsPoint(pin.posx, pin.posy):
+                            self.nc_outside_outline_errors.append(pin)
 
     def check(self) -> bool:
         """
@@ -84,6 +143,7 @@ class Rule(KLCRule):
             * invisible_errors
             * power_invisible_errors
             * type_errors
+            * nc_outside_outline_errors
         """
 
         # no need to check this for a derived symbols
