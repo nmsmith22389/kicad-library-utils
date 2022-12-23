@@ -83,7 +83,8 @@ class Rule(KLCRule):
 
         if self.nc_outside_outline_errors:
             self.error(
-                "Hidden NC pins should lie on or within the symbol's outline to prevent unwanted connections."
+                "Hidden NC pins should lie on or within the symbol's "
+                "outline to prevent unwanted connections."
             )
 
             for pin in self.nc_outside_outline_errors:
