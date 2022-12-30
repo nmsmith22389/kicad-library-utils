@@ -114,14 +114,14 @@ class Rule(KLCRule):
             ctr = self.component.get_center_rectangle([0, unit])
             unit_pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
 
+            # No pins? Ignore check.
+            if not unit_pins:
+                continue
+
             if ctr is not None:
                 (x_max, y_max, x_min, y_min) = ctr.get_boundingbox()
                 outline_box = boundingbox.BoundingBox(x_min, y_min, x_max, y_max)
             else:
-                # No pins? Ignore check.
-                # This can be improved to include graphical items too...
-                if not self.component.pins:
-                    continue
                 x_pos = [pin.posx for pin in unit_pins]
                 y_pos = [pin.posy for pin in unit_pins]
                 x_min = min(x_pos)
