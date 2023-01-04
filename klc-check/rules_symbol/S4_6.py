@@ -122,14 +122,9 @@ class Rule(KLCRule):
                 (x_max, y_max, x_min, y_min) = ctr.get_boundingbox()
                 outline_box = boundingbox.BoundingBox(x_min, y_min, x_max, y_max)
             else:
-                x_pos = [pin.posx for pin in unit_pins]
-                y_pos = [pin.posy for pin in unit_pins]
-                x_min = min(x_pos)
-                x_max = max(x_pos)
-                y_min = min(y_pos)
-                y_max = max(y_pos)
 
-                outline_box = boundingbox.BoundingBox(x_min, y_min, x_max, y_max)
+                connected_pins = [pin for pin in unit_pins if pin.etype != "no_connect"]
+                outline_box = boundingbox.BoundingBox.fromPins(connected_pins)
 
             if outline_box is not None:
                 for pin in unit_pins:
