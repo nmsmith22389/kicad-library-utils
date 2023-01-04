@@ -2,7 +2,9 @@
 Library for dealing with bounding boxes (2D areas defined by four points).
 """
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Iterable
+
+from kicad_sym import Pin
 
 
 class BoundingBox:
@@ -20,6 +22,20 @@ class BoundingBox:
 
         self.addPoint(xmin, ymin)
         self.addPoint(xmax, ymax)
+
+    @classmethod
+    def fromPins(cls, pins: Iterable[Pin]):
+        if not pins:
+            return
+
+        x_pos = [pin.posx for pin in pins]
+        y_pos = [pin.posy for pin in pins]
+        x_min = min(x_pos)
+        x_max = max(x_pos)
+        y_min = min(y_pos)
+        y_max = max(y_pos)
+
+        return cls(x_min, y_min, x_max, y_max)
 
     def checkMin(
         self, current: Optional[float], compare: Optional[float]
