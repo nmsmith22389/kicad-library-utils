@@ -618,6 +618,21 @@ class Polyline(KicadSymbolBase):
         (fill, fcolor) = _get_fill(sexpr)
         return Polyline(pts, stroke, scolor, fill, fcolor, unit=unit, demorgan=demorgan)
 
+    def point_is_inside(self, other: Point) -> bool:
+
+        is_inside = False
+
+        prev_point: Point = self.points[-1]
+
+        for point in self.points:
+            if ((point.y <= other.y < prev_point.y) or (prev_point.y <= other.y < point.y)) \
+                    and (other.x < (prev_point.x - point.x) * (other.y - point.y) / (prev_point.y - point.y) + point.x):
+                is_inside = not is_inside
+
+            prev_point = point
+
+        return is_inside
+
 
 @dataclass
 class Text(KicadSymbolBase):

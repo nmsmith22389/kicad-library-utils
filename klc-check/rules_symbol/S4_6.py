@@ -1,8 +1,10 @@
+import itertools
 import re
+from copy import deepcopy
 from typing import List
 
 import boundingbox
-from kicad_sym import KicadSymbol, Pin
+from kicad_sym import KicadSymbol, Pin, Point, Polyline
 from rules_symbol.rule import KLCRule, pinString
 
 
@@ -25,6 +27,41 @@ class Rule(KLCRule):
         for name in nameList:
             if re.search(name, pinName, flags=re.IGNORECASE) is not None:
                 return True
+
+        return False
+
+    @staticmethod
+    def point_on_polyline(polyline: Polyline, point: Point):
+        def is_on(a: Point, b: Point, c: Point):
+            "Return true iff point c intersects the line segment from a to b."
+            # (or the degenerate case that all 3 points are coincident)
+            return (collinear(a, b, c)
+                    and (within(a.x, c.x, b.x) if a.x != b.x else
+                         within(a.y, c.y, b.y)))
+
+        def collinear(a: Point, b: Point, c: Point):
+            "Return true iff a, b, and c all lie on the same line."
+            return (b.x - a.x) * (c.y - a.y) == (c.x - a.x) * (b.y - a.y)
+
+        def within(p, q, r):
+            "Return true iff q is between p and r (inclusive)."
+            return p <= q <= r or r <= q <= p
+
+        for p1, p2 in itertools.pairwise(polyline.points):
+            if is_on(p1, p2, point):
+                return True
+        return False
+
+    @staticmethod
+    def isLineOrthogonal(line: Polyline) -> bool:
+        if len(line.points) != 2:
+            return False
+
+        if line.points[0].x == line.points[1].x:
+            return True
+
+        if line.points[0].y == line.points[1].y:
+            return True
 
         return False
 
@@ -109,27 +146,113 @@ class Rule(KLCRule):
         outline_box: boundingbox.BoundingBox
 
         for unit in range(1, self.component.unit_count + 1):
-            # If there is only a single filled rectangle, we assume that it is the
-            # main symbol outline.
-            ctr = self.component.get_center_rectangle([0, unit])
             unit_pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
 
             # No pins? Ignore check.
             if not unit_pins:
                 continue
 
-            if ctr is not None:
-                (x_max, y_max, x_min, y_min) = ctr.get_boundingbox()
-                outline_box = boundingbox.BoundingBox(x_min, y_min, x_max, y_max)
-            else:
+            # rectangles are very fast to check position for, so we check them first.
+            bounding_boxes_points = [i.as_polyline().get_boundingbox() for i in self.component.rectangles]
+            bounding_boxes_points.extend(r.get_boundingbox() for r in self.component.polylines if r.is_rectangle())
 
-                connected_pins = [pin for pin in unit_pins if pin.etype != "no_connect"]
-                outline_box = boundingbox.BoundingBox.fromPins(connected_pins)
+            # if an NC pin is on an orthogonal line, assume that it's meant to be there, and it's ok.
+            bounding_boxes_points.extend(line.get_boundingbox() for line in self.component.polylines
+                                         if len(line.points) == 2 and self.isLineOrthogonal(line))
 
-            if outline_box is not None:
+            bounding_boxes = [boundingbox.BoundingBox(b[2], b[3], b[0], b[1]) for b in bounding_boxes_points]
+
+            # we can also check if a pin is inside a closed polygon
+            closed_shapes = [pl for pl in self.component.polylines if pl.is_closed()]
+
+            # include polylines that aren't closed but have background fill,
+            # they should be treated as closed -- must connect last and first points
+            # must deepcopy the object so that we don't modify the underlying object
+            filled_polylines = [deepcopy(pl) for pl in self.component.polylines if
+                                not pl.is_closed()
+                                and pl.fill_type == 'background']
+
+            for poly in filled_polylines:
+                poly.points.append(poly.points[0])
+
+            closed_shapes.extend(filled_polylines)
+
+            # remove closed polylines inside bounding boxes
+            # TODO check for polylines inside of other polylines
+            filled_shapes = []
+            for shape in closed_shapes:
+                surrounded = False
+                for box in bounding_boxes:
+                    for point in shape.points:
+                        if not box.containsPoint(point.x, point.y):
+                            break
+                    else:
+                        surrounded = True
+
+                if not surrounded:
+                    filled_shapes.append(shape)
+
+            # remove any unfilled polylines inside boundingboxes, since boundingboxes are faster to check
+            polyline_edges = []
+            for poly in [pl for pl in self.component.polylines if
+                         not pl.is_closed()
+                         and pl.fill_type == 'none'
+                         and len(pl.points) > 2]:
+
+                surrounded = False
+                for box in bounding_boxes:
+                    for point in poly.points:
+                        if not box.containsPoint(point.x, point.y):
+                            break
+                    else:
+                        surrounded = True
+
+                if not surrounded:
+                    polyline_edges.append(poly)
+
+            if bounding_boxes or filled_shapes or polyline_edges:
                 for pin in unit_pins:
                     if pin.etype == "no_connect" and pin.is_hidden:
-                        if not outline_box.containsPoint(pin.posx, pin.posy):
+                        ok = False
+                        # check if pin in inside bounding box
+                        for box in bounding_boxes:
+                            if box.containsPoint(pin.posx, pin.posy):
+                                ok = True
+                                break
+
+                        # check if pin is inside filled polyline
+                        if not ok:
+                            for shape in filled_shapes:
+                                if shape.point_is_inside(Point(pin.posx, pin.posy)):
+                                    ok = True
+                                    break
+                                else:
+                                    # sometimes hidden pins are *almost* within a polyline, like
+                                    # with op-amp shapes. Adding a little leniency here helps
+                                    # eliminate false positives
+                                    expanded_point = [
+                                        Point(pin.posx + 0.01, pin.posy + 0.01),
+                                        Point(pin.posx - 0.01, pin.posy + 0.01),
+                                        Point(pin.posx + 0.01, pin.posy - 0.01),
+                                        Point(pin.posx - 0.01, pin.posy - 0.01),
+                                        Point(pin.posx + 0.01, pin.posy),
+                                        Point(pin.posx - 0.01, pin.posy),
+                                        Point(pin.posx, pin.posy + 0.01),
+                                        Point(pin.posx, pin.posy - 0.01),
+                                    ]
+
+                                    if any(shape.point_is_inside(p) for p in expanded_point):
+                                        ok = True
+                                        break
+
+                        # check if pin is on diagonal polyline segment
+                        if not ok:
+                            for poly in polyline_edges:
+                                if self.point_on_polyline(poly, Point(pin.posx, pin.posy)):
+                                    ok = True
+                                    break
+
+                        if not ok:
                             self.nc_outside_outline_errors.append(pin)
 
     def check(self) -> bool:
