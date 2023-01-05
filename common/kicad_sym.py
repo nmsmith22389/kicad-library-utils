@@ -626,11 +626,24 @@ class Polyline(KicadSymbolBase):
 
         for point in self.points:
             if ((point.y <= other.y < prev_point.y) or (prev_point.y <= other.y < point.y)) \
-                    and (other.x < (prev_point.x - point.x) * (other.y - point.y) / (prev_point.y - point.y) + point.x):
+                    and (other.x < (prev_point.x - point.x)
+                         * (other.y - point.y)
+                         / (prev_point.y - point.y)
+                         + point.x):
                 is_inside = not is_inside
 
             prev_point = point
 
+        #     int pnpoly(int npol, float *xp, float *yp, float x, float y)
+        #     {
+        #       int i, j, c = 0;
+        #       for (i = 0, j = npol-1; i < npol; j = i++) {
+        #         if ((((yp[i] <= y) && (y < yp[j])) || ((yp[j] <= y) && (y < yp[i]))) &&
+        #             (x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
+        #           c = !c;
+        #       }
+        #       return c;
+        #     }
         return is_inside
 
 

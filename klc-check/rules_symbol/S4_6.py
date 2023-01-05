@@ -143,8 +143,6 @@ class Rule(KLCRule):
         """
         self.nc_outside_outline_errors: List[Pin] = []
 
-        outline_box: boundingbox.BoundingBox
-
         for unit in range(1, self.component.unit_count + 1):
             unit_pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
 
@@ -153,14 +151,17 @@ class Rule(KLCRule):
                 continue
 
             # rectangles are very fast to check position for, so we check them first.
-            bounding_boxes_points = [i.as_polyline().get_boundingbox() for i in self.component.rectangles]
-            bounding_boxes_points.extend(r.get_boundingbox() for r in self.component.polylines if r.is_rectangle())
+            bounding_boxes_points = [i.as_polyline().get_boundingbox()
+                                     for i in self.component.rectangles]
+            bounding_boxes_points.extend(r.get_boundingbox()
+                                         for r in self.component.polylines if r.is_rectangle())
 
-            # if an NC pin is on an orthogonal line, assume that it's meant to be there, and it's ok.
-            bounding_boxes_points.extend(line.get_boundingbox() for line in self.component.polylines
-                                         if len(line.points) == 2 and self.isLineOrthogonal(line))
+            # if NC pin is on an orthogonal line, assume that it's meant to be there, and it's ok.
+            bounding_boxes_points.extend(pl.get_boundingbox() for pl in self.component.polylines
+                                         if len(pl.points) == 2 and self.isLineOrthogonal(pl))
 
-            bounding_boxes = [boundingbox.BoundingBox(b[2], b[3], b[0], b[1]) for b in bounding_boxes_points]
+            bounding_boxes = [boundingbox.BoundingBox(b[2], b[3], b[0], b[1])
+                              for b in bounding_boxes_points]
 
             # we can also check if a pin is inside a closed polygon
             closed_shapes = [pl for pl in self.component.polylines if pl.is_closed()]
@@ -192,7 +193,7 @@ class Rule(KLCRule):
                 if not surrounded:
                     filled_shapes.append(shape)
 
-            # remove any unfilled polylines inside boundingboxes, since boundingboxes are faster to check
+            # remove unfilled polylines inside boundingboxes, since boxes are faster to check
             polyline_edges = []
             for poly in [pl for pl in self.component.polylines if
                          not pl.is_closed()
