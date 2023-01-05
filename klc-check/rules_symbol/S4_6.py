@@ -1,10 +1,9 @@
-import itertools
 import re
 from copy import deepcopy
 from typing import List
 
 import boundingbox
-from kicad_sym import KicadSymbol, Pin, Point, Polyline
+from kicad_sym import KicadSymbol, Pin, Point
 from rules_symbol.rule import KLCRule, pinString
 
 
@@ -27,41 +26,6 @@ class Rule(KLCRule):
         for name in nameList:
             if re.search(name, pinName, flags=re.IGNORECASE) is not None:
                 return True
-
-        return False
-
-    @staticmethod
-    def point_on_polyline(polyline: Polyline, point: Point):
-        def is_on(a: Point, b: Point, c: Point):
-            "Return true iff point c intersects the line segment from a to b."
-            # (or the degenerate case that all 3 points are coincident)
-            return (collinear(a, b, c)
-                    and (within(a.x, c.x, b.x) if a.x != b.x else
-                         within(a.y, c.y, b.y)))
-
-        def collinear(a: Point, b: Point, c: Point):
-            "Return true iff a, b, and c all lie on the same line."
-            return (b.x - a.x) * (c.y - a.y) == (c.x - a.x) * (b.y - a.y)
-
-        def within(p, q, r):
-            "Return true iff q is between p and r (inclusive)."
-            return p <= q <= r or r <= q <= p
-
-        for p1, p2 in itertools.pairwise(polyline.points):
-            if is_on(p1, p2, point):
-                return True
-        return False
-
-    @staticmethod
-    def isLineOrthogonal(line: Polyline) -> bool:
-        if len(line.points) != 2:
-            return False
-
-        if line.points[0].x == line.points[1].x:
-            return True
-
-        if line.points[0].y == line.points[1].y:
-            return True
 
         return False
 
@@ -158,7 +122,8 @@ class Rule(KLCRule):
 
             # if NC pin is on an orthogonal line, assume that it's meant to be there, and it's ok.
             bounding_boxes_points.extend(pl.get_boundingbox() for pl in self.component.polylines
-                                         if len(pl.points) == 2 and self.isLineOrthogonal(pl))
+                                         if len(pl.points) == 2
+                                         and pl.is_line_horizontal_or_vertical())
 
             bounding_boxes = [boundingbox.BoundingBox(b[2], b[3], b[0], b[1])
                               for b in bounding_boxes_points]
@@ -224,32 +189,14 @@ class Rule(KLCRule):
                         # check if pin is inside filled polyline
                         if not ok:
                             for shape in filled_shapes:
-                                if shape.point_is_inside(Point(pin.posx, pin.posy)):
+                                if shape.point_is_inside(Point(pin.posx, pin.posy), 0.01):
                                     ok = True
                                     break
-                                else:
-                                    # sometimes hidden pins are *almost* within a polyline, like
-                                    # with op-amp shapes. Adding a little leniency here helps
-                                    # eliminate false positives
-                                    expanded_point = [
-                                        Point(pin.posx + 0.01, pin.posy + 0.01),
-                                        Point(pin.posx - 0.01, pin.posy + 0.01),
-                                        Point(pin.posx + 0.01, pin.posy - 0.01),
-                                        Point(pin.posx - 0.01, pin.posy - 0.01),
-                                        Point(pin.posx + 0.01, pin.posy),
-                                        Point(pin.posx - 0.01, pin.posy),
-                                        Point(pin.posx, pin.posy + 0.01),
-                                        Point(pin.posx, pin.posy - 0.01),
-                                    ]
-
-                                    if any(shape.point_is_inside(p) for p in expanded_point):
-                                        ok = True
-                                        break
 
                         # check if pin is on diagonal polyline segment
                         if not ok:
                             for poly in polyline_edges:
-                                if self.point_on_polyline(poly, Point(pin.posx, pin.posy)):
+                                if poly.is_point_on_polyline(Point(pin.posx, pin.posy)):
                                     ok = True
                                     break
 

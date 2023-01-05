@@ -1,7 +1,7 @@
 """
 Library for processing KiCad's symbol files.
 """
-
+import itertools
 import json
 import math
 import re
@@ -618,23 +618,75 @@ class Polyline(KicadSymbolBase):
         (fill, fcolor) = _get_fill(sexpr)
         return Polyline(pts, stroke, scolor, fill, fcolor, unit=unit, demorgan=demorgan)
 
-    def point_is_inside(self, other: Point) -> bool:
+    def is_point_on_polyline(self, point: Point):
+        def is_on(a: Point, b: Point, c: Point):
+            """Return true iff point c intersects the line segment from a to b."""
+            # (or the degenerate case that all 3 points are coincident)
+            return (collinear(a, b, c)
+                    and (within(a.x, c.x, b.x) if a.x != b.x else
+                         within(a.y, c.y, b.y)))
 
-        is_inside = False
+        def collinear(a: Point, b: Point, c: Point):
+            """Return true iff a, b, and c all lie on the same line."""
+            return (b.x - a.x) * (c.y - a.y) == (c.x - a.x) * (b.y - a.y)
 
-        prev_point: Point = self.points[-1]
+        def within(p, q, r):
+            """Return true iff q is between p and r (inclusive)."""
+            return p <= q <= r or r <= q <= p
 
-        for point in self.points:
-            if ((point.y <= other.y < prev_point.y) or (prev_point.y <= other.y < point.y)) \
-                    and (other.x < (prev_point.x - point.x)
-                         * (other.y - point.y)
-                         / (prev_point.y - point.y)
-                         + point.x):
-                is_inside = not is_inside
+        for p1, p2 in itertools.pairwise(self.points):
+            if is_on(p1, p2, point):
+                return True
+        return False
 
-            prev_point = point
+    def point_is_inside(self, p: Point, sigma: float = 0) -> bool:
 
-        return is_inside
+        points_to_check = [p]
+        if sigma != 0:
+            points_to_check.extend([
+                Point(p.x + sigma, p.y + sigma),
+                Point(p.x - sigma, p.y + sigma),
+                Point(p.x + sigma, p.y - sigma),
+                Point(p.x - sigma, p.y - sigma),
+                Point(p.x + sigma, p.y),
+                Point(p.x - sigma, p.y),
+                Point(p.x, p.y + sigma),
+                Point(p.x, p.y - sigma),
+            ])
+
+        for p in points_to_check:
+            is_inside = False
+
+            prev_point: Point = self.points[-1]
+
+            for point in self.points:
+                if ((point.y <= p.y < prev_point.y) or (prev_point.y <= p.y < point.y)) \
+                        and (p.x < (prev_point.x - point.x)
+                             * (p.y - point.y)
+                             / (prev_point.y - point.y)
+                             + point.x):
+                    is_inside = not is_inside
+
+                prev_point = point
+
+            # when sigma != 0, breaks early from loop if at least one point is inside
+            if is_inside:
+                return True
+
+        return False
+
+    def is_line_horizontal_or_vertical(self) -> bool:
+        """Returns true if polyline is two points and horizontal or vertical."""
+        if len(self.points) != 2:
+            return False
+
+        if self.points[0].x == self.points[1].x:
+            return True
+
+        if self.points[0].y == self.points[1].y:
+            return True
+
+        return False
 
 
 @dataclass
