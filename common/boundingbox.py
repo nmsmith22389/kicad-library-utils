@@ -3,7 +3,7 @@ Library for dealing with bounding boxes (2D areas defined by four points).
 """
 
 from typing import Dict, Optional
-from math import sin, cos, pi, sqrt, atan2
+from math import pi, sqrt, atan2
 
 
 class BoundingBox:
@@ -81,8 +81,8 @@ class BoundingBox:
         startquad = int(startphi // (pi/2))
         endquad = int(endphi // (pi/2))
 
-        # For each quadrant change, add the point reached when moving clockwise to the next quadrant
-        for q in [q%4 for q in range(startquad, endquad)]:
+        # For each quadrant change, add the point touching the next quadrant (clockwise)
+        for q in [q % 4 for q in range(startquad, endquad)]:
             if q == 0:
                 self.addPoint(midx, midy + radius)
             elif q == 1:
@@ -91,7 +91,6 @@ class BoundingBox:
                 self.addPoint(midx, midy - radius)
             elif q == 3:
                 self.addPoint(midx + radius, midy)
-
 
     def addBoundingBox(self, other: "BoundingBox") -> None:
         self.addPoint(other.xmin, other.ymin)
