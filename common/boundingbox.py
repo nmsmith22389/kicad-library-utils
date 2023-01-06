@@ -3,6 +3,7 @@ Library for dealing with bounding boxes (2D areas defined by four points).
 """
 
 from typing import Dict, Optional
+from math import sin, cos, pi, sqrt, atan2
 
 
 class BoundingBox:
@@ -59,6 +60,38 @@ class BoundingBox:
         # y might be 'None' so prevent subtraction
         self.ymin = self.checkMin(self.ymin, y - radius if y else y)
         self.ymax = self.checkMax(self.ymax, y + radius if y else y)
+
+    def addArc(
+        self, startx: float, starty: float, endx: float, endy: float, midx: float, midy: float
+    ) -> None:
+        # Start/end points of the arc are always in the bounding box
+        self.addPoint(startx, starty)
+        self.addPoint(endx, endy)
+
+        # Convert to radius and angles, making sure that angles are positive
+        radius = sqrt((startx-midx)**2 + (starty-midy)**2)
+        startphi = atan2(starty-midy, startx-midx)
+        if startphi < 0:
+            startphi += 2*pi
+        endphi = atan2(endy-midy, endx-midx)
+        while endphi < startphi:
+            endphi += 2*pi
+
+        # Quadrants of the arc
+        startquad = int(startphi // (pi/2))
+        endquad = int(endphi // (pi/2))
+
+        # For each quadrant change, add the point reached when moving clockwise to the next quadrant
+        for q in [q%4 for q in range(startquad, endquad)]:
+            if q == 0:
+                self.addPoint(midx, midy + radius)
+            elif q == 1:
+                self.addPoint(midx - radius, midy)
+            elif q == 2:
+                self.addPoint(midx, midy - radius)
+            elif q == 3:
+                self.addPoint(midx + radius, midy)
+
 
     def addBoundingBox(self, other: "BoundingBox") -> None:
         self.addPoint(other.xmin, other.ymin)
