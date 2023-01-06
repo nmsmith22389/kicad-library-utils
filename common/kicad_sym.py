@@ -628,7 +628,7 @@ class Polyline(KicadSymbolBase):
 
         def collinear(a: Point, b: Point, c: Point):
             """Return true iff a, b, and c all lie on the same line."""
-            return (b.x - a.x) * (c.y - a.y) == (c.x - a.x) * (b.y - a.y)
+            return math.isclose((b.x - a.x) * (c.y - a.y), (c.x - a.x) * (b.y - a.y), rel_tol=1e-6)
 
         def within(p, q, r):
             """Return true iff q is between p and r (inclusive)."""
