@@ -68,12 +68,25 @@ class BoundingBox:
         self.addPoint(startx, starty)
         self.addPoint(endx, endy)
 
+        def centerPoint():
+            a = midx**2 + midy**2
+            b = (startx**2 + starty**2 - a)/2
+            c = (a - endx**2 - endy**2)/2
+            d = (startx - midx) * (midy - endy) - (midx - endx) * (starty - midy)
+
+            cx = (b * (midy - endy) - c * (starty - midy)) / d
+            cy = ((startx - midx) * c - (midx - endx) * b) / d
+
+            return round(cx, 3), round(cy, 3)
+
+        cx, cy = centerPoint()
+
         # Convert to radius and angles, making sure that angles are positive
-        radius = sqrt((startx-midx)**2 + (starty-midy)**2)
-        startphi = atan2(starty-midy, startx-midx)
+        radius = sqrt((startx-cx)**2 + (starty-cy)**2)
+        startphi = atan2(starty-cy, startx-cx)
         if startphi < 0:
             startphi += 2*pi
-        endphi = atan2(endy-midy, endx-midx)
+        endphi = atan2(endy-cy, endx-cx)
         while endphi < startphi:
             endphi += 2*pi
 
@@ -84,13 +97,13 @@ class BoundingBox:
         # For each quadrant change, add the point touching the next quadrant (clockwise)
         for q in [q % 4 for q in range(startquad, endquad)]:
             if q == 0:
-                self.addPoint(midx, midy + radius)
+                self.addPoint(cx, cy + radius)
             elif q == 1:
-                self.addPoint(midx - radius, midy)
+                self.addPoint(cx - radius, cy)
             elif q == 2:
-                self.addPoint(midx, midy - radius)
+                self.addPoint(cx, cy - radius)
             elif q == 3:
-                self.addPoint(midx + radius, midy)
+                self.addPoint(cx + radius, cy)
 
     def addBoundingBox(self, other: "BoundingBox") -> None:
         self.addPoint(other.xmin, other.ymin)
