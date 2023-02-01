@@ -38,6 +38,10 @@ def process_file(filename: str, *,
                  kicad_cli: str = "",
                  upgrade: bool = True):
 
+    changed = False
+    upgraded = False
+    failed = False
+
     if not os.path.exists(filename):
         printer.red("File does not exist: %s" % filename)
         return
@@ -76,7 +80,7 @@ def process_file(filename: str, *,
         elif adjust_roundrect and pad["shape"] == "roundrect":
             current_rr = pad.get("roundrect_rratio", 0)
             current_r = min_pad_diameter * current_rr
-            if current_r < max_r:
+            if current_r < 0.9999 * max_r:
                 if check_only:
                     if verbose:
                         printer.yellow(f"Pad {pname} needs to increase "
@@ -101,6 +105,7 @@ def process_file(filename: str, *,
                 shutil.copy(filename, filename + ".bak")
             module.save(filename)
             printer.green(f"{filename}: {num_changes} pad(s) changed")
+            changed = True
             if upgrade and file_version != KicadMod.SEXPR_BOARD_FILE_VERSION:
                 tmpdir = None
                 tmpfile = None
@@ -108,11 +113,17 @@ def process_file(filename: str, *,
                     tmpdir = tempfile.mkdtemp()
                     tmpfile = os.path.join(tmpdir, os.path.split(filename)[1])
                     shutil.copy(filename, tmpdir)
-                    subprocess.run([kicad_cli, 'fp', 'upgrade', tmpdir], check=True, capture_output=True)
+                    subprocess.run([kicad_cli, 'fp', 'upgrade', tmpdir], check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     shutil.move(tmpfile, filename)
                     printer.green(f"{filename}: was upgraded to latest file format using kicad-cli")
+                    upgraded = True
                 except FileNotFoundError:
-                    printer.yellow("Cannot find kicad-cli; footprint can not be converted to the latest file format.")
+                    printer.yellow(f"{filename}: WARNING: Cannot find kicad-cli; footprint can not be converted to the latest file format.")
+                except subprocess.CalledProcessError as e:
+                    printer.red(f"{filename}: ERROR: kicad-cli returned exit status {e.returncode}")
+                    for line in e.output.decode().splitlines(keepends=False):
+                        printer.red(f"    {line}")
+                    failed = True
                 finally:
                     if tmpfile and os.path.exists(tmpfile):
                         os.unlink(tmpfile)
@@ -121,6 +132,7 @@ def process_file(filename: str, *,
         else:
             printer.green(f"{filename}: nothing changed, all pads are OK")
 
+    return {"changed": changed, "upgraded": upgraded, "failed": failed}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=("Check or adjust pad shapes to roundrect with certain radius"))
@@ -144,7 +156,22 @@ if __name__ == "__main__":
 
     kicad_cli = args.kicad_cli if args.kicad_cli else os.environ.get('KICAD_CLI', 'kicad-cli')
 
+    summary = {"changed": 0, "upgraded": 0, "failed": 0, "processed": 0}
+    failed_fps = []
     for fp in args.footprint:
-        process_file(fp, backup=not args.no_backup, check_only=args.check_only, adjust_roundrect=not args.no_adjust,
-                     max_radius=args.radius, max_rratio=args.ratio, verbose=args.verbose,
-                     kicad_cli=kicad_cli, upgrade=not args.no_upgrade)
+        retcode = process_file(fp, backup=not args.no_backup, check_only=args.check_only,
+                               adjust_roundrect=not args.no_adjust, max_radius=args.radius, max_rratio=args.ratio,
+                               verbose=args.verbose, kicad_cli=kicad_cli, upgrade=not args.no_upgrade)
+        if retcode:
+            summary["processed"] += 1
+            for key, val in retcode.items():
+                if val:
+                    summary[key] += 1
+            if retcode["failed"]:
+                failed_fps.append(fp)
+
+    print(f"Processed {summary['processed']} footprint(s): {summary['changed']} changed, {summary['upgraded']} upgraded, {summary['failed']} failed")
+    if failed_fps:
+        printer.red("The following footprint(s) failed:")
+        printer.red("    " + ", ".join(failed_fps))
+
