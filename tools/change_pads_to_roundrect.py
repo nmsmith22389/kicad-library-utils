@@ -113,12 +113,14 @@ def process_file(filename: str, *,
                     tmpdir = tempfile.mkdtemp()
                     tmpfile = os.path.join(tmpdir, os.path.split(filename)[1])
                     shutil.copy(filename, tmpdir)
-                    subprocess.run([kicad_cli, 'fp', 'upgrade', tmpdir], check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    subprocess.run([kicad_cli, 'fp', 'upgrade', tmpdir], check=True,
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     shutil.move(tmpfile, filename)
                     printer.green(f"{filename}: was upgraded to latest file format using kicad-cli")
                     upgraded = True
                 except FileNotFoundError:
-                    printer.yellow(f"{filename}: WARNING: Cannot find kicad-cli; footprint can not be converted to the latest file format.")
+                    printer.yellow(f"{filename}: WARNING: Cannot find kicad-cli; footprint can not be converted "
+                                   f"to the latest file format.")
                 except subprocess.CalledProcessError as e:
                     printer.red(f"{filename}: ERROR: kicad-cli returned exit status {e.returncode}")
                     for line in e.output.decode().splitlines(keepends=False):
@@ -133,6 +135,7 @@ def process_file(filename: str, *,
             printer.green(f"{filename}: nothing changed, all pads are OK")
 
     return {"changed": changed, "upgraded": upgraded, "failed": failed}
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=("Check or adjust pad shapes to roundrect with certain radius"))
@@ -170,8 +173,8 @@ if __name__ == "__main__":
             if retcode["failed"]:
                 failed_fps.append(fp)
 
-    print(f"Processed {summary['processed']} footprint(s): {summary['changed']} changed, {summary['upgraded']} upgraded, {summary['failed']} failed")
+    print(f"Processed {summary['processed']} footprint(s): {summary['changed']} changed, {summary['upgraded']} "
+          f"upgraded, {summary['failed']} failed")
     if failed_fps:
         printer.red("The following footprint(s) failed:")
         printer.red("    " + ", ".join(failed_fps))
-
