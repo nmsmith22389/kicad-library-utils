@@ -2,6 +2,7 @@
 code extracted from: http://rosettacode.org/wiki/S-Expressions
 """
 
+from textwrap import shorten
 import re
 from typing import Any, Optional
 
@@ -11,10 +12,11 @@ term_regex = r"""(?mx)
     \s*(?:
         (\()|
         (\))|
-        ([+-]?\d+\.\d+(?=[\ \)]))|
-        (\-?\d+(?=[\ \)]))|
-        "((?:[^"]|(?<=\\)")*)"|
-        ([^(^)\s]+)
+        ([+-]?\d+\.\d+)(?=[)\s])|
+        (-?\d+)(?=[)\s])|
+        "((?:[^"]|\\")*)"(?=[)\s])|
+        ([^()"\s]+)(?=[)\s])|
+        ([^\s]+)
        )"""
 
 
@@ -24,28 +26,29 @@ class SexprError(ValueError):
 
 def parse_sexp(sexp: str) -> Any:
     re_iter = re.finditer(term_regex, sexp)
+
+    match = next(re_iter)
+    if match[1] != '(':
+        raise SexprError(f'Missing initial opening parenthesis at position {match.start()}: got "{shorten(match[0].strip(), 80)}"')  # noqa: E501
+
     rv = list(_parse_sexp_internal(re_iter))
 
     for leftover in re_iter:
-        lparen, rparen, *rest = leftover.groups()
-        if lparen or any(rest):
-            raise SexprError(f'Leftover garbage after end of expression at position {leftover.start()}')  # noqa: E501
-
+        lparen, rparen, *rest, garbage = leftover.groups()
+        if any(rest):
+            raise SexprError(f'Unexpected token after end of expression at position {leftover.start()}: got "{shorten(leftover[0], 80)}". Is the expression missing an opening parenthesis?')  # noqa: E501
         elif rparen:
             raise SexprError(f'Unbalanced closing parenthesis at position {leftover.start()}')
 
-    if len(rv) == 0:
-        raise SexprError('No or empty expression')
+        elif garbage:
+            raise SexprError(f'Leftover garbage after end of expression at position {leftover.start()}: got "{shorten(leftover[0], 80)}".')  # noqa: E501
 
-    if len(rv) > 1:
-        raise SexprError('Missing initial opening parenthesis')
-
-    return rv[0]
+    return rv
 
 
 def _parse_sexp_internal(re_iter) -> Any:
     for match in re_iter:
-        lparen, rparen, float_num, integer_num, quoted_str, bare_str = match.groups()
+        lparen, rparen, float_num, integer_num, quoted_str, bare_str, garbage = match.groups()
 
         if lparen:
             yield list(_parse_sexp_internal(re_iter))
@@ -59,6 +62,10 @@ def _parse_sexp_internal(re_iter) -> Any:
             yield float(float_num)
         elif integer_num:
             yield int(integer_num)
+        elif garbage:
+            raise SexprError(f'Found garbage inside S-Expression at position {match.start()}: got "{shorten(garbage, 80)}". Is the expression missing a space?')  # noqa: E501
+    else:
+        raise SexprError('Missing closing parenthesis')
 
 
 # Form a valid sexpr (single line)
@@ -189,7 +196,7 @@ def format_sexp(sexp: str, indentation_size: int = 2, max_nesting: int = 2) -> s
     n = 0
     for match in re.finditer(term_regex, sexp):
         indentation = ""
-        lparen, rparen, float_num, integer_num, quoted_str, bare_str = match.groups()
+        lparen, rparen, float_num, integer_num, quoted_str, bare_str, garbage = match.groups()
         if lparen:
             if out:
                 if n <= max_nesting:
@@ -214,6 +221,8 @@ def format_sexp(sexp: str, indentation_size: int = 2, max_nesting: int = 2) -> s
             out += f'{indentation}"{quoted_str}" '
         elif bare_str is not None:
             out += indentation + bare_str + ' '
+        elif garbage:
+            raise SexprError(f'Found garbage inside S-Expression at position {match.start()}: got "{shorten(garbage, 80)}". Is the expression missing a space?')  # noqa: E501
 
     out += '\n'
     return out
