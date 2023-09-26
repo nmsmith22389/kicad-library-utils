@@ -224,6 +224,10 @@ class KicadMod:
                 text_dict["pos"] = {"x": a[1], "y": a[2], "orientation": 0}
                 if len(a) > 3:
                     text_dict["pos"]["orientation"] = a[3]
+                if len(a) > 4 :
+                    text_dict["pos"]["lock"] = a[4]
+                else:
+                    text_dict["pos"]["lock"] = 'locked'
 
                 # text layer
                 a = self._getArray(text, "layer")[0]
