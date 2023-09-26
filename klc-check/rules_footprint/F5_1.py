@@ -59,6 +59,12 @@ class Rule(KLCRule):
         if ref["hide"]:
             errors.append("Reference label is hidden (must be set to visible)")
 
+        # Check if locked (upright orientation) is checked
+        lock_status = ref['pos']['lock']
+        print(str(ref))
+        if not lock_status == 'locked':
+            errors.append("RefDes on F.SilkS layer should be locked (upright orientation)")
+
         # Check reference size
         if not font["width"] == font["height"]:
             errors.append("Reference label font aspect ratio should be 1:1")
