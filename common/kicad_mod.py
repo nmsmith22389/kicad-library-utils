@@ -225,7 +225,7 @@ class KicadMod:
                 if len(a) > 3:
                     text_dict["pos"]["orientation"] = a[3]
                     if text_dict["pos"]["orientation"] == 'unlocked':
-                      text_dict["pos"]["lock"] = a[3]
+                        text_dict["pos"]["lock"] = a[3]
                 if len(a) > 4 :
                     text_dict["pos"]["lock"] = a[4]
 
