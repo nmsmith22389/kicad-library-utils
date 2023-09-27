@@ -61,7 +61,6 @@ class Rule(KLCRule):
 
         # Check if locked (upright orientation) is checked
         lock_status = ref['pos']['lock']
-        print(str(ref))
         if not lock_status == 'locked':
             errors.append("RefDes on F.SilkS layer should be locked (upright orientation)")
 
