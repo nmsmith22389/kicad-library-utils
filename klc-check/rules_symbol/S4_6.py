@@ -1,7 +1,9 @@
 import re
+from copy import deepcopy
 from typing import List
 
-from kicad_sym import KicadSymbol, Pin
+import boundingbox
+from kicad_sym import KicadSymbol, Pin, Point
 from rules_symbol.rule import KLCRule, pinString
 
 
@@ -17,6 +19,7 @@ class Rule(KLCRule):
         self.invisible_errors: List[Pin] = []
         self.power_invisible_errors: List[Pin] = []
         self.type_errors: List[Pin] = []
+        self.nc_outside_outline_errors: List[Pin] = []
 
     # check if a pin name fits within a list of possible pins (using regex testing)
     def test(self, pinName: str, nameList: List[str]) -> bool:
@@ -49,6 +52,8 @@ class Rule(KLCRule):
             if not is_power and etype == "power_in" and pin.is_hidden:
                 self.power_invisible_errors.append(pin)
 
+        self.checkPinPositions()
+
         if self.type_errors:
             self.error("NC pins are not correct pin-type:")
 
@@ -68,14 +73,135 @@ class Rule(KLCRule):
                 )
 
         if self.power_invisible_errors:
-            self.error("Power input pins must not be invisible unless used in power symbols.")
+            self.error(
+                "Power input pins must not be invisible unless used in power symbols."
+            )
 
             for pin in self.power_invisible_errors:
                 self.errorExtra(
                     "{pin} is of type power_in and invisible".format(pin=pinString(pin))
                 )
 
-        return self.invisible_errors or self.type_errors or self.power_invisible_errors
+        if self.nc_outside_outline_errors:
+            self.error(
+                "Hidden NC pins should lie on or within the symbol's "
+                "outline to prevent unwanted connections."
+            )
+
+            for pin in self.nc_outside_outline_errors:
+                self.errorExtra(
+                    "{pin} is outside of symbol outline".format(pin=pinString(pin))
+                )
+
+        return (
+            self.invisible_errors
+            or self.type_errors
+            or self.power_invisible_errors
+            or self.nc_outside_outline_errors
+        )
+
+    def checkPinPositions(self):
+        """
+        NC pins should lie within or on the symbol border,
+        report the ones that lie outside and could be accidentally connected
+        """
+        self.nc_outside_outline_errors: List[Pin] = []
+
+        for unit in range(1, self.component.unit_count + 1):
+            unit_pins = [pin for pin in self.component.pins if (pin.unit in [unit, 0])]
+
+            # No pins? Ignore check.
+            if not unit_pins:
+                continue
+
+            # rectangles are very fast to check position for, so we check them first.
+            bounding_boxes_points = [i.as_polyline().get_boundingbox()
+                                     for i in self.component.rectangles]
+            bounding_boxes_points.extend(r.get_boundingbox()
+                                         for r in self.component.polylines if r.is_rectangle())
+
+            # if NC pin is on an orthogonal line, assume that it's meant to be there, and it's ok.
+            bounding_boxes_points.extend(pl.get_boundingbox() for pl in self.component.polylines
+                                         if len(pl.points) == 2
+                                         and pl.is_line_horizontal_or_vertical())
+
+            bounding_boxes = [boundingbox.BoundingBox(b[2], b[3], b[0], b[1])
+                              for b in bounding_boxes_points]
+
+            # we can also check if a pin is inside a closed polygon
+            closed_shapes = [pl for pl in self.component.polylines if pl.is_closed()]
+
+            # include polylines that aren't closed but have background fill,
+            # they should be treated as closed -- must connect last and first points
+            # must deepcopy the object so that we don't modify the underlying object
+            filled_polylines = [deepcopy(pl) for pl in self.component.polylines if
+                                not pl.is_closed()
+                                and pl.fill_type == 'background']
+
+            for poly in filled_polylines:
+                poly.points.append(poly.points[0])
+
+            closed_shapes.extend(filled_polylines)
+
+            # remove closed polylines inside bounding boxes
+            # TODO check for polylines inside of other polylines
+            filled_shapes = []
+            for shape in closed_shapes:
+                surrounded = False
+                for box in bounding_boxes:
+                    for point in shape.points:
+                        if not box.containsPoint(point.x, point.y):
+                            break
+                    else:
+                        surrounded = True
+
+                if not surrounded:
+                    filled_shapes.append(shape)
+
+            # remove unfilled polylines inside boundingboxes, since boxes are faster to check
+            polyline_edges = []
+            for poly in [pl for pl in self.component.polylines if
+                         not pl.is_closed()
+                         and pl.fill_type == 'none'
+                         and len(pl.points) > 2]:
+
+                surrounded = False
+                for box in bounding_boxes:
+                    for point in poly.points:
+                        if not box.containsPoint(point.x, point.y):
+                            break
+                    else:
+                        surrounded = True
+
+                if not surrounded:
+                    polyline_edges.append(poly)
+
+            if bounding_boxes or filled_shapes or polyline_edges:
+                for pin in unit_pins:
+                    if pin.etype == "no_connect" and pin.is_hidden:
+                        ok = False
+                        # check if pin in inside bounding box
+                        for box in bounding_boxes:
+                            if box.containsPoint(pin.posx, pin.posy):
+                                ok = True
+                                break
+
+                        # check if pin is inside filled polyline
+                        if not ok:
+                            for shape in filled_shapes:
+                                if shape.point_is_inside(Point(pin.posx, pin.posy), 0.01):
+                                    ok = True
+                                    break
+
+                        # check if pin is on diagonal polyline segment
+                        if not ok:
+                            for poly in polyline_edges:
+                                if poly.is_point_on_polyline(Point(pin.posx, pin.posy)):
+                                    ok = True
+                                    break
+
+                        if not ok:
+                            self.nc_outside_outline_errors.append(pin)
 
     def check(self) -> bool:
         """
@@ -84,6 +210,7 @@ class Rule(KLCRule):
             * invisible_errors
             * power_invisible_errors
             * type_errors
+            * nc_outside_outline_errors
         """
 
         # no need to check this for a derived symbols

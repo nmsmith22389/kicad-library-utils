@@ -1,14 +1,14 @@
 """
 Library for processing KiCad's symbol files.
 """
-
+import itertools
 import json
 import math
 import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Iterable
 
 import sexpr
 
@@ -640,6 +640,107 @@ class Polyline(KicadSymbolBase):
         (stroke, scolor) = _get_stroke(sexpr)
         (fill, fcolor) = _get_fill(sexpr)
         return Polyline(pts, stroke, scolor, fill, fcolor, unit=unit, demorgan=demorgan)
+
+    def is_point_on_polyline(self, point: Point):
+        def is_on(a: Point, b: Point, c: Point):
+            """Return true iff point c intersects the line segment from a to b."""
+            # (or the degenerate case that all 3 points are coincident)
+            return (collinear(a, b, c)
+                    and (within(a.x, c.x, b.x) if a.x != b.x else
+                         within(a.y, c.y, b.y)))
+
+        def collinear(a: Point, b: Point, c: Point):
+            """Return true iff a, b, and c all lie on the same line."""
+            return math.isclose((b.x - a.x) * (c.y - a.y), (c.x - a.x) * (b.y - a.y), rel_tol=1e-6)
+
+        def within(p, q, r):
+            """Return true iff q is between p and r (inclusive)."""
+            return p <= q <= r or r <= q <= p
+
+        def pairwise(iterable: Iterable[Point]):
+            # pairwise('ABCDEFG') --> AB BC CD DE EF FG
+            a, b = itertools.tee(iterable)
+            next(b, None)
+            return zip(a, b)
+
+        for p1, p2 in pairwise(self.points):
+            if is_on(p1, p2, point):
+                return True
+        return False
+
+    def point_is_inside(self, p: Point, sigma: float = 0) -> bool:
+        """
+        Derived from https://wrfranklin.org/Research/Short_Notes/pnpoly.html
+
+        License to use:
+        Copyright (c) 1970-2003, Wm. Randolph Franklin
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this
+        software and associated documentation files (the "Software"), to deal in the Software
+        without restriction, including without limitation the rights to use, copy, modify, merge,
+        publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+        to whom the Software is furnished to do so, subject to the following conditions:
+
+        1. Redistributions of source code must retain the above copyright notice, this list of
+            conditions and the following disclaimers.
+        2. Redistributions in binary form must reproduce the above copyright notice in the
+            documentation and/or other materials provided with the distribution.
+        3. The name of W. Randolph Franklin may not be used to endorse or promote products derived
+            from this Software without specific prior written permission.
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+        INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+        PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+        FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+        OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+        DEALINGS IN THE SOFTWARE.
+        """
+
+        points_to_check = [p]
+        if sigma != 0:
+            points_to_check.extend([
+                Point(p.x + sigma, p.y + sigma),
+                Point(p.x - sigma, p.y + sigma),
+                Point(p.x + sigma, p.y - sigma),
+                Point(p.x - sigma, p.y - sigma),
+                Point(p.x + sigma, p.y),
+                Point(p.x - sigma, p.y),
+                Point(p.x, p.y + sigma),
+                Point(p.x, p.y - sigma),
+            ])
+
+        for p in points_to_check:
+            is_inside = False
+
+            prev_point: Point = self.points[-1]
+
+            for point in self.points:
+                if ((point.y <= p.y < prev_point.y) or (prev_point.y <= p.y < point.y)) \
+                        and (p.x < (prev_point.x - point.x)
+                             * (p.y - point.y)
+                             / (prev_point.y - point.y)
+                             + point.x):
+                    is_inside = not is_inside
+
+                prev_point = point
+
+            # when sigma != 0, breaks early from loop if at least one point is inside
+            if is_inside:
+                return True
+
+        return False
+
+    def is_line_horizontal_or_vertical(self) -> bool:
+        """Returns true if polyline is two points and horizontal or vertical."""
+        if len(self.points) != 2:
+            return False
+
+        if self.points[0].x == self.points[1].x:
+            return True
+
+        if self.points[0].y == self.points[1].y:
+            return True
+
+        return False
 
 
 @dataclass
