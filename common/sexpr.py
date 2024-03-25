@@ -178,7 +178,7 @@ def build_sexp(exp, indent='  ') -> str:
             joined += build_sexp(elem, indent=f'{indent}  ')
         return joined + ')'
 
-    if isinstance(exp, str) and (len(exp) == 0 or re.search(r"[\s\(\)]", exp)):
+    if isinstance(exp, str) and (len(exp) == 0 or re.search(r"[\s\(\)]", exp)) and not re.fullmatch(r'".*"', exp):
         return '"%s"' % exp.replace('"', r'\"')
     elif isinstance(exp, float):
         return str(exp)
