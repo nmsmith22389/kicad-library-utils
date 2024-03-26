@@ -143,15 +143,15 @@ class Device:
             "LQFP144":      ("Package_QFP:LQFP-144_20x20mm_P0.5mm",                         "LQFP*20x20mm*P0.5mm*"), # NOQA
             "LQFP176":      ("Package_QFP:LQFP-176_24x24mm_P0.5mm",                         "LQFP*24x24mm*P0.5mm*"), # NOQA
             "LQFP208":      ("Package_QFP:LQFP-208_28x28mm_P0.5mm",                         "LQFP*28x28mm*P0.5mm*"), # NOQA
-            "TFBGA64":      ("Package_BGA:TFBGA-64_5x5mm_Layout8x8_P0.5mm",                 "TFBGA*5x5mm*Layout8x8*P0.5mm*"), # NOQA
-            "TFBGA100":     ("Package_BGA:TFBGA-100_8x8mm_Layout10x10_P0.8mm",              "TFBGA*8x8mm*Layout10x10*P0.8mm*"), # NOQA
-            "TFBGA169":     ("Package_BGA:ST_TFBGA-169_7x7mm_Layout13x13_P0.5mm",           "TFBGA*7x7mm*Layout13x13*P0.5mm*"), # NOQA
-            "TFBGA216":     ("Package_BGA:TFBGA-216_13x13mm_Layout15x15_P0.8mm",            "TFBGA*13x13mm*Layout15x15*P0.8mm*"), # NOQA
+            "TFBGA64":      ("Package_BGA:TFBGA-64_5x5mm_Layout8x8_P0.5mm",                 "*TFBGA*5x5mm*Layout8x8*P0.5mm*"), # NOQA
+            "TFBGA100":     ("Package_BGA:TFBGA-100_8x8mm_Layout10x10_P0.8mm",              "*TFBGA*8x8mm*Layout10x10*P0.8mm*"), # NOQA
+            "TFBGA169":     ("Package_BGA:ST_TFBGA-169_7x7mm_Layout13x13_P0.5mm",           "*TFBGA*7x7mm*Layout13x13*P0.5mm*"), # NOQA
+            "TFBGA216":     ("Package_BGA:TFBGA-216_13x13mm_Layout15x15_P0.8mm",            "*TFBGA*13x13mm*Layout15x15*P0.8mm*"), # NOQA
             "TFBGA225":     ("Package_BGA:ST_TFBGA-225_13x13mm_Layout15x15_P0.8mm",         "*TFBGA*13x13mm*Layout15x15*P0.8mm*"), # NOQA
-            "TFBGA240":     ("Package_BGA:TFBGA-265_14x14mm_Layout17x17_P0.8mm",            "TFBGA*14x14mm*Layout17x17*P0.8mm*"), # NOQA
+            "TFBGA240":     ("Package_BGA:TFBGA-265_14x14mm_Layout17x17_P0.8mm",            "*TFBGA*14x14mm*Layout17x17*P0.8mm*"), # NOQA
             "TFBGA257":     ("Package_BGA:ST_TFBGA-257_10x10mm_Layout19x19_P0.5mmP0.65mm",  "*TFBGA*10x10mm*Layout19x19*P0.5mmP0.65mm*"), # NOQA
-            "TFBGA289":     ("Package_BGA:TFBGA-289_9x9mm_Layout17x17_P0.5mm",              "*TFBGA*9x9mm*Layout17x17*P0.5mmP0.65mm*"), # NOQA
-            "TFBGA320":     ("Package_BGA:ST_TFBGA-320_11x11mm_Layout21x21_P0.5mm",         "*TFBGA*11x11mm_Layout21x21*P0.5mm"), # NOQA
+            "TFBGA289":     ("Package_BGA:TFBGA-289_9x9mm_Layout17x17_P0.5mm",              "*TFBGA*9x9mm*Layout17x17*P0.5mm*"), # NOQA
+            "TFBGA320":     ("Package_BGA:ST_TFBGA-320_11x11mm_Layout21x21_P0.5mm", "*TFBGA*11x11mm*Layout21x21*P0.5mm*"), # NOQA
             "TFBGA361":     ("Package_BGA:ST_TFBGA-361_12x12mm_Layout23x23_P0.5mmP0.65mm",  "*TFBGA*12x12mm*Layout23x23*P0.5mmP0.65mm*"), # NOQA
             "TSSOP14":      ("Package_SO:TSSOP-14_4.4x5mm_P0.65mm",                         "TSSOP*4.4x5mm*P0.65mm*"), # NOQA
             "TSSOP20":      ("Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm",                       "TSSOP*4.4x6.5mm*P0.65mm*"), # NOQA
