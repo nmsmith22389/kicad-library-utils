@@ -17,6 +17,7 @@ import fnmatch
 from pygments.lexer import RegexLexer
 from pygments import token
 import wsdiff
+import tqdm
 
 try:
     # Try importing kicad_mod to figure out whether the kicad-library-utils stuff is in path
@@ -101,7 +102,54 @@ def js_str_list(l):  # NOQA: E741
     return '[' + ', '.join(js_template_strs) + ']'
 
 
-def temporary_symbol_library(symbol_lines):
+term_regex = r"""(?mx)
+    \s*(?:
+        (\()|
+        (\))|
+        ([+-]?\d+\.\d+(?=[\ \)\n]))|
+        (\-?\d+(?=[\ \)\n]))|
+        "((?:[^"]|(?<=\\)")*)"|
+        ([^(^)\s]+)
+       )"""
+
+
+# Formatting code copied from common/sexpr.py for simplicity
+def format_sexp(sexp: str, indentation_size: int = 2, max_nesting: int = 2) -> str:
+    out = ''
+    n = 0
+    for match in re.finditer(term_regex, sexp):
+        indentation = "" if out[-1:] != ")" else " "
+        lparen, rparen, float_num, integer_num, quoted_str, bare_str = match.groups()
+        if lparen:
+            if out:
+                if n <= max_nesting:
+                    if out[-1] == ' ':
+                        out = out[:-1]
+                    indentation = '\n' + (' ' * indentation_size * n)
+                else:
+                    if out[-1] == ')':
+                        out += ' '
+            n += 1
+            out += indentation + '('
+        elif rparen:
+            if out and out[-1] == ' ':
+                out = out[:-1]
+            n -= 1
+            out += indentation + ')'
+        elif float_num:
+            out += indentation + float_num + ' '
+        elif integer_num:
+            out += indentation + integer_num + ' '
+        elif quoted_str is not None:
+            out += f'{indentation}"{quoted_str}" '
+        elif bare_str is not None:
+            out += indentation + bare_str + ' '
+
+    out += '\n'
+    return out
+
+
+def temporary_symbol_library(symbol_lines, reformat_sexpr):
     if symbol_lines and not symbol_lines[0].strip().startswith('(symbol'):
         warnings.warn(f'Leading garbage in same line before symbol definition or broken symbol index')  # NOQA: E501, F541
 
@@ -109,6 +157,8 @@ def temporary_symbol_library(symbol_lines):
         warnings.warn(f'Trailing garbage in same line after symbol definition or broken symbol index')  # NOQA: E501, F541
 
     content = '\n'.join(symbol_lines)
+    if reformat_sexpr:
+        content = format_sexp(content)
     return f'(kicad_symbol_lib (version 20231120) (generator kicad_html_diff)\n{content}\n)'
 
 
@@ -147,9 +197,17 @@ def render_symbol_kicad_cli(libfile, symname, outdir):
         subprocess.run([kicad_cli, 'sym', 'export', 'svg',
                         '-s', symname,
                         '-o', str(outdir), str(libfile)],
-                       check=True, stdout=sys.stdout, stderr=sys.stderr)
+                       check=True, capture_output=True, text=True)
     except FileNotFoundError:
         warnings.warn('Cannot find kicad-cli, no reference screenshots will be exported.')
+        return {}
+    except subprocess.CalledProcessError as e:
+        print(f'Error rendering footprint {symname} in {libfile}.', file=sys.stderr)
+        print(f'kicad-cli exited with error code {e.returncode} and output:', file=sys.stderr)
+        if (l := e.stdout.strip()): # NOQA
+            print(l, file=sys.stderr)
+        if (l := e.stderr.strip()): # NOQA
+            print(l, file=sys.stderr)
         return {}
 
     new_files = svg_glob()
@@ -208,13 +266,16 @@ class HTMLDiff:
 
             **kwargs)
 
-    def __init__(self, output, meta, name_glob='*', changes_only=True, screenshot_dir=None):
+    def __init__(self, output, meta, name_glob='*', changes_only=True, screenshot_dir=None, no_screenshots=False,
+                 reformat_sexpr=True):
         self.output = output
         self.meta = meta
         self.name_glob = name_glob
         self.changes_only = changes_only
         self.name_map = {}
         self.diff_index = []
+        self.no_screenshots = no_screenshots
+        self.reformat_sexpr = reformat_sexpr
 
         if screenshot_dir is None:
             tmp = self.screenshot_tmpdir = tempfile.TemporaryDirectory()
@@ -418,7 +479,7 @@ class HTMLDiff:
             self.diff_index.append((out_file, created, changed))
             files.append((name, out_file, start, end, old_name, old_start, old_end))
 
-        for i, (name, out_file, start, end, old_name, old_start, old_end) in enumerate(files):
+        for i, (name, out_file, start, end, old_name, old_start, old_end) in tqdm.tqdm(list(enumerate(files))):
             meta['prev_diff'] = files[(i-1) % len(files)][0] + '.html'
             meta['next_diff'] = files[(i+1) % len(files)][0] + '.html'
             meta['diff_index'] = 'index.html'
@@ -428,25 +489,31 @@ class HTMLDiff:
             meta['old_line_range'] = (old_start, old_end)
             meta['new_line_range'] = (start, end)
 
-            old_sym = temporary_symbol_library(old_lines[old_start:old_end])
-            new_sym = temporary_symbol_library(new_lines[start:end])
+            old_sym = temporary_symbol_library(old_lines[old_start:old_end], reformat_sexpr=self.reformat_sexpr)
+            new_sym = temporary_symbol_library(new_lines[start:end], reformat_sexpr=self.reformat_sexpr)
 
-            with tempfile.TemporaryDirectory() as tmpdir:
-                tmpdir = Path(tmpdir)
-                out = self.screenshot_dir / new.name if self.screenshot_dir else tmpdir
-
-                screenshots_new = render_symbol_kicad_cli(new, name, out)
-                screenshots_new_sorted = [v.read_text()
-                                          for k, v in sorted(
-                                              screenshots_new.items(),
-                                              key=lambda x: x[0])]
-
-            if old_lines[old_start:old_end]:
-                svgs_old = [str(x) for x in render_sym.render_sym(old_sym, old_name,
-                                                                  default_style=False)]
-            else:
+            if self.no_screenshots:
                 svgs_old = []
-            svgs_new = [str(x) for x in render_sym.render_sym(new_sym, name, default_style=False)]
+                svgs_new = []
+                screenshots_new_sorted = []
+
+            else:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    tmpdir = Path(tmpdir)
+                    out = self.screenshot_dir / new.name if self.screenshot_dir else tmpdir
+
+                    screenshots_new = render_symbol_kicad_cli(new, name, out)
+                    screenshots_new_sorted = [v.read_text()
+                                              for k, v in sorted(
+                                                  screenshots_new.items(),
+                                                  key=lambda x: x[0])]
+
+                if old_lines[old_start:old_end]:
+                    svgs_old = [str(x) for x in render_sym.render_sym(old_sym, old_name,
+                                                                      default_style=False)]
+                else:
+                    svgs_old = []
+                svgs_new = [str(x) for x in render_sym.render_sym(new_sym, name, default_style=False)]
 
             sexpr_diff = wsdiff.html_diff_block(old_sym, new_sym, filename='', lexer=SexprLexer())
 
@@ -475,7 +542,9 @@ if __name__ == '__main__':
     parser.add_argument('path', help='New version to compare. Format: [library_or_mod_file]:[library_item], with the item name optional.')  # NOQA: E501
     parser.add_argument('-n', '--only-names', default='*', help='Only output symbols or footprints whose name matches the given glob')  # NOQA: E501
     parser.add_argument('-u', '--unchanged', action='store_true', help='Also output unchanged symbols or footprints')  # NOQA: E501
+    parser.add_argument('-t', '--no-screenshots', action='store_true', help='Only output textual diffs and do not generate screenshots')  # NOQA: E501
     parser.add_argument('-s', '--screenshot-dir', type=Path, help='Read (footprints) or write (symbols) screenshots generated with kicad-cli to given directory instead of re-generating them on the fly.')  # NOQA: E501
+    parser.add_argument('-r', '--reformat-sexpr', action='store_true', help='Re-format S-Expressions before diff to only compare semantic differences, and ignore S-Expression formatting')  # NOQA: E501
     parser.add_argument('-o', '--output', type=Path, help='Where to output the diff. Must be a directory for symbol/footprint library comparisons, and must be a file for individual symbol or footprint comparisons.')  # NOQA: E501
     args = parser.parse_args()
 
@@ -500,7 +569,9 @@ if __name__ == '__main__':
 
             html_diff = HTMLDiff(args.output, meta, args.only_names,
                                  changes_only=(not args.unchanged),
-                                 screenshot_dir=args.screenshot_dir)
+                                 screenshot_dir=args.screenshot_dir,
+                                 no_screenshots=args.no_screenshots,
+                                 reformat_sexpr=args.reformat_sexpr)
             html_diff.diff(base, path)
 
         else:
@@ -562,7 +633,9 @@ if __name__ == '__main__':
 
                 html_diff = HTMLDiff(args.output, meta, args.only_names,
                                      changes_only=(not args.unchanged),
-                                     screenshot_dir=args.screenshot_dir)
+                                     screenshot_dir=args.screenshot_dir,
+                                     no_screenshots=args.no_screenshots,
+                                     reformat_sexpr=args.reformat_sexpr)
                 html_diff.diff(base, path)
 
     except ValueError as e:
