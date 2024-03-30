@@ -181,6 +181,8 @@ def build_sexp(exp, indent='  ') -> str:
     if isinstance(exp, str) and (len(exp) == 0 or re.search(r"[\s\(\)]", exp)) and not re.fullmatch(r'".*"', exp):
         return '"%s"' % exp.replace('"', r'\"')
     elif isinstance(exp, float):
+        if exp.is_integer():
+            return str(int(exp))
         return str(exp)
     elif isinstance(exp, int):
         return str(exp)
