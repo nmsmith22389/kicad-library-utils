@@ -268,23 +268,23 @@ class Rule(KLCRule):
         # Split
         keywords_tokens = self._tokenize_keywords(keywords, split_sub_tokens=False)
         keywords_subtokens = self._tokenize_keywords(keywords, split_sub_tokens=True)
-        
+
         description_tokens = self._tokenize_description(description, split_sub_tokens=False)
         description_subtokens = self._tokenize_description(description, split_sub_tokens=True)
-        
+
         all_tokens = keywords_tokens + description_tokens
         all_subtokens = keywords_subtokens + description_subtokens
-        
+
         _return = False
         # Opamp <=> operational amplifier
         if "operational" in all_subtokens and "amplifier" in description_tokens:
             if "opamp" not in all_subtokens:
                 self.warning("Metadata contains 'operational amplifier', please add 'opamp' to the keywords")
-                _return = True        
+                _return = True
         if "opamp" in all_subtokens and not ("operational" in all_subtokens and "amplifier" in all_subtokens):
             self.warning("Metadata contains 'opamp', please add 'operational-amplifier' to the keywords")
             _return = True
-            
+
         # LDO <=> low-dropout ... regulator
         if "low-dropout" in all_tokens and "regulator" in all_subtokens:
             if "ldo" not in all_tokens:
@@ -295,7 +295,6 @@ class Rule(KLCRule):
             _return = True
 
         return _return
-            
 
     def checkKeywords(self) -> bool:
         keywords_property = self.component.get_property("ki_keywords")
@@ -320,7 +319,7 @@ class Rule(KLCRule):
             description = description_property.value if description_property else ""
 
             _result |= self._checkKeywordsDuplicateTokens(keywords, description)
-            
+
             # Other checks
             _result |= self._checkCommonKeywordAliases(keywords, description)
 
