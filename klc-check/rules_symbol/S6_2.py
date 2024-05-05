@@ -193,6 +193,18 @@ class Rule(KLCRule):
         """
         split_regex = r'\s+|-' if split_sub_tokens else r'\s+'
         return [token.strip().lower() for token in re.split(split_regex, keywords)]
+
+    def _tokenize_description(self, description: str, split_sub_tokens=True) -> list[str]:
+        """
+        Similar to _tokenize_keywords but takes into account that
+        the description *may* contain special characters, which would cause
+        tokens such as "opamp," to appear in the list.
+        
+        """
+        # Remove everything non-alphanumeric except for dash and whitespace
+        description = re.sub(r"[^\w\s-]", "", description)
+        split_regex = r'\s+|-' if split_sub_tokens else r'\s+'
+        return [token.strip().lower() for token in re.split(split_regex, description)]
     
     def _checkKeywordsDuplicateTokens(self, keywords: str, descriptions: str) -> bool:
         """
@@ -224,7 +236,7 @@ class Rule(KLCRule):
         
         # Now check if any tokens from the description appear in the keywords
         # NOTE: We remove tokens here which are already duplicate in the keywords
-        description_tokens = self._tokenize_keywords(descriptions)
+        description_tokens = self._tokenize_description(descriptions)
         all_tokens = tokens + description_tokens
         duplicate_desc_keyword_tokens = {
             token for token, count in Counter(all_tokens).items() if count > 1
