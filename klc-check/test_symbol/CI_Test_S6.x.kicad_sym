@@ -2295,8 +2295,8 @@
 			)
 		)
 	)
-	(symbol "Fail__S6.2__DescriptionSameWordTwice"
-		(extends "Fail__S6.2__DescriptionSameWordTwice")
+	(symbol "Pass__S6.2__DescriptionSameWordTwice"
+		(extends "Pass__S6.2__DescriptionSameWordTwice")
 		(property "Reference" "U"
 			(at 7.62 12.7 0)
 			(effects
@@ -2305,7 +2305,7 @@
 				)
 			)
 		)
-		(property "Value" "Fail__S6.2__DescriptionSameWordTwice"
+		(property "Value" "Pass__S6.2__DescriptionSameWordTwice"
 			(at 7.62 10.16 0)
 			(effects
 				(font
