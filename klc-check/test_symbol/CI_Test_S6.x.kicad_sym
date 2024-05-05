@@ -1279,7 +1279,7 @@
 				(hide yes)
 			)
 		)
-		(property "ki_keywords" "SMPS Controller with MOSFET"
+		(property "ki_keywords" "SMPS Controller MOSFET"
 			(at 0 0 0)
 			(effects
 				(font
