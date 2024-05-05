@@ -178,7 +178,7 @@ class Rule(KLCRule):
             )
         return len(forbidden_matches) > 0
     
-    def _tokenize_keywords(self, keywords: str, split_sub_tokens=True) -> set[str]:
+    def _tokenize_keywords(self, keywords: str, split_sub_tokens=True) -> list[str]:
         """
         Tokenize the keywords string into a list of tokens,
         splitting on whitespace and removing leading/trailing whitespace.
@@ -192,7 +192,7 @@ class Rule(KLCRule):
         The tokens are returned as lowercase strings.
         """
         split_regex = r'\s+|-' if split_sub_tokens else r'\s+'
-        return {token.strip().lower() for token in re.split(split_regex, keywords)}
+        return [token.strip().lower() for token in re.split(split_regex, keywords)]
     
     def _checkKeywordsDuplicateTokens(self, keywords: str, descriptions: str) -> bool:
         """
@@ -214,10 +214,10 @@ class Rule(KLCRule):
         # NOTE: We ignore tokens here which already appeared as full
         # tokens in the previous step (for usability)
         tokens_and_subtokens = self._tokenize_keywords(keywords, split_sub_tokens=True)
-        token_counts = Counter(tokens)
+        token_counts = Counter(tokens_and_subtokens)
         duplicate_sub_tokens = {token for token, count in token_counts.items() if count > 1}
         duplicate_sub_tokens -= duplicate_tokens  # see NOTE above
-        if duplicate_tokens:
+        if duplicate_sub_tokens:
             self.error(
                 f"S6.2.7: Symbol keywords contain duplicate dash-separated sub-tokens: {duplicate_sub_tokens}"
             )
@@ -225,7 +225,7 @@ class Rule(KLCRule):
         # Now check if any tokens from the description appear in the keywords
         # NOTE: We remove tokens here which are already duplicate in the keywords
         description_tokens = self._tokenize_keywords(descriptions)
-        all_tokens = tokens | description_tokens
+        all_tokens = tokens + description_tokens
         duplicate_desc_keyword_tokens = {
             token for token, count in Counter(all_tokens).items() if count > 1
         }
