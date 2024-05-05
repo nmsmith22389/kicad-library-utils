@@ -50,7 +50,7 @@ for LIBNAME in $LIBS_NEW; do
 
   # Perform sha256sum after
   sha256sum_before=$(sha256sum "$CI_PROJECT_DIR/$LIBNAME" | awk '{print $1}')
-  kicad-cli sym upgrade --sym-lib "$CI_PROJECT_DIR/$LIBNAME" --force > /dev/null
+  kicad-cli sym upgrade "$CI_PROJECT_DIR/$LIBNAME" --force > /dev/null
   upgrade_status=$?
   sha256sum_after=$(sha256sum "$CI_PROJECT_DIR/$LIBNAME" | awk '{print $1}')
 
