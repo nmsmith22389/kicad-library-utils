@@ -219,7 +219,7 @@ class Rule(KLCRule):
         duplicate_sub_tokens -= duplicate_tokens  # see NOTE above
         if duplicate_sub_tokens:
             self.error(
-                f"S6.2.7: Symbol keywords contain duplicate dash-separated sub-tokens: {duplicate_sub_tokens}"
+                f"S6.2.7: Symbol keywords contain duplicate sub-tokens (= dash-separated tokens): {duplicate_sub_tokens}"
             )
         
         # Now check if any tokens from the description appear in the keywords
