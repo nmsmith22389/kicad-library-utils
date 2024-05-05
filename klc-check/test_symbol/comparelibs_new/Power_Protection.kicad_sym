@@ -3759,7 +3759,7 @@
 				(hide yes)
 			)
 		)
-		(property "ki_keywords" "overvoltage protection"
+		(property "ki_keywords" "onsemi"
 			(at 0 0 0)
 			(effects
 				(font
