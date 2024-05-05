@@ -282,7 +282,16 @@ class Rule(KLCRule):
                 self.warning("Metadata contains 'operational amplifier', please add 'opamp' to the keywords")
                 _return = True        
         if "opamp" in all_subtokens and not ("operational" in all_subtokens and "amplifier" in all_subtokens):
-            self.warning("Metadata contains 'opamp', please add 'operational amplifier' to the keywords")
+            self.warning("Metadata contains 'opamp', please add 'operational-amplifier' to the keywords")
+            _return = True
+            
+        # LDO <=> low-dropout ... regulator
+        if "low-dropout" in all_tokens and "regulator" in all_subtokens:
+            if "ldo" not in all_tokens:
+                self.warning("Metadata contains 'low-dropout .. regulator', please add 'ldo' to the keywords")
+                _return = True
+        if "ldo" in all_tokens and not ("low-dropout" in all_tokens and "regulator" in all_subtokens):
+            self.warning("Metadata contains 'LDO', please add 'low-dropout-regulator' to the keywords")
             _return = True
 
         return _return
