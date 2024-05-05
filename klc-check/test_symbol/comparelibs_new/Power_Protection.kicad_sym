@@ -21480,7 +21480,7 @@
 				(hide yes)
 			)
 		)
-		(property "ki_keywords" "ESD Protection TVS High-speed USB"
+		(property "ki_keywords" "ESD Protection Würth High-speed USB"
 			(at 0 0 0)
 			(effects
 				(font
@@ -22121,7 +22121,7 @@
 				(hide yes)
 			)
 		)
-		(property "ki_keywords" "ESD protection diodes"
+		(property "ki_keywords" "protection diodes"
 			(at 0 0 0)
 			(effects
 				(font
