@@ -309,7 +309,8 @@ class Rule(KLCRule):
             if self.component.is_power_symbol():
                 return True
             else:
-                self.error("Missing or empty Keywords field on 'Properties' tab")
+                self.error("Missing or empty Keywords field on 'Properties' tab. " +
+                           "If you have nothing to add here, add the manufacturer e.g. 'texas'")
                 return True
         else:  # have non-empty keywords
             keywords = keywords_property.value
