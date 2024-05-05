@@ -151,28 +151,35 @@ class Rule(KLCRule):
             self.warning("Symbol name should not be included in description")
 
         return False
+    
+    def _checkKeywordsSpecialCharacters(self, keywords: str) -> bool:
+        """
+        Check keywords for special characters such as "," or "." etc
+        """
+        # find special chars.
+        # A dot followed by a non-word char is also considered a violation.
+        # This allows 3.3V but prevents 'foobar. buzz'
+        forbidden_matches = re.findall(r"\.\W|\.$|[,:;?!<>]", keywords)
+        if forbidden_matches:
+            self.error(
+                "Symbol keywords contain forbidden characters: {}".format(
+                    forbidden_matches
+                )
+            )
+        return forbidden_matches
 
     def checkKeywords(self) -> bool:
-        dsc = self.component.get_property("ki_keywords")
-        if not dsc:
+        keywords_property = self.component.get_property("ki_keywords")
+        if not keywords_property:
             # can not do other checks, return
             if self.component.is_power_symbol():
                 return True
             else:
-                self.error("Missing Keywords field on 'Properties' tab")
+                self.error("Missing or empty Keywords field on 'Properties' tab")
                 return True
-        else:
-            # find special chars.
-            # A dot followed by a non-word char is also considered a violation.
-            # This allows 3.3V but prevents 'foobar. buzz'
-            forbidden_matches = re.findall(r"\.\W|\.$|[,:;?!<>]", dsc.value)
-            if forbidden_matches:
-                self.error(
-                    "Symbol keywords contain forbidden characters: {}".format(
-                        forbidden_matches
-                    )
-                )
-                return True
+        else:  # have non-empty keywords
+            keywords = keywords_property.value
+            _result = self._checkKeywordsSpecialCharacters(keywords)
 
         return False
 
