@@ -199,11 +199,17 @@ class Rule(KLCRule):
         Similar to _tokenize_keywords but takes into account that
         the description *may* contain special characters, which would cause
         tokens such as "opamp," to appear in the list.
+        
+        Also, the description may contain words more than once.
         """
         # Remove everything non-alphanumeric except for dash and whitespace
         description = re.sub(r"[^\w\s-]", "", description)
         split_regex = r'\s+|-' if split_sub_tokens else r'\s+'
-        return [token.strip().lower() for token in re.split(split_regex, description)]
+        tokens = [token.strip().lower() for token in re.split(split_regex, description)]
+        
+        # Remove duplicates from tokens and return, preserving the order
+        tokens = list(set(tokens))
+        return tokens
 
     def _checkKeywordsDuplicateTokens(self, keywords: str, descriptions: str) -> bool:
         """
