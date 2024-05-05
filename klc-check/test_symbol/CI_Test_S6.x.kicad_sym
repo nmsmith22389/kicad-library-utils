@@ -1484,7 +1484,7 @@
 				(hide yes)
 			)
 		)
-		(property "ki_keywords" "Pass"
+		(property "ki_keywords" "missing"
 			(at 0 0 0)
 			(effects
 				(font
