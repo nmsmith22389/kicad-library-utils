@@ -237,7 +237,7 @@ class Rule(KLCRule):
         # Now check if any tokens from the description appear in the keywords
         # NOTE: We remove tokens here which are already duplicate in the keywords
         description_tokens = self._tokenize_description(descriptions)
-        all_tokens = tokens + description_tokens
+        all_tokens = tokens_and_subtokens + description_tokens
         duplicate_desc_keyword_tokens = {
             token for token, count in Counter(all_tokens).items() if count > 1
         }
