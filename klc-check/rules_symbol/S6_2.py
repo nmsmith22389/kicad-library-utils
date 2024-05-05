@@ -2,6 +2,16 @@ import re
 
 from rulebase import isValidName
 from rules_symbol.rule import KLCRule
+from collections import Counter
+
+DISALLOWED_FILLER_TOKENS = frozenset([
+    "and", "or", "the", "a", "an", "of", "in", "on", "at", "to",
+    "with", "by", "for", "from", "as", "into", "onto", "upon",
+    "over", "under", "through", "between", "among", "within",
+    "without", "about", "after", "before", "during", "since",
+    "until", "while", "till", "throughout", "along", "across",
+    "against", "behind", "beside", "beyond", "inside", "outside",
+])
 
 
 class Rule(KLCRule):
@@ -166,7 +176,81 @@ class Rule(KLCRule):
                     forbidden_matches
                 )
             )
-        return forbidden_matches
+        return len(forbidden_matches) > 0
+    
+    def _tokenize_keywords(self, keywords: str, split_sub_tokens=True) -> set[str]:
+        """
+        Tokenize the keywords string into a list of tokens,
+        splitting on whitespace and removing leading/trailing whitespace.
+        
+        NOTE: This doesn't only split into tokens on whitespace, but also
+        into sub-tokens separated by dash.
+        
+        Example:
+        "foo bar-baz" -> ["foo", "bar", "baz"]
+        
+        The tokens are returned as lowercase strings.
+        """
+        split_regex = r'\s+|-' if split_sub_tokens else r'\s+'
+        return {token.strip().lower() for token in re.split(split_regex, keywords)}
+    
+    def _checkKeywordsDuplicateTokens(self, keywords: str, descriptions: str) -> bool:
+        """
+        Check for duplicate tokens in the keywords
+        """
+        # First check for pure duplicates e.g. "single opamp single"
+        tokens = self._tokenize_keywords(keywords, split_sub_tokens=False)
+        
+        # Check if any token appears more than once
+        token_counts = Counter(tokens)
+        duplicate_tokens = {token for token, count in token_counts.items() if count > 1}
+        if duplicate_tokens:
+            self.error(
+                f"S6.2.7: Symbol keywords contain duplicate keywords: {duplicate_tokens}"
+            )
+            
+        # Now check if any token appears as a sub-token,
+        # e.g. "single opamp highspeed-opamp"
+        # NOTE: We ignore tokens here which already appeared as full
+        # tokens in the previous step (for usability)
+        tokens_and_subtokens = self._tokenize_keywords(keywords, split_sub_tokens=True)
+        token_counts = Counter(tokens)
+        duplicate_sub_tokens = {token for token, count in token_counts.items() if count > 1}
+        duplicate_sub_tokens -= duplicate_tokens  # see NOTE above
+        if duplicate_tokens:
+            self.error(
+                f"S6.2.7: Symbol keywords contain duplicate dash-separated sub-tokens: {duplicate_sub_tokens}"
+            )
+        
+        # Now check if any tokens from the description appear in the keywords
+        # NOTE: We remove tokens here which are already duplicate in the keywords
+        description_tokens = self._tokenize_keywords(descriptions)
+        all_tokens = tokens | description_tokens
+        duplicate_desc_keyword_tokens = {
+            token for token, count in Counter(all_tokens).items() if count > 1
+        }
+        duplicate_desc_keyword_tokens -= duplicate_tokens  # see NOTE above
+        duplicate_desc_keyword_tokens -= duplicate_sub_tokens  # see NOTE above
+        if duplicate_desc_keyword_tokens:
+            self.error(
+                f"S6.2.7: Symbol keywords contain tokens which already appear in description: {duplicate_desc_keyword_tokens}"
+            )
+                    
+        return len(duplicate_tokens) > 0
+    
+    def _checkKeywordFillerWords(self, tokenized_keywords: list[str]) -> bool:
+        """
+        S6.2.7b
+        Check for filler words such as "and"
+        """
+        # Check if any of the tokens are in the disallowed set
+        forbidden_matches = set(tokenized_keywords) & DISALLOWED_FILLER_TOKENS
+        if forbidden_matches:
+            self.error(
+                f"S6.2.7b: Symbol keywords contain forbidden filler words: {forbidden_matches}"
+            )
+        return len(forbidden_matches) > 0
+    
 
     def checkKeywords(self) -> bool:
         keywords_property = self.component.get_property("ki_keywords")
@@ -179,9 +263,20 @@ class Rule(KLCRule):
                 return True
         else:  # have non-empty keywords
             keywords = keywords_property.value
+            # Tests on raw keywords
             _result = self._checkKeywordsSpecialCharacters(keywords)
+            
+            # Tests on tokenized keywords
+            keyword_tokens = self._tokenize_keywords(keywords)
+            _result |= self._checkKeywordFillerWords(keyword_tokens)
+            
+            # Tests on description and tokenized keywords
+            description_property = self.component.get_property("Description")
+            description = description_property.value if description_property else ""
+            
+            _result |= self._checkKeywordsDuplicateTokens(keywords, description)
 
-        return False
+            return _result
 
     def check(self) -> bool:
         # Check for extra fields. How? TODO
