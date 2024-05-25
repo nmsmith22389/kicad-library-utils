@@ -1008,7 +1008,7 @@ class KicadSymbol(KicadSymbolBase):
             return []
 
     def is_graphic_symbol(self) -> bool:
-        return self.extends is None and (
+        return self.extends is None and self.get_property("Footprint").value == "" and (
             not self.pins or self.get_property("Reference").value == "#SYM"
         )
 
