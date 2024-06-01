@@ -166,21 +166,26 @@ class SexprBuilder:
             self.indent -= 1
 
 
-def build_sexp(exp, indent='  ') -> str:
+def build_sexp(exp, indent='') -> str:
     # Special case for multi-values
     if isinstance(exp, list):
         joined = '('
         for i, elem in enumerate(exp):
-            if 1 <= i <= 5 and len(joined) < 120 and not isinstance(elem, list):
-                joined += ' '
-            elif i >= 1:
-                joined += '\n' + indent
-            joined += build_sexp(elem, indent=f'{indent}  ')
+            if i > 0:
+                if isinstance(elem, list):
+                    joined += '\n\t' + indent
+                elif i >= 1:
+                    joined += ' '
+            joined += build_sexp(elem, indent=indent+'\t')
+        if isinstance(elem, list):
+            joined += '\n' + indent
         return joined + ')'
 
-    if isinstance(exp, str) and (len(exp) == 0 or re.search(r"[\s\(\)]", exp)):
+    if isinstance(exp, str) and (len(exp) == 0 or re.search(r"[\s\(\)]", exp)) and not re.fullmatch(r'".*"', exp):
         return '"%s"' % exp.replace('"', r'\"')
     elif isinstance(exp, float):
+        if exp.is_integer():
+            return str(int(exp))
         return str(exp)
     elif isinstance(exp, int):
         return str(exp)
