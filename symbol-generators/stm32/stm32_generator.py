@@ -69,6 +69,16 @@ datasheet_fixups = {
 _PINNAME_MATCH = re.compile("[^ /-]*(-$)?")
 
 
+def pinkey(pin):
+    """ Split pin name into alphabetic and numeric parts and parse numeric parts, for
+    sorting. Example:
+
+    'DDR1_DQ15B' -> ('DDR', 1, '_DQ', 15, 'B')
+    """
+    return tuple([int(num) if num else char
+                  for num, char in re.findall('([0-9]+)|([^0-9]+)', pin.name)])
+
+
 @dataclass
 class DataPin:
     num: str  # may also be an BGA pin coordinate
@@ -113,7 +123,8 @@ class DataPin:
             "PF11BOOT0": "PF11",
         }
 
-        self.name = name_lookup.get(self.name, _PINNAME_MATCH.match(self.name).group())
+        if self.name in name_lookup:
+            self.name = name_lookup[self.name]
 
         for k, v in type_lookup.items():
             if re.match(k, f'{self.pintype}/{self.name}'):
@@ -236,8 +247,6 @@ class Device:
     }
 
     def __init__(self, xml):
-        self.pins = []
-
         soup = BeautifulSoup(xml.read_text(), features='xml').find('Mcu')
         self.name = soup['RefName'].replace('(', '_').replace(')', '_')
 
@@ -308,6 +317,7 @@ class Device:
             nc_override = {}
 
         # Read the information for each pin
+        pins_by_number = defaultdict(lambda: [])
         for child in soup.find_all('Pin'):
             pos, name, pintype = child['Position'], child['Name'], child['Type']
 
@@ -324,7 +334,8 @@ class Device:
                 if altfunction != 'GPIO':
                     altfuncs.append(kicad_sym.AltFunction(altfunction, 'bidirectional', 'line'))
 
-            self.pins.append(DataPin(pos, name, pintype, altfuncs))
+            name = _PINNAME_MATCH.match(name).group()
+            pins_by_number[pos].append(DataPin(pos, name, pintype, altfuncs))
 
         # If this part has a power pad, we have to add it manually
         if (soup['HasPowerPad'] == 'true' or self.package in Device._POWER_PAD_FIX_PACKAGES):
@@ -332,22 +343,23 @@ class Device:
             packPinCountR = Device._pincount_search.search(self.package)
             powerpinnumber = str(int(packPinCountR.group(1)) + 1)
             # Create power pad pin
-            powerpadpin = DataPin(powerpinnumber, "VSS", "Power")
-            self.pins.append(powerpadpin)
+            pins_by_number[powerpinnumber].append(DataPin(powerpinnumber, "VSS", "Power"))
 
-        # Merge any duplicated pins
-        pinNumMap = {}
-        removePins = []
-        for pin in self.pins:
-            if pin.num in pinNumMap:
-                mergedPin = pinNumMap[pin.num]
-                mergedPin.name += f"/{pin.name}"
-                removePins.append(pin)
+        # Merge pins where multiple pins of the die are bonded out to a single pin on the package.
+        self.pins = []
+        for pos, pin_list in pins_by_number.items():
+            if len(pin_list) == 1:
+                self.pins += pin_list
             else:
-                pinNumMap[pin.num] = pin
-
-        for pin in removePins:
-            self.pins.remove(pin)
+                pin_list = sorted(pin_list, key=pinkey)
+                altfuncs = []
+                for pin in pin_list:
+                    # Add a new entry for the IO remap
+                    altfuncs.append(kicad_sym.AltFunction(pin.name, 'bidirectional', 'line'))
+                    for func in pin.altfuncs:
+                        altfuncs.append(kicad_sym.AltFunction(f'{func.name} ({pin.name})', func.etype, func.shape))
+                merged = DataPin(pos, '/'.join(pin.name for pin in pin_list), pin_list[0].pintype, altfuncs)
+                self.pins.append(merged)
 
     def create_symbol(self, lib, keywords, desc, datasheet):
         # Make the symbol
@@ -366,15 +378,6 @@ class Device:
         # Classify pins
         for pin in self.pins:
             pins[pin.graphical_type].append(pin)
-
-        def pinkey(pin):
-            """ Split pin name into alphabetic and numeric parts and parse numeric parts, for
-            sorting. Example:
-
-            'DDR1_DQ15B' -> ('DDR', 1, '_DQ', 15, 'B')
-            """
-            return tuple([int(num) if num else char
-                          for num, char in re.findall('([0-9]+)|([^0-9]+)', pin.name)])
 
         pins = defaultdict(lambda: [], {
                 k: sorted(v, key=pinkey) for k, v in pins.items()
